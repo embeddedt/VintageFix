@@ -50,6 +50,9 @@ public class MixinModelManager {
         // and the item variant to model location map.
         ModelLocationInformation.init(modelProvider.getBlockStateMapper());
 
+        // construct this to satisfy CCL
+        new ModelLoader(resourceManager, texMap, modelProvider);
+
         // Get custom loaders
         Set<ICustomModelLoader> loaders;
         try {
