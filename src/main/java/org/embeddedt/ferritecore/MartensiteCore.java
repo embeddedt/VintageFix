@@ -3,7 +3,7 @@ package org.embeddedt.ferritecore;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLConstructionEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,7 +16,7 @@ public class MartensiteCore {
 
     @Mod.EventHandler
     @SuppressWarnings("unused")
-    public void init(FMLPreInitializationEvent ev) {
+    public void init(FMLConstructionEvent ev) {
         if(FMLCommonHandler.instance().getSide() == Side.CLIENT)
             MinecraftForge.EVENT_BUS.register(new MartensiteCoreClient());
     }
