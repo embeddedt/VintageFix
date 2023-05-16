@@ -1,7 +1,7 @@
 [
   {
-    "modid": "martensitecore",
-    "name": "MartensiteCore",
+    "modid": "vintagefix",
+    "name": "VintageFix",
     "version": "${modVersion}",
     "mcversion": "1.12.2",
     "description": "A backport of FerriteCore to 1.12.2",
