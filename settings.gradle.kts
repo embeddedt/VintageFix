@@ -1,4 +1,4 @@
-rootProject.name = "MartensiteCore"
+rootProject.name = "VintageFix"
 
 pluginManagement {
   repositories {

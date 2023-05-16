@@ -12,7 +12,7 @@ plugins {
 }
 
 // Project properties
-group = "org.embeddedt.ferritecore"
+group = "org.embeddedt.vintagefix"
 version = "1.0.0"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
@@ -115,7 +115,7 @@ sourceSets.register("googleimpl") {
 val googleimpl by sourceSets.getting
 main.runtimeClasspath += googleimpl.output
 
-val mixinConfigRefMap = "mixins.martensitecore.refmap.json"
+val mixinConfigRefMap = "mixins.vintagefix.refmap.json"
 val mixinTmpDir = buildDir.path + File.separator + "tmp" + File.separator + "mixins"
 val refMap = mixinTmpDir + File.separator + mixinConfigRefMap
 val mixinSrg = mixinTmpDir + File.separator + "mixins.srg"

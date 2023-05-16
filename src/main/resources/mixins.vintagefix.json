@@ -1,0 +1,29 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "org.embeddedt.vintagefix.mixin",
+  "refmap": "mixins.vintagefix.refmap.json",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "fastmap.FastMapStateHolderMixin"
+  ],
+  "client": [
+    "dedupbakedquad.SimpleModelBuilderMixin",
+    "dedupmultipart.MixinMultipartBuilder",
+    "dedupmultipart.MixinMultipartModel",
+    "dynamicresources.client.MixinBlockModelShapes",
+    "dynamicresources.client.MixinItemModelMesherForge",
+    "dynamicresources.client.MixinModelBlockAnimation",
+    "dynamicresources.client.MixinModelLoaderRegistry",
+    "dynamicresources.client.MixinModelManager",
+    "modelsides.SimpleBakedModelMixin",
+    "mrl.ModelResourceLocationMixin",
+    "mrl.ResourceLocationAccess",
+    "predicates.AndConditionMixin",
+    "predicates.KeyValueConditionMixin",
+    "predicates.OrConditionMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
