@@ -37,7 +37,11 @@ public class ModelSidesImpl {
         boolean allEmpty = true;
         for (final EnumFacing face : SIDES) {
             final List<BakedQuad> sideQuads = quadsBySide.get(face);
-            quadsBySide.put(face, ImmutableList.copyOf(sideQuads));
+            try {
+                quadsBySide.put(face, ImmutableList.copyOf(sideQuads));
+            } catch(RuntimeException e) {
+                /* some models don't allow putting entries in this map */
+            }
             allEmpty &= sideQuads.isEmpty();
         }
         return allEmpty ? EMPTY : quadsBySide;
