@@ -23,7 +23,7 @@ java {
     vendor.set(org.gradle.jvm.toolchain.JvmVendorSpec.AZUL)
   }
   // Generate sources and javadocs jars when building and publishing
-  withSourcesJar()
+  // withSourcesJar()
 }
 
 // Most RFG configuration lives here, see the JavaDoc for com.gtnewhorizons.retrofuturagradle.MinecraftExtension
