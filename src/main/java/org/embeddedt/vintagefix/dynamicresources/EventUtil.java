@@ -1,4 +1,4 @@
-package org.embeddedt.vintagefix.dynamicresources.dynamicresources;
+package org.embeddedt.vintagefix.dynamicresources;
 
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.Event;

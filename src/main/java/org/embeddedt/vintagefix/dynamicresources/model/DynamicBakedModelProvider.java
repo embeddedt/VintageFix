@@ -1,4 +1,4 @@
-package org.embeddedt.vintagefix.dynamicresources.dynamicresources.model;
+package org.embeddedt.vintagefix.dynamicresources.model;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -86,7 +86,10 @@ public class DynamicBakedModelProvider implements IRegistry<ModelResourceLocatio
             IModel model = modelProvider.getObject(location);
             return model.bake(model.getDefaultState(), DefaultVertexFormats.BLOCK, ModelLoader.defaultTextureGetter());
         } catch (Throwable t) {
-            LOGGER.error("Error occured while loading model {}", location, t);
+            if(ModelLocationInformation.DEBUG_MODEL_LOAD)
+                LOGGER.error("Error occured while loading model {}", location, t);
+            else
+                LOGGER.error("Error occured while loading model {}", location);
         }
 
         return null;

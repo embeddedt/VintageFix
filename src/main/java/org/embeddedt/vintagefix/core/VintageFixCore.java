@@ -10,7 +10,7 @@ import java.util.Map;
 
 @IFMLLoadingPlugin.Name("MartensiteCore")
 @IFMLLoadingPlugin.MCVersion("1.12.2")
-public class MartensiteCore implements IFMLLoadingPlugin, IEarlyMixinLoader {
+public class VintageFixCore implements IFMLLoadingPlugin, IEarlyMixinLoader {
     @Override
     public String[] getASMTransformerClass() {
         return new String[0];

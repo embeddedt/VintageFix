@@ -1,4 +1,4 @@
-package org.embeddedt.vintagefix.dynamicresources.dynamicresources.model;
+package org.embeddedt.vintagefix.dynamicresources.model;
 
 import com.google.common.collect.Lists;
 import net.minecraft.block.Block;
@@ -15,6 +15,7 @@ import java.lang.reflect.Field;
 import java.util.*;
 
 public class ModelLocationInformation {
+    public static final boolean DEBUG_MODEL_LOAD = Boolean.getBoolean("vintagefix.debugDynamicModelLoading");
     private static Map<Item, List<String>> variantNames = new HashMap<>();
     private static HashMap<ModelResourceLocation, ResourceLocation> inventoryVariantLocations = new HashMap<>();
     private static HashMap<ResourceLocation, Block> blockstateLocationToBlock = new HashMap<>();

@@ -143,7 +143,7 @@ tasks.processResources {
 tasks.named<Jar>("jar") {
   manifest {
     attributes(
-      "FMLCorePlugin" to ("org.embeddedt.ferritecore.core.MartensiteCore"),
+      "FMLCorePlugin" to ("org.embeddedt.vintagefix.core.VintageFixCore"),
       "FMLCorePluginContainsFMLMod" to "true",
       "ForceLoadAsMod" to "true"
     )

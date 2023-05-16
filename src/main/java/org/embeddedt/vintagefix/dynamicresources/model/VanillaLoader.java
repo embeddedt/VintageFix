@@ -1,4 +1,4 @@
-package org.embeddedt.vintagefix.dynamicresources.dynamicresources.model;
+package org.embeddedt.vintagefix.dynamicresources.model;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelBlock;

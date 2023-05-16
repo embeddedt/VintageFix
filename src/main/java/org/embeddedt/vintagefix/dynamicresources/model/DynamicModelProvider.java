@@ -1,4 +1,4 @@
-package org.embeddedt.vintagefix.dynamicresources.dynamicresources.model;
+package org.embeddedt.vintagefix.dynamicresources.model;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
