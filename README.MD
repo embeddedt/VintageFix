@@ -1,5 +1,7 @@
-# MartensiteCore
+# VintageFix
 
-Experimental FerriteCore backport for 1.12. Requires MixinBooter.
+Experimental performance mod for 1.12, intended to expand upon and replace FoamFix.
 
-Download: https://nightly.link/embeddedt/MartensiteCore/workflows/gradle/main/Package.zip
+Requires MixinBooter.
+
+Download: https://nightly.link/embeddedt/VintageFix/workflows/gradle/main/Package.zip
