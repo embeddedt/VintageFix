@@ -64,10 +64,4 @@ public class VintageFixClient {
         VintageFix.LOGGER.info("Texture search took {}", watch);
     }
 
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void collectTextures(TextureStitchEvent.Post event) {
-        TextureMap map = event.getMap();
-        TextureAtlasSprite sprite = map.getTextureExtry("tconstruct:items/part/sword_blade_wood");
-    }
-
 }
