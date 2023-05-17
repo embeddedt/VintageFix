@@ -1,6 +1,7 @@
 package org.embeddedt.vintagefix.mixin.dynamicresources.client;
 
-import gnu.trove.map.hash.TIntObjectHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.client.renderer.ItemModelMesher;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ModelManager;
@@ -16,7 +17,7 @@ import java.util.Map;
 
 @Mixin(ItemModelMesherForge.class)
 public class MixinItemModelMesherForge extends ItemModelMesher {
-    @Shadow Map<IRegistryDelegate<Item>, TIntObjectHashMap<ModelResourceLocation>> locations;
+    @Shadow Map<IRegistryDelegate<Item>, Int2ObjectMap<ModelResourceLocation>> locations;
 
     public MixinItemModelMesherForge(ModelManager modelManager) {
         super(modelManager);
@@ -29,7 +30,7 @@ public class MixinItemModelMesherForge extends ItemModelMesher {
     @Overwrite
     @Override
     protected IBakedModel getItemModel(Item item, int meta) {
-        TIntObjectHashMap<ModelResourceLocation> map = locations.get(item.delegate);
+        Int2ObjectMap<ModelResourceLocation> map = locations.get(item.delegate);
         return map == null ? null : getModelManager().getModel(map.get(meta));
     }
 
@@ -41,9 +42,9 @@ public class MixinItemModelMesherForge extends ItemModelMesher {
     @Override
     public void register(Item item, int meta, ModelResourceLocation location) {
         IRegistryDelegate<Item> key = item.delegate;
-        TIntObjectHashMap<ModelResourceLocation> locs = locations.get(key);
+        Int2ObjectMap<ModelResourceLocation> locs = locations.get(key);
         if (locs == null) {
-            locs = new TIntObjectHashMap<>();
+            locs = new Int2ObjectOpenHashMap<>();
             locations.put(key, locs);
         }
         locs.put(meta, location);
