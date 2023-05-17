@@ -31,7 +31,12 @@ public class MixinItemModelMesherForge extends ItemModelMesher {
     @Override
     protected IBakedModel getItemModel(Item item, int meta) {
         Int2ObjectMap<ModelResourceLocation> map = locations.get(item.delegate);
-        return map == null ? null : getModelManager().getModel(map.get(meta));
+        if(map == null)
+            return null;
+        ModelResourceLocation location = map.get(meta);
+        if(location == null)
+            return null;
+        return getModelManager().getModel(location);
     }
 
     /**
