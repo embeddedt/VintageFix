@@ -10,12 +10,10 @@ import net.minecraft.block.properties.PropertyEnum;
 import net.minecraft.block.properties.PropertyInteger;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.IStringSerializable;
+import org.embeddedt.vintagefix.VintageFix;
 
 import javax.annotation.Nullable;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Provides a way of converting between values of a property and indices in [0, #values). Most properties are covered
@@ -188,11 +186,15 @@ public abstract class PropertyIndexer<T extends Comparable<T>> {
 
         protected GenericIndexer(IProperty<T> property) {
             super(property, property.getAllowedValues().toArray((T[]) new Comparable[0]));
-            ImmutableMap.Builder<Comparable<?>, Integer> toValueIndex = ImmutableMap.builder();
+            // use a mutable map first to detect repeated values
+            Map<Comparable<?>, Integer> tempMap = new LinkedHashMap<>();
             for (int i = 0; i < this.valuesInOrder.length; i++) {
-                toValueIndex.put(this.valuesInOrder[i], i);
+                Integer oldI = tempMap.put(this.valuesInOrder[i], i);
+                if(oldI != null) {
+                    VintageFix.LOGGER.warn("Property {} uses the same value {} multiple times", property.getClass().getName(), this.valuesInOrder[i]);
+                }
             }
-            this.toValueIndex = toValueIndex.build();
+            this.toValueIndex = ImmutableMap.copyOf(tempMap);
         }
 
         @Override
