@@ -102,7 +102,6 @@ public class MixinModelManager {
         int permLoaded = 0;
 
         for(String path : earlyModelPaths) {
-            System.out.println(path);
             ResourceLocation rl = ResourcePackHelper.pathToResourceLocation(path, ResourcePackHelper.ResourceLocationMatchType.SHORT);
             if(rl != null) {
                 try {

@@ -8,6 +8,7 @@ import net.minecraft.util.registry.IRegistry;
 import net.minecraftforge.client.model.ICustomModelLoader;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import org.embeddedt.vintagefix.VintageFix;
 
 import javax.annotation.Nullable;
@@ -31,6 +32,17 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
 
     public DynamicModelProvider(Set<ICustomModelLoader> loaders) {
         this.loaders = loaders;
+    }
+
+    private static final ICustomModelLoader VANILLA_LOADER, VARIANT_LOADER;
+
+    static {
+        try {
+            VANILLA_LOADER = ObfuscationReflectionHelper.<ICustomModelLoader, ICustomModelLoader>getPrivateValue((Class<? super ICustomModelLoader>)Class.forName("net.minecraftforge.client.model.ModelLoader$VanillaLoader"), null, "INSTANCE");
+            VARIANT_LOADER = ObfuscationReflectionHelper.<ICustomModelLoader, ICustomModelLoader>getPrivateValue((Class<? super ICustomModelLoader>)Class.forName("net.minecraftforge.client.model.ModelLoader$VariantLoader"), null, "INSTANCE");
+        } catch(ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Nullable
@@ -70,12 +82,10 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
 
         // No custom loaders found, use vanilla loaders
         if (accepted == null) {
-            if (BuiltinLoader.INSTANCE.accepts(actualLocation)) {
-                accepted = BuiltinLoader.INSTANCE;
-            } else if (VariantLoader.INSTANCE.accepts(actualLocation)) {
-                accepted = VariantLoader.INSTANCE;
-            } else if (VanillaLoader.INSTANCE.accepts(actualLocation)) {
-                accepted = VanillaLoader.INSTANCE;
+            if (VARIANT_LOADER.accepts(actualLocation)) {
+                accepted = VARIANT_LOADER;
+            } else if (VANILLA_LOADER.accepts(actualLocation)) {
+                accepted = VANILLA_LOADER;
             }
         }
 

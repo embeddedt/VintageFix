@@ -3,7 +3,6 @@ package org.embeddedt.vintagefix.mixin.dynamicresources.client;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
-import org.embeddedt.vintagefix.dynamicresources.model.BuiltinLoader;
 import org.embeddedt.vintagefix.dynamicresources.model.DynamicModelProvider;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -18,8 +17,10 @@ public abstract class MixinModelLoaderRegistry {
     }
 
     /** @reason Get the missing model from BuiltinLoader. **/
+    /*
     @Overwrite
     public static IModel getMissingModel() {
         return BuiltinLoader.WRAPPED_MODEL_MISSING;
     }
+     */
 }

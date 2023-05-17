@@ -2,6 +2,7 @@ package org.embeddedt.vintagefix.dynamicresources.model;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.ImmutableMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -9,6 +10,7 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.IResource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.IRegistry;
+import net.minecraft.util.registry.RegistrySimple;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoader;
 import org.apache.logging.log4j.LogManager;
@@ -21,7 +23,7 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-public class DynamicBakedModelProvider implements IRegistry<ModelResourceLocation, IBakedModel> {
+public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocation, IBakedModel> {
     private static final Logger LOGGER = LogManager.getLogger();
     public static DynamicBakedModelProvider instance;
 
@@ -40,12 +42,27 @@ public class DynamicBakedModelProvider implements IRegistry<ModelResourceLocatio
     }
 
     @Override
+    protected Map<ModelResourceLocation, IBakedModel> createUnderlyingMap() {
+        return ImmutableMap.of();
+    }
+
+    @Override
     @Nullable
     public IBakedModel getObject(ModelResourceLocation location) {
         try {
             return loadedBakedModels.get(location, () -> Optional.ofNullable(loadBakedModel(location))).orElse(null);
         } catch (ExecutionException e) {
             throw new RuntimeException(e.getCause());
+        }
+    }
+
+    private static final Class<?> VANILLA_MODEL_WRAPPER;
+
+    static {
+        try {
+            VANILLA_MODEL_WRAPPER = Class.forName("net.minecraftforge.client.model.ModelLoader$VanillaModelWrapper");
+        } catch(ReflectiveOperationException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -73,8 +90,8 @@ public class DynamicBakedModelProvider implements IRegistry<ModelResourceLocatio
                     }
                 }
 
-                if (model instanceof VanillaModelWrapper) {
-                    for (ResourceLocation dep : ((VanillaModelWrapper) model).getOverrides()) {
+                if (VANILLA_MODEL_WRAPPER.isAssignableFrom(model.getClass())) {
+                    for (ResourceLocation dep : model.asVanillaModel().get().getOverrideLocations()) {
                         if (!location.equals(dep)) {
                             ModelLocationInformation.addInventoryVariantLocation(ModelLocationInformation.getInventoryVariant(dep.toString()), dep);
                         }
