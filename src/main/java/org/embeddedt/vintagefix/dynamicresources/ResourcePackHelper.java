@@ -92,10 +92,26 @@ public class ResourcePackHelper {
         return paths;
     }
 
-    private static Pattern PATH_TO_RESLOC_REGEX = Pattern.compile("^/?assets/(.+?(?=/))/(.*)$");
+    public static final Pattern PATH_TO_RESLOC_REGEX = Pattern.compile("^/?assets/(.+?(?=/))/(.*)$");
+    public static final Pattern PATH_TO_SHORT_RESLOC_REGEX = Pattern.compile("^^/?assets/(.+?(?=/))/(?:.+?(?=/))/(.*)\\.(?:[A-Za-z]*)$");
 
-    public static ResourceLocation pathToResourceLocation(String path) {
-        Matcher matcher = PATH_TO_RESLOC_REGEX.matcher(path);
+    public enum ResourceLocationMatchType {
+        SHORT,
+        FULL
+    }
+
+    public static ResourceLocation pathToResourceLocation(String path, ResourceLocationMatchType type) {
+        Pattern pattern;
+        switch(type) {
+            default:
+            case SHORT:
+                pattern = PATH_TO_SHORT_RESLOC_REGEX;
+                break;
+            case FULL:
+                pattern = PATH_TO_RESLOC_REGEX;
+                break;
+        }
+        Matcher matcher = pattern.matcher(path);
         if (matcher.matches())
             return new ResourceLocation(matcher.group(1), matcher.group(2));
         else

@@ -16,6 +16,7 @@
     "dynamicresources.client.MixinModelBlockAnimation",
     "dynamicresources.client.MixinModelLoaderRegistry",
     "dynamicresources.client.MixinModelManager",
+    "dynamicresources.client.MixinSimpleReloadableResourceManager",
     "modelsides.SimpleBakedModelMixin",
     "mrl.ModelResourceLocationMixin",
     "mrl.ResourceLocationAccess",

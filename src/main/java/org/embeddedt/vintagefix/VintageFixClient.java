@@ -2,6 +2,7 @@ package org.embeddedt.vintagefix;
 
 import com.google.common.base.Stopwatch;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.resources.FallbackResourceManager;
 import net.minecraft.client.resources.IResourcePack;
@@ -10,6 +11,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ColorHandlerEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.embeddedt.vintagefix.dynamicresources.ResourcePackHelper;
 import org.embeddedt.vintagefix.impl.Deduplicator;
@@ -29,7 +31,7 @@ public class VintageFixClient {
 
     private static final Pattern TEXTURE_MATCH_PATTERN = Pattern.compile("^/?assets/(.+?(?=/))/textures/((?:attachment|bettergrass|block.?|cape|item.?|entity/(bed|chest)|pipe|ropebridge)/.*)\\.png$");
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void collectTextures(TextureStitchEvent.Pre event) {
         /* take every texture from these folders (1.19.3+ emulation) */
         Stopwatch watch = Stopwatch.createStarted();
@@ -60,6 +62,12 @@ public class VintageFixClient {
         }
         watch.stop();
         VintageFix.LOGGER.info("Texture search took {}", watch);
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public void collectTextures(TextureStitchEvent.Post event) {
+        TextureMap map = event.getMap();
+        TextureAtlasSprite sprite = map.getTextureExtry("tconstruct:items/part/sword_blade_wood");
     }
 
 }

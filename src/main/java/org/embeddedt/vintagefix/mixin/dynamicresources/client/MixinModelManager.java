@@ -8,6 +8,7 @@ import net.minecraft.client.renderer.block.model.ModelManager;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.resources.IResourceManager;
+import net.minecraft.client.resources.IResourceManagerReloadListener;
 import net.minecraft.client.resources.SimpleReloadableResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.IRegistry;
@@ -20,6 +21,7 @@ import net.minecraftforge.common.ForgeModContainer;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import org.embeddedt.vintagefix.VintageFix;
+import org.embeddedt.vintagefix.dynamicresources.DeferredListeners;
 import org.embeddedt.vintagefix.dynamicresources.EventUtil;
 import org.embeddedt.vintagefix.dynamicresources.ResourcePackHelper;
 import org.embeddedt.vintagefix.dynamicresources.model.DynamicBakedModelProvider;
@@ -35,6 +37,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Mixin(ModelManager.class)
@@ -53,6 +57,10 @@ public class MixinModelManager {
      */
     @Overwrite
     public void onResourceManagerReload(IResourceManager resourceManager) {
+        // Run the "end of model loading" listeners first
+        for(IResourceManagerReloadListener listener : DeferredListeners.deferredListeners) {
+            listener.onResourceManagerReload(resourceManager);
+        }
         // Generate information about model locations, such as the blockstate location to block map
         // and the item variant to model location map.
         ModelLocationInformation.init(modelProvider.getBlockStateMapper());
@@ -78,24 +86,40 @@ public class MixinModelManager {
         DynamicBakedModelProvider.instance = dynamicBakedModelProvider;
         modelRegistry = dynamicBakedModelProvider;
 
-        Collection<String> earlyModelPaths = ResourcePackHelper.getAllPaths((SimpleReloadableResourceManager)resourceManager, p -> {
+        // load some models early (e.g. TConstruct)
+        Pattern loadsEarly = Pattern.compile("^.*\\.(tmat|tcon|mod)\\.json");
+
+        Predicate<String> shouldLoadEarly = p -> {
+            return loadsEarly.matcher(p).matches();
+        };
+        Predicate<String> shouldPersistEarly = p -> {
             return p.endsWith(".tmat.json");
-        });
-        VintageFix.LOGGER.info("Permanently loading {} models", earlyModelPaths.size());
-        // trigger early load of some models
+        };
+
+        Collection<String> earlyModelPaths = ResourcePackHelper.getAllPaths((SimpleReloadableResourceManager)resourceManager, shouldLoadEarly);
+        VintageFix.LOGGER.info("Early loading {} models", earlyModelPaths.size());
+
+        int permLoaded = 0;
+
         for(String path : earlyModelPaths) {
-            // remove json from filename
-            ResourceLocation rl = ResourcePackHelper.pathToResourceLocation(path.substring(7, path.length() - 5));
+            System.out.println(path);
+            ResourceLocation rl = ResourcePackHelper.pathToResourceLocation(path, ResourcePackHelper.ResourceLocationMatchType.SHORT);
             if(rl != null) {
                 try {
                     //VintageFix.LOGGER.info("Loading {}", rl);
-                    IModel theModel = ModelLoaderRegistry.getModel(rl);
-                    dynamicModelProvider.putObject(rl, theModel);
+                    IModel theModel = dynamicModelProvider.getObject(rl);
+                    if(theModel != null && shouldPersistEarly.test(path)) {
+                        dynamicModelProvider.putObject(rl, theModel);
+                        permLoaded++;
+                    }
                 } catch(Exception e) {
                     VintageFix.LOGGER.error("Early load error for {}", rl, e);
                 }
-            }
+            } else
+                VintageFix.LOGGER.warn("Path {} is not a valid model location", path);
         }
+
+        VintageFix.LOGGER.info("Permanently loaded {} models", permLoaded);
 
         Method getTexturesMethod = ObfuscationReflectionHelper.findMethod(ModelLoaderRegistry.class, "getTextures", Iterable.class);
         final Set<ResourceLocation> textures;

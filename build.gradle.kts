@@ -86,6 +86,9 @@ repositories {
   maven {
     url = uri("https://maven.cleanroommc.com")
   }
+  maven {
+    url = uri("https://dvs1.progwml6.com/files/maven/")
+  }
 }
 
 dependencies {
@@ -100,6 +103,10 @@ dependencies {
   annotationProcessor("com.google.guava:guava:24.1.1-jre")
   annotationProcessor("com.google.code.gson:gson:2.8.6")
   annotationProcessor("org.spongepowered:mixin:0.8.3") {isTransitive = false}
+
+  implementation(rfg.deobf("slimeknights.mantle:Mantle:1.12-1.3.3.55+"))
+  implementation(rfg.deobf("slimeknights:TConstruct:1.12.2-2.13.0.183+"))
+
 }
 
 val main by sourceSets.getting // created by ForgeGradle
