@@ -13,6 +13,7 @@ import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.embeddedt.vintagefix.util.ExceptionHelper;
 
 import javax.annotation.Nullable;
 import java.io.FileNotFoundException;
@@ -86,7 +87,7 @@ public class DynamicBakedModelProvider implements IRegistry<ModelResourceLocatio
             IModel model = modelProvider.getObject(location);
             return model.bake(model.getDefaultState(), DefaultVertexFormats.BLOCK, ModelLoader.defaultTextureGetter());
         } catch (Throwable t) {
-            if(ModelLocationInformation.DEBUG_MODEL_LOAD)
+            if(ModelLocationInformation.DEBUG_MODEL_LOAD && !ExceptionHelper.isTypeInStackTrace(t, FileNotFoundException.class))
                 LOGGER.error("Error occured while loading model {}", location, t);
             else
                 LOGGER.error("Error occured while loading model {}", location);

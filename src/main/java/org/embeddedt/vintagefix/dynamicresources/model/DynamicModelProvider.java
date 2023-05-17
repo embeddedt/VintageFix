@@ -8,6 +8,7 @@ import net.minecraft.util.registry.IRegistry;
 import net.minecraftforge.client.model.ICustomModelLoader;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
+import org.embeddedt.vintagefix.VintageFix;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -43,12 +44,13 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
     }
 
     private IModel loadModel(ResourceLocation location) throws ModelLoaderRegistry.LoaderException {
-//        LOGGER.info("Loading model " + location);
-
         IModel model = permanentlyLoadedModels.get(location);
         if (model != null) {
             return model;
         }
+
+        if(ModelLocationInformation.DEBUG_MODEL_LOAD)
+            VintageFix.LOGGER.info("Loading model {}", location);
 
         // Check if a custom loader accepts the model
         ResourceLocation actualLocation = getActualLocation(location);

@@ -8,16 +8,20 @@ import net.minecraft.client.renderer.block.model.ModelManager;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.resources.IResourceManager;
+import net.minecraft.client.resources.SimpleReloadableResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.IRegistry;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.model.ICustomModelLoader;
+import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.common.ForgeModContainer;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import org.embeddedt.vintagefix.VintageFix;
 import org.embeddedt.vintagefix.dynamicresources.EventUtil;
+import org.embeddedt.vintagefix.dynamicresources.ResourcePackHelper;
 import org.embeddedt.vintagefix.dynamicresources.model.DynamicBakedModelProvider;
 import org.embeddedt.vintagefix.dynamicresources.model.DynamicModelProvider;
 import org.embeddedt.vintagefix.dynamicresources.model.ModelLocationInformation;
@@ -26,9 +30,12 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Mixin(ModelManager.class)
 public class MixinModelManager {
@@ -70,6 +77,25 @@ public class MixinModelManager {
         DynamicBakedModelProvider dynamicBakedModelProvider = new DynamicBakedModelProvider(dynamicModelProvider);
         DynamicBakedModelProvider.instance = dynamicBakedModelProvider;
         modelRegistry = dynamicBakedModelProvider;
+
+        Collection<String> earlyModelPaths = ResourcePackHelper.getAllPaths((SimpleReloadableResourceManager)resourceManager, p -> {
+            return p.endsWith(".tmat.json");
+        });
+        VintageFix.LOGGER.info("Permanently loading {} models", earlyModelPaths.size());
+        // trigger early load of some models
+        for(String path : earlyModelPaths) {
+            // remove json from filename
+            ResourceLocation rl = ResourcePackHelper.pathToResourceLocation(path.substring(7, path.length() - 5));
+            if(rl != null) {
+                try {
+                    //VintageFix.LOGGER.info("Loading {}", rl);
+                    IModel theModel = ModelLoaderRegistry.getModel(rl);
+                    dynamicModelProvider.putObject(rl, theModel);
+                } catch(Exception e) {
+                    VintageFix.LOGGER.error("Early load error for {}", rl, e);
+                }
+            }
+        }
 
         Method getTexturesMethod = ObfuscationReflectionHelper.findMethod(ModelLoaderRegistry.class, "getTextures", Iterable.class);
         final Set<ResourceLocation> textures;
