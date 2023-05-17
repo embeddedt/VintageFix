@@ -7,6 +7,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.IRegistry;
 import net.minecraftforge.client.model.ICustomModelLoader;
 import net.minecraftforge.client.model.IModel;
+import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import org.embeddedt.vintagefix.VintageFix;
@@ -55,11 +56,17 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
         }
     }
 
+    private static final Map<ResourceLocation, IModel> MODEL_LOADER_REGISTRY_CACHE = ObfuscationReflectionHelper.getPrivateValue(ModelLoaderRegistry.class, null, "cache");
+
     private IModel loadModel(ResourceLocation location) throws ModelLoaderRegistry.LoaderException {
         IModel model = permanentlyLoadedModels.get(location);
         if (model != null) {
             return model;
         }
+
+        model = MODEL_LOADER_REGISTRY_CACHE.get(location);
+        if(model != null)
+            return model;
 
         if(ModelLocationInformation.DEBUG_MODEL_LOAD)
             VintageFix.LOGGER.info("Loading model {}", location);
