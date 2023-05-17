@@ -65,7 +65,7 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
             VintageFix.LOGGER.info("Loading model {}", location);
 
         // Check if a custom loader accepts the model
-        ResourceLocation actualLocation = getActualLocation(location);
+        ResourceLocation actualLocation = ModelLoaderRegistry.getActualLocation(location);
         ICustomModelLoader accepted = null;
         for (ICustomModelLoader loader : loaders) {
             try {
@@ -102,20 +102,6 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
         }
 
         return model;
-    }
-
-    private ResourceLocation getActualLocation(ResourceLocation location) {
-        if (location instanceof ModelResourceLocation) {
-            return location;
-        }
-
-        if (location.getPath().startsWith("builtin/") ||
-            location.getPath().startsWith("block/builtin/") ||
-            location.getPath().startsWith("item/builtin/")) { // TODO: why is this necessary
-            return location;
-        }
-
-        return new ResourceLocation(location.getNamespace(), "models/" + location.getPath());
     }
 
     @Override

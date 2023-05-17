@@ -6,7 +6,9 @@ import com.google.common.collect.ImmutableMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.client.resources.IResource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.IRegistry;
@@ -98,19 +100,24 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
                     }
                 }
 
-                return model.bake(model.getDefaultState(), DefaultVertexFormats.ITEM, ModelLoader.defaultTextureGetter());
+                return bakeAndCheckTextures(model, DefaultVertexFormats.ITEM);
             }
 
             IModel model = modelProvider.getObject(location);
-            return model.bake(model.getDefaultState(), DefaultVertexFormats.BLOCK, ModelLoader.defaultTextureGetter());
+            return bakeAndCheckTextures(model, DefaultVertexFormats.BLOCK);
         } catch (Throwable t) {
-            if(ModelLocationInformation.DEBUG_MODEL_LOAD && !ExceptionHelper.isTypeInStackTrace(t, FileNotFoundException.class))
+            if(ModelLocationInformation.DEBUG_MODEL_LOAD)
                 LOGGER.error("Error occured while loading model {}", location, t);
             else
                 LOGGER.error("Error occured while loading model {}", location);
         }
 
         return null;
+    }
+
+    private static IBakedModel bakeAndCheckTextures(IModel model, VertexFormat format) {
+        // TODO log when textures missing
+        return model.bake(model.getDefaultState(), format, ModelLoader.defaultTextureGetter());
     }
 
     @Override

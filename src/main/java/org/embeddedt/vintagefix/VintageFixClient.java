@@ -29,7 +29,7 @@ public class VintageFixClient {
         Deduplicator.registerReloadListener();
     }
 
-    private static final Pattern TEXTURE_MATCH_PATTERN = Pattern.compile("^/?assets/(.+?(?=/))/textures/((?:attachment|bettergrass|block.?|cape|item.?|entity/(bed|chest)|pipe|ropebridge)/.*)\\.png$");
+    private static final Pattern TEXTURE_MATCH_PATTERN = Pattern.compile("^/?assets/(.+?(?=/))/textures/((?:attachment|bettergrass|block.?|cape|item.?|entity/(bed|chest)|model.?|part.?|pipe|ropebridge)/.*)\\.png$");
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void collectTextures(TextureStitchEvent.Pre event) {
