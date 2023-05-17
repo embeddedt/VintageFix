@@ -135,6 +135,8 @@ public class MixinModelManager {
 
         // Get the default model, returned by getModel when the model provider returns null
         defaultModel = modelRegistry.getObject(new ModelResourceLocation("builtin/missing", "missing"));
+        if(defaultModel == null)
+            throw new AssertionError("Missing model is missing");
 
         // Register the universal bucket item
         if (FluidRegistry.isUniversalBucketEnabled()) {

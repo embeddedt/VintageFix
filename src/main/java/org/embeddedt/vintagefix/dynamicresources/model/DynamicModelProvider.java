@@ -82,7 +82,8 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
 
         // No custom loaders found, use vanilla loaders
         if (accepted == null) {
-            if (VARIANT_LOADER.accepts(actualLocation)) {
+            boolean isBuiltin = actualLocation.getPath().startsWith("builtin/") || actualLocation.getPath().startsWith("block/builtin/") || actualLocation.getPath().startsWith("item/builtin/");
+            if (!isBuiltin && VARIANT_LOADER.accepts(actualLocation)) {
                 accepted = VARIANT_LOADER;
             } else if (VANILLA_LOADER.accepts(actualLocation)) {
                 accepted = VANILLA_LOADER;
