@@ -54,15 +54,11 @@ public class VintageFixClient {
         for(IResourcePack pack : resourcePacks) {
             try {
                 Collection<String> paths = ResourcePackHelper.getAllPaths(pack, s -> true);
-                List<ResourceLocation> locations = paths.stream().flatMap(str -> {
-                    Matcher matcher = TEXTURE_MATCH_PATTERN.matcher(str);
+                for(String path : paths) {
+                    Matcher matcher = TEXTURE_MATCH_PATTERN.matcher(path);
                     if(matcher.matches()) {
-                        return Stream.of(new ResourceLocation(matcher.group(1), matcher.group(2)));
-                    } else
-                        return Stream.of();
-                }).collect(Collectors.toList());
-                for(ResourceLocation texLoc : locations) {
-                    map.registerSprite(texLoc);
+                        map.registerSprite(new ResourceLocation(matcher.group(1), matcher.group(2)));
+                    }
                 }
             } catch(IOException e) {
                 VintageFix.LOGGER.error("Error listing resources", e);
