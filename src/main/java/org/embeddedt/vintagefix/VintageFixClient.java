@@ -10,9 +10,12 @@ import net.minecraft.client.resources.SimpleReloadableResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ColorHandlerEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import org.embeddedt.vintagefix.dynamicresources.CTMHelper;
 import org.embeddedt.vintagefix.dynamicresources.ResourcePackHelper;
 import org.embeddedt.vintagefix.impl.Deduplicator;
 
@@ -24,6 +27,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class VintageFixClient {
+    public VintageFixClient() {
+        if(Loader.isModLoaded("ctm")) {
+            MinecraftForge.EVENT_BUS.register(CTMHelper.class);
+        }
+    }
     @SubscribeEvent
     public void registerListener(ColorHandlerEvent.Block event) {
         Deduplicator.registerReloadListener();

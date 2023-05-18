@@ -15,8 +15,10 @@ import net.minecraft.util.registry.IRegistry;
 import net.minecraft.util.registry.RegistrySimple;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.common.MinecraftForge;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.embeddedt.vintagefix.event.DynamicModelBakeEvent;
 import org.embeddedt.vintagefix.util.ExceptionHelper;
 
 import javax.annotation.Nullable;
@@ -100,11 +102,11 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
                     }
                 }
 
-                return bakeAndCheckTextures(model, DefaultVertexFormats.ITEM);
+                return bakeAndCheckTextures(location, model, DefaultVertexFormats.ITEM);
             }
 
             IModel model = modelProvider.getObject(location);
-            return bakeAndCheckTextures(model, DefaultVertexFormats.BLOCK);
+            return bakeAndCheckTextures(location, model, DefaultVertexFormats.BLOCK);
         } catch (Throwable t) {
             if(ModelLocationInformation.DEBUG_MODEL_LOAD)
                 LOGGER.error("Error occured while loading model {}", location, t);
@@ -115,9 +117,14 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
         return null;
     }
 
-    private static IBakedModel bakeAndCheckTextures(IModel model, VertexFormat format) {
+    private static IBakedModel bakeAndCheckTextures(ResourceLocation location, IModel model, VertexFormat format) {
         // TODO log when textures missing
-        return model.bake(model.getDefaultState(), format, ModelLoader.defaultTextureGetter());
+        IBakedModel bakedModel = model.bake(model.getDefaultState(), format, ModelLoader.defaultTextureGetter());
+        DynamicModelBakeEvent event = new DynamicModelBakeEvent(location, model, bakedModel);
+        synchronized (DynamicBakedModelProvider.class) {
+            MinecraftForge.EVENT_BUS.post(event);
+        }
+        return event.bakedModel;
     }
 
     @Override

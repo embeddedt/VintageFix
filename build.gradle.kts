@@ -92,6 +92,9 @@ repositories {
   maven {
     url = uri("https://cursemaven.com")
   }
+  maven {
+    url = uri("https://maven.tterrag.com/")
+  }
 }
 
 dependencies {
@@ -110,7 +113,8 @@ dependencies {
   implementation(rfg.deobf("slimeknights.mantle:Mantle:1.12-1.3.3.55+"))
   implementation(rfg.deobf("slimeknights:TConstruct:1.12.2-2.13.0.183+"))
   implementation(rfg.deobf("curse.maven:applied-energistics-2-223794:2747063"))
-
+  implementation(rfg.deobf("team.chisel.ctm:CTM:MC1.12.2-1.0.2.31"))
+  implementation(rfg.deobf("team.chisel:Chisel:MC1.12.2-1.0.1.44"))
 }
 
 val main by sourceSets.getting // created by ForgeGradle
