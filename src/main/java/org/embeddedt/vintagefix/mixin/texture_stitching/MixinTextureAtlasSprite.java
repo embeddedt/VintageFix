@@ -43,7 +43,6 @@ public class MixinTextureAtlasSprite {
         if(image != null)
             return image;
         else {
-            System.out.println("miss for " + resource.getResourceLocation());
             return TextureUtil.readBufferedImage(stream);
         }
     }
