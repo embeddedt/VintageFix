@@ -63,10 +63,10 @@ public class MixinModelManager {
         }
         // Generate information about model locations, such as the blockstate location to block map
         // and the item variant to model location map.
-        ModelLocationInformation.init(modelProvider.getBlockStateMapper());
 
-        // construct this to satisfy CCL
-        new ModelLoader(resourceManager, texMap, modelProvider);
+        ModelLoader loader = new ModelLoader(resourceManager, texMap, modelProvider);
+        ModelLocationInformation.init(loader, modelProvider.getBlockStateMapper());
+
 
         // Get custom loaders
         Set<ICustomModelLoader> loaders;
