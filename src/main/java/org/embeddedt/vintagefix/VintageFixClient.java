@@ -23,11 +23,10 @@ import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class VintageFixClient {
     public VintageFixClient() {
+        ObfuscationReflectionHelper.setPrivateValue(Minecraft.class, Minecraft.getMinecraft(), new byte[0], "field_71444_a");
         if(Loader.isModLoaded("ctm")) {
             MinecraftForge.EVENT_BUS.register(CTMHelper.class);
         }
