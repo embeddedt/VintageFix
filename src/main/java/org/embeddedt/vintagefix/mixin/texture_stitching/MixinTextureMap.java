@@ -1,33 +1,27 @@
 package org.embeddedt.vintagefix.mixin.texture_stitching;
 
+import com.google.common.base.Stopwatch;
 import net.minecraft.client.renderer.texture.PngSizeInfo;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
-import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.client.resources.IResource;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.resources.data.IMetadataSection;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.ProgressManager;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
 import org.embeddedt.vintagefix.VintageFix;
-import org.embeddedt.vintagefix.stitcher.TextureCache;
-import org.embeddedt.vintagefix.stitcher.WrongDimensionException;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Queue;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.LockSupport;
@@ -43,6 +37,8 @@ public abstract class MixinTextureMap {
     @Shadow
     @Final
     private String basePath;
+    @Shadow
+    private int mipmapLevels;
     private static final String TEXTURE_LOADER_CORE = "loadTexture(Lnet/minecraft/client/renderer/texture/Stitcher;Lnet/minecraft/client/resources/IResourceManager;Lnet/minecraft/util/ResourceLocation;Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;Lnet/minecraftforge/fml/common/ProgressManager$ProgressBar;II)I";
 
     private static final IResource EMPTY_META_RESOURCE = new IResource() {
@@ -112,36 +108,52 @@ public abstract class MixinTextureMap {
     @Inject(method = "loadTextureAtlas", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/fml/common/ProgressManager;push(Ljava/lang/String;I)Lnet/minecraftforge/fml/common/ProgressManager$ProgressBar;"))
     private void preloadTextures(IResourceManager resourceManager, CallbackInfo ci) {
         /* parallel texture load go brr */
+        Stopwatch watch = Stopwatch.createStarted();
         loadedCount.set(0);
         int numSubmittedSprites = 0;
         for(Map.Entry<String, TextureAtlasSprite> entry : mapRegisteredSprites.entrySet()) {
-            TEXTURE_LOADER_POOL.execute(() -> {
-                try {
-                    ResourceLocation fileLocation = this.getResourceLocation(entry.getValue());
-                    if(!entry.getValue().hasCustomLoader(resourceManager, fileLocation)) {
+            TextureAtlasSprite sprite = entry.getValue();
+            if(sprite != null && sprite.getClass() == TextureAtlasSprite.class) {
+                TEXTURE_LOADER_POOL.execute(() -> {
+                    try {
+                        sprite.loadSprite(null, false);
+                        ResourceLocation fileLocation = this.getResourceLocation(sprite);
                         try(IResource resource = resourceManager.getResource(fileLocation)) {
-                            BufferedImage image = TextureUtil.readBufferedImage(resource.getInputStream());
-                            TextureCache.textureLoadingCache.put(fileLocation, image);
+                            sprite.loadSpriteFrames(resource, this.mipmapLevels + 1);
                         }
+                        sprite.generateMipmaps(this.mipmapLevels);
+                    } catch(IOException | RuntimeException e) {
+                        /* reset sprite state */
+                        try { sprite.loadSprite(null, false); } catch(IOException ignored) {}
+                    } finally {
+                        loadedCount.incrementAndGet();
                     }
-                } catch(IOException | RuntimeException ignored) {
-                } finally {
-                    loadedCount.incrementAndGet();
-                }
-            });
-            numSubmittedSprites++;
+                });
+                numSubmittedSprites++;
+            }
         }
         ProgressManager.ProgressBar bar = ProgressManager.push("Texture preloading", 1);
         long timeToBlock = TimeUnit.MILLISECONDS.toNanos(30);
         while(loadedCount.get() < numSubmittedSprites) {
             LockSupport.parkNanos(timeToBlock);
         }
+        watch.stop();
+        VintageFix.LOGGER.info("Preloaded {} sprites in {}", numSubmittedSprites, watch);
         bar.step("done");
         ProgressManager.pop(bar);
     }
 
-    @Inject(method = "loadTextureAtlas", at = @At("RETURN"))
-    private void clearAtlasCache(IResourceManager manager, CallbackInfo ci) {
-        TextureCache.textureLoadingCache.clear();
+    @Redirect(method = TEXTURE_LOADER_CORE, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;loadSprite(Lnet/minecraft/client/renderer/texture/PngSizeInfo;Z)V"))
+    private void skipResetSprite(TextureAtlasSprite sprite, PngSizeInfo info, boolean flag) throws IOException {
+        if(sprite.getClass() != TextureAtlasSprite.class || sprite.getFrameCount() == 0)
+            sprite.loadSprite(info, flag);
+    }
+
+    @Inject(method = "generateMipmaps", at = @At("HEAD"), cancellable = true)
+    private void skipPreloadedSprite(IResourceManager manager, TextureAtlasSprite sprite, CallbackInfoReturnable<Boolean> cir) {
+        if(sprite.getClass() == TextureAtlasSprite.class && sprite.getFrameCount() > 0) {
+            /* handled by preloader already */
+            cir.setReturnValue(true);
+        }
     }
 }

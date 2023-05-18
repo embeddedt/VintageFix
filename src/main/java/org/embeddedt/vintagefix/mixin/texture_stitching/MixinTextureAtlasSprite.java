@@ -5,7 +5,6 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.client.resources.IResource;
 import net.minecraft.client.resources.data.AnimationMetadataSection;
-import org.embeddedt.vintagefix.stitcher.TextureCache;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -15,9 +14,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Optional;
 
 @Mixin(TextureAtlasSprite.class)
 public class MixinTextureAtlasSprite {
@@ -34,16 +30,6 @@ public class MixinTextureAtlasSprite {
             this.width = 16;
             this.height = 16;
             ci.cancel();
-        }
-    }
-
-    @Redirect(method = "loadSpriteFrames", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/TextureUtil;readBufferedImage(Ljava/io/InputStream;)Ljava/awt/image/BufferedImage;"))
-    private BufferedImage useCachedImage(InputStream stream, IResource resource) throws IOException {
-        BufferedImage image = TextureCache.textureLoadingCache.get(resource.getResourceLocation());
-        if(image != null)
-            return image;
-        else {
-            return TextureUtil.readBufferedImage(stream);
         }
     }
 
