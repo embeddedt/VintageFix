@@ -33,7 +33,7 @@ public class MixinConfigPlugin implements IMixinConfigPlugin {
     public List<String> getMixins() {
         MixinEnvironment.Phase phase = MixinEnvironment.getCurrentEnvironment().getPhase();
         if(phase == MixinEnvironment.Phase.DEFAULT) {
-            TransformerCache.instance.init();
+            //TransformerCache.instance.init();
         }
         return null;
     }
