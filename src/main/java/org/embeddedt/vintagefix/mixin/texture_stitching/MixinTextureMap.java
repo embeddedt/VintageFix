@@ -1,6 +1,9 @@
 package org.embeddedt.vintagefix.mixin.texture_stitching;
 
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.client.renderer.texture.PngSizeInfo;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
@@ -107,17 +110,29 @@ public abstract class MixinTextureMap {
 
     private static final AtomicInteger loadedCount = new AtomicInteger(0);
 
+    private static final Set<Class<?>> SAFE_CLASSES;
+
+    static {
+        ImmutableSet.Builder<Class<?>> builder = ImmutableSet.builder();
+        for(String clzName : ImmutableList.of("net.minecraft.client.renderer.texture.TextureAtlasSprite")) {
+            try {
+                builder.add(Class.forName(clzName));
+            } catch(ClassNotFoundException ignored) {}
+        }
+        SAFE_CLASSES = builder.build();
+    }
+
     @Inject(method = "loadTextureAtlas", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/fml/common/ProgressManager;push(Ljava/lang/String;I)Lnet/minecraftforge/fml/common/ProgressManager$ProgressBar;"))
     private void preloadTextures(IResourceManager resourceManager, CallbackInfo ci) {
         /* parallel texture load go brr */
         Stopwatch watch = Stopwatch.createStarted();
         loadedCount.set(0);
         int numSubmittedSprites = 0;
-        Set<Class<?>> invalidClasses = new HashSet<>();
+        Object2IntOpenHashMap<Class<?>> invalidClasses = new Object2IntOpenHashMap<>();
         for(Map.Entry<String, TextureAtlasSprite> entry : mapRegisteredSprites.entrySet()) {
             TextureAtlasSprite sprite = entry.getValue();
             if(sprite != null) {
-                if(sprite.getClass() == TextureAtlasSprite.class) {
+                if(SAFE_CLASSES.contains(sprite.getClass())) {
                     TEXTURE_LOADER_POOL.execute(() -> {
                         try {
                             sprite.loadSprite(null, false);
@@ -135,12 +150,14 @@ public abstract class MixinTextureMap {
                     });
                     numSubmittedSprites++;
                 } else {
-                    if(invalidClasses.add(sprite.getClass())) {
-                        VintageFix.LOGGER.warn("Can't preload sprite class {}", sprite.getClass().getName());
-                    }
+                    invalidClasses.compute(sprite.getClass(), (k, v) -> v == null ? 1 : (v + 1));
                 }
             }
         }
+        int totalRegisteredSprites = mapRegisteredSprites.size();
+        invalidClasses.forEach((clz, i) -> {
+            VintageFix.LOGGER.warn("Can't preload sprite class {} (seen {}/{}times)", clz.getName(), i, totalRegisteredSprites);
+        });
         ProgressManager.ProgressBar bar = ProgressManager.push("Texture preloading", 1);
         long timeToBlock = TimeUnit.MILLISECONDS.toNanos(30);
         while(loadedCount.get() < numSubmittedSprites) {
