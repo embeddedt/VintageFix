@@ -15,6 +15,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.embeddedt.vintagefix.VintageFix;
 import org.embeddedt.vintagefix.event.DynamicModelBakeEvent;
 import team.chisel.ctm.api.model.IModelCTM;
+import team.chisel.ctm.client.model.AbstractCTMBakedModel;
 import team.chisel.ctm.client.model.parsing.ModelLoaderCTM;
 import team.chisel.ctm.client.texture.IMetadataSectionCTM;
 import team.chisel.ctm.client.util.ResourceUtil;
@@ -55,7 +56,9 @@ public class CTMHelper {
             return;
         ModelResourceLocation mrl = (ModelResourceLocation)event.location;
         IModel rootModel = event.unbakedModel;
-        if (rootModel != null && !(rootModel instanceof IModelCTM) && !ModelLoaderCTM.parsedLocations.contains(mrl)) {
+        if (rootModel != null) {
+            if(event.bakedModel instanceof AbstractCTMBakedModel || event.bakedModel.isBuiltInRenderer())
+                return;
             Deque<ResourceLocation> dependencies = new ArrayDeque<>();
             Set<ResourceLocation> seenModels = new HashSet<>();
             dependencies.push(mrl);
