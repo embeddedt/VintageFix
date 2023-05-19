@@ -36,7 +36,7 @@ public abstract class MixinFileResourcePack {
         Enumeration<? extends ZipEntry> entryEnum = zf.entries();
         while(entryEnum.hasMoreElements()) {
             ZipEntry entry = entryEnum.nextElement();
-            if(entry.getName().startsWith("assets/"))
+            if(entry.getName().startsWith("assets/") || entry.getName().indexOf('/') == -1)
                 containedPaths.put(new CachedResourcePath(entry.getName(), true), entry);
         }
         containedPaths.trim();
