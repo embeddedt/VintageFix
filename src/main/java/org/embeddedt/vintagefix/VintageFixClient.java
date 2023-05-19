@@ -74,7 +74,6 @@ public class VintageFixClient {
             Path base = gameDirPath.resolve(gameFolder);
             try(Stream<Path> stream = Files.walk(base)) {
                 stream.map(base::relativize).map(path -> "assets/" + path).forEach(p -> {
-                    System.out.println(p);
                     Matcher matcher = TEXTURE_MATCH_PATTERN.matcher(p);
                     if(matcher.matches()) {
                         map.registerSprite(new ResourceLocation(matcher.group(1), matcher.group(2)));

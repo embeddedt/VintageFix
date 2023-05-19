@@ -21,7 +21,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.LockSupport;
@@ -111,25 +113,32 @@ public abstract class MixinTextureMap {
         Stopwatch watch = Stopwatch.createStarted();
         loadedCount.set(0);
         int numSubmittedSprites = 0;
+        Set<Class<?>> invalidClasses = new HashSet<>();
         for(Map.Entry<String, TextureAtlasSprite> entry : mapRegisteredSprites.entrySet()) {
             TextureAtlasSprite sprite = entry.getValue();
-            if(sprite != null && sprite.getClass() == TextureAtlasSprite.class) {
-                TEXTURE_LOADER_POOL.execute(() -> {
-                    try {
-                        sprite.loadSprite(null, false);
-                        ResourceLocation fileLocation = this.getResourceLocation(sprite);
-                        try(IResource resource = resourceManager.getResource(fileLocation)) {
-                            sprite.loadSpriteFrames(resource, this.mipmapLevels + 1);
+            if(sprite != null) {
+                if(sprite.getClass() == TextureAtlasSprite.class) {
+                    TEXTURE_LOADER_POOL.execute(() -> {
+                        try {
+                            sprite.loadSprite(null, false);
+                            ResourceLocation fileLocation = this.getResourceLocation(sprite);
+                            try(IResource resource = resourceManager.getResource(fileLocation)) {
+                                sprite.loadSpriteFrames(resource, this.mipmapLevels + 1);
+                            }
+                            sprite.generateMipmaps(this.mipmapLevels);
+                        } catch(IOException | RuntimeException e) {
+                            /* reset sprite state */
+                            try { sprite.loadSprite(null, false); } catch(IOException ignored) {}
+                        } finally {
+                            loadedCount.incrementAndGet();
                         }
-                        sprite.generateMipmaps(this.mipmapLevels);
-                    } catch(IOException | RuntimeException e) {
-                        /* reset sprite state */
-                        try { sprite.loadSprite(null, false); } catch(IOException ignored) {}
-                    } finally {
-                        loadedCount.incrementAndGet();
+                    });
+                    numSubmittedSprites++;
+                } else {
+                    if(invalidClasses.add(sprite.getClass())) {
+                        VintageFix.LOGGER.warn("Can't preload sprite class {}", sprite.getClass().getName());
                     }
-                });
-                numSubmittedSprites++;
+                }
             }
         }
         ProgressManager.ProgressBar bar = ProgressManager.push("Texture preloading", 1);
