@@ -19,10 +19,14 @@ import org.embeddedt.vintagefix.dynamicresources.CTMHelper;
 import org.embeddedt.vintagefix.dynamicresources.ResourcePackHelper;
 import org.embeddedt.vintagefix.impl.Deduplicator;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 public class VintageFixClient {
     public VintageFixClient() {
@@ -36,7 +40,7 @@ public class VintageFixClient {
         Deduplicator.registerReloadListener();
     }
 
-    private static final Pattern TEXTURE_MATCH_PATTERN = Pattern.compile("^/?assets/(.+?(?=/))/textures/((?:attachment|bettergrass|block.?|cape|item.?|entity/(bed|chest)|model.?|part.?|pipe|ropebridge)/.*)\\.png$");
+    private static final Pattern TEXTURE_MATCH_PATTERN = Pattern.compile("^/?assets/(.+?(?=/))/textures/((?:attachment|bettergrass|block.?|cape|item.?|entity/(bed|chest)|model.?|part.?|pipe|ropebridge|solid_block)/.*)\\.png$");
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void collectTextures(TextureStitchEvent.Pre event) {
@@ -59,6 +63,23 @@ public class VintageFixClient {
                         map.registerSprite(new ResourceLocation(matcher.group(1), matcher.group(2)));
                     }
                 }
+            } catch(IOException e) {
+                VintageFix.LOGGER.error("Error listing resources", e);
+            }
+        }
+        String[] gameFolders = new String[] { "resources" };
+        Path gameDirPath = Minecraft.getMinecraft().gameDir.toPath();
+        for(String gameFolder : gameFolders) {
+            Path base = gameDirPath.resolve(gameFolder);
+            try(Stream<Path> stream = Files.walk(base)) {
+                stream.map(base::relativize).map(path -> "assets/" + path).forEach(p -> {
+                    System.out.println(p);
+                    Matcher matcher = TEXTURE_MATCH_PATTERN.matcher(p);
+                    if(matcher.matches()) {
+                        map.registerSprite(new ResourceLocation(matcher.group(1), matcher.group(2)));
+                    }
+                });
+            } catch(FileNotFoundException ignored) {
             } catch(IOException e) {
                 VintageFix.LOGGER.error("Error listing resources", e);
             }
