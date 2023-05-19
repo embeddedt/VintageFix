@@ -11,6 +11,7 @@ import net.minecraft.client.resources.IResource;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.resources.data.IMetadataSection;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.ProgressManager;
 import org.apache.logging.log4j.Logger;
 import org.embeddedt.vintagefix.VintageFix;
@@ -132,7 +133,7 @@ public abstract class MixinTextureMap {
         for(Map.Entry<String, TextureAtlasSprite> entry : mapRegisteredSprites.entrySet()) {
             TextureAtlasSprite sprite = entry.getValue();
             if(sprite != null) {
-                if(SAFE_CLASSES.contains(sprite.getClass())) {
+                if(!FMLClientHandler.instance().hasError() && SAFE_CLASSES.contains(sprite.getClass())) {
                     TEXTURE_LOADER_POOL.execute(() -> {
                         try {
                             sprite.loadSprite(null, false);
