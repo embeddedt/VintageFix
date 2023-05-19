@@ -2,7 +2,9 @@ package org.embeddedt.vintagefix.core;
 
 import com.google.common.collect.ImmutableList;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
+import org.embeddedt.vintagefix.transformercache.TransformerCache;
 import org.embeddedt.vintagefix.util.DummyList;
+import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.injection.struct.InjectorGroupInfo;
 import zone.rong.mixinbooter.IEarlyMixinLoader;
 
@@ -32,7 +34,6 @@ public class VintageFixCore implements IFMLLoadingPlugin, IEarlyMixinLoader {
 
     @Override
     public void injectData(Map<String, Object> data) {
-
     }
 
     @Override

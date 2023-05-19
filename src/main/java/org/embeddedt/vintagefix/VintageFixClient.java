@@ -22,6 +22,7 @@ import org.embeddedt.vintagefix.impl.Deduplicator;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -79,7 +80,7 @@ public class VintageFixClient {
                         map.registerSprite(new ResourceLocation(matcher.group(1), matcher.group(2)));
                     }
                 });
-            } catch(FileNotFoundException ignored) {
+            } catch(FileNotFoundException | NoSuchFileException ignored) {
             } catch(IOException e) {
                 VintageFix.LOGGER.error("Error listing resources", e);
             }

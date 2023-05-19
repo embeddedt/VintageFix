@@ -1,5 +1,6 @@
 package org.embeddedt.vintagefix;
 
+import net.minecraft.launchwrapper.Launch;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
@@ -8,10 +9,16 @@ import net.minecraftforge.fml.relauncher.Side;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.File;
+
 @Mod(modid = "vintagefix", name = "VintageFix", version = Tags.VERSION)
 public class VintageFix {
 
     public static final Logger LOGGER = LogManager.getLogger("VintageFix");
+
+    public static final File MY_DIR = new File(Launch.minecraftHome, "vintagefix");
+    public static final File OUT_DIR = new File(MY_DIR, "out");
+    public static final File CACHE_DIR = new File(MY_DIR, "transformerCache");
 
     @Mod.EventHandler
     @SuppressWarnings("unused")

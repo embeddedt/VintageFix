@@ -77,6 +77,16 @@ listOf(configurations.runtimeClasspath, configurations.testRuntimeClasspath).for
   }
 }
 
+val embed: Configuration by configurations.creating {
+  description = "Included in output JAR"
+}
+
+listOf(configurations.implementation).forEach {
+  it.configure {
+    extendsFrom(embed)
+  }
+}
+
 // Add an access tranformer
 // tasks.deobfuscateMergedJarToSrg.configure {accessTransformerFiles.from("src/main/resources/META-INF/mymod_at.cfg")}
 
@@ -117,6 +127,7 @@ dependencies {
   //implementation(rfg.deobf("team.chisel:Chisel:MC1.12.2-1.0.1.44"))
   implementation(rfg.deobf("curse.maven:codechicken-lib-1-8-242818:2779848"))
   implementation(rfg.deobf("curse.maven:avaritia-261348:3143349"))
+  embed("com.esotericsoftware:kryo:5.1.1")
 }
 
 val main by sourceSets.getting // created by ForgeGradle
@@ -176,6 +187,7 @@ tasks.named<Jar>("jar") {
       }
   }
   from(googleimpl.output)
+  from(embed.map { if (it.isDirectory) it else zipTree(it) })
 }
 
 
