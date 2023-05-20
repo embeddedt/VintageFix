@@ -1,11 +1,7 @@
 package org.embeddedt.vintagefix;
 
 import com.google.common.base.Stopwatch;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.resources.FallbackResourceManager;
 import net.minecraft.client.resources.IResourcePack;
@@ -28,7 +24,6 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -91,26 +86,4 @@ public class VintageFixClient {
         watch.stop();
         VintageFix.LOGGER.info("Texture search took {}", watch);
     }
-
-    @SubscribeEvent(priority = EventPriority.HIGHEST)
-    public void clearTextures(TextureStitchEvent.Post event) {
-        /* aggressively clear framesTextureData using canonicalized empty textures */
-        ArrayList<int[][]> backingArrayList = new ArrayList<>();
-        int requiredSize = Minecraft.getMinecraft().gameSettings.mipmapLevels + 1;
-        int largestArea = 0;
-        Map<String, TextureAtlasSprite> registeredSprites = ObfuscationReflectionHelper.getPrivateValue(TextureMap.class, event.getMap(), "field_110574_e");
-        int clearedSprites = 0;
-        for(TextureAtlasSprite sprite : registeredSprites.values()) {
-            if(sprite.getClass() == TextureAtlasSprite.class && !sprite.hasAnimationMetadata()) {
-                largestArea = Math.max(largestArea, sprite.getIconWidth() * sprite.getIconHeight());
-                sprite.setFramesTextureData(backingArrayList);
-                clearedSprites++;
-            }
-        }
-        /* mods will see a blank texture if they retrieve between now and when LoliASM takes over */
-        int[][] theArray = new int[requiredSize][largestArea];
-        backingArrayList.add(theArray);
-        VintageFix.LOGGER.info("Cleared {} sprites", clearedSprites);
-    }
-
 }
