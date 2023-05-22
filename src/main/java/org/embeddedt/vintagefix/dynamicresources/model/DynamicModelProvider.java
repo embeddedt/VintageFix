@@ -2,6 +2,7 @@ package org.embeddedt.vintagefix.dynamicresources.model;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.IRegistry;
@@ -22,7 +23,7 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
     public static DynamicModelProvider instance;
 
     private final Set<ICustomModelLoader> loaders;
-    private final Map<ResourceLocation, IModel> permanentlyLoadedModels = new HashMap<>();
+    private final Map<ResourceLocation, IModel> permanentlyLoadedModels = new Object2ObjectOpenHashMap<>();
     private final Cache<ResourceLocation, Optional<IModel>> loadedModels =
             CacheBuilder.newBuilder()
                         .expireAfterAccess(3, TimeUnit.MINUTES)

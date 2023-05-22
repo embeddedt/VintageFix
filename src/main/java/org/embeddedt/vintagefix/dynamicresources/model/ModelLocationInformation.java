@@ -1,27 +1,25 @@
 package org.embeddedt.vintagefix.dynamicresources.model;
 
-import com.google.common.collect.Lists;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.block.model.ModelBakery;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.block.statemap.BlockStateMapper;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
-import net.minecraftforge.registries.IRegistryDelegate;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public class ModelLocationInformation {
     public static final boolean DEBUG_MODEL_LOAD = Boolean.getBoolean("vintagefix.debugDynamicModelLoading");
-    private static Map<Item, List<String>> variantNames = new HashMap<>();
-    private static HashMap<ModelResourceLocation, ResourceLocation> inventoryVariantLocations = new HashMap<>();
-    private static HashMap<ResourceLocation, Block> blockstateLocationToBlock = new HashMap<>();
+    private static Map<Item, List<String>> variantNames;
+    private static final Map<ModelResourceLocation, ResourceLocation> inventoryVariantLocations = new Object2ObjectOpenHashMap<>();
+    private static final Map<ResourceLocation, Block> blockstateLocationToBlock = new Object2ObjectOpenHashMap<>();
 
     public static void init(ModelLoader loader, BlockStateMapper blockStateMapper) {
         Method method = ObfuscationReflectionHelper.findMethod(ModelBakery.class, "func_177592_e", Void.TYPE);
@@ -31,6 +29,9 @@ public class ModelLocationInformation {
         } catch(ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
+
+        inventoryVariantLocations.clear();
+        blockstateLocationToBlock.clear();
 
         // Make inventory variant -> location map
         for (Item item : Item.REGISTRY) {

@@ -3,6 +3,7 @@ package org.embeddedt.vintagefix.dynamicresources.model;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -32,7 +33,7 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
     public static DynamicBakedModelProvider instance;
 
     private final IRegistry<ResourceLocation, IModel> modelProvider;
-    private final Map<ModelResourceLocation, IBakedModel> permanentlyLoadedBakedModels = new HashMap<>();
+    private final Map<ModelResourceLocation, IBakedModel> permanentlyLoadedBakedModels = new Object2ObjectOpenHashMap<>();
     private final Cache<ModelResourceLocation, Optional<IBakedModel>> loadedBakedModels =
             CacheBuilder.newBuilder()
                         .expireAfterAccess(3, TimeUnit.MINUTES)
