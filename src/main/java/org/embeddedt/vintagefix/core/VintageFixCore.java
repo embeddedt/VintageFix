@@ -13,7 +13,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 
-@IFMLLoadingPlugin.Name("MartensiteCore")
+@IFMLLoadingPlugin.Name("VintageFix")
 @IFMLLoadingPlugin.MCVersion("1.12.2")
 public class VintageFixCore implements IFMLLoadingPlugin, IEarlyMixinLoader {
     @Override
