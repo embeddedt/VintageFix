@@ -119,12 +119,12 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
 
     private static IBakedModel bakeAndCheckTextures(ResourceLocation location, IModel model, VertexFormat format) {
         // TODO log when textures missing
-        IBakedModel bakedModel = model.bake(model.getDefaultState(), format, ModelLoader.defaultTextureGetter());
-        DynamicModelBakeEvent event = new DynamicModelBakeEvent(location, model, bakedModel);
         synchronized (DynamicBakedModelProvider.class) {
+            IBakedModel bakedModel = model.bake(model.getDefaultState(), format, ModelLoader.defaultTextureGetter());
+            DynamicModelBakeEvent event = new DynamicModelBakeEvent(location, model, bakedModel);
             MinecraftForge.EVENT_BUS.post(event);
+            return event.bakedModel;
         }
-        return event.bakedModel;
     }
 
     @Override
