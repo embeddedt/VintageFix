@@ -41,6 +41,7 @@ minecraft {
 
   // Enable assertions in the mod's package when running the client or server
   extraRunJvmArguments.add("-ea:${project.group}")
+  extraRunJvmArguments.addAll("-Xmx350m", "-Xms350m")
 
   // If needed, add extra tweaker classes like for mixins.
   // extraTweakClasses.add("org.spongepowered.asm.launch.MixinTweaker")
