@@ -22,6 +22,7 @@
     "dynamicresources.client.MixinVanillaModelWrapper",
     "dynamicresources.client.MixinVariantLoader",
     "dynamicresources.client.MixinWeightedRandomModel",
+    "dynamicresources.client.MixinCTMCoreMethods",
     "resourcepacks.MixinDefaultResourcePack",
     "resourcepacks.MixinFileResourcePack",
     "resourcepacks.MixinResourceIndex",

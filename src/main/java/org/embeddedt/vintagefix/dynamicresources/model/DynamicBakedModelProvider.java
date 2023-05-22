@@ -61,6 +61,15 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
         }
     }
 
+    @Nullable
+    public IBakedModel getModelIfPresent(ModelResourceLocation location) {
+        Optional<IBakedModel> opt = loadedBakedModels.getIfPresent(location);
+        if(opt != null)
+            return opt.orElse(null);
+        else
+            return null;
+    }
+
     private static final Class<?> VANILLA_MODEL_WRAPPER;
 
     static {
