@@ -41,7 +41,7 @@ minecraft {
 
   // Enable assertions in the mod's package when running the client or server
   extraRunJvmArguments.add("-ea:${project.group}")
-  extraRunJvmArguments.addAll("-Xmx350m", "-Xms350m")
+  extraRunJvmArguments.addAll("-Xmx450m", "-Xms450m")
 
   // If needed, add extra tweaker classes like for mixins.
   // extraTweakClasses.add("org.spongepowered.asm.launch.MixinTweaker")
@@ -121,8 +121,8 @@ dependencies {
   annotationProcessor("com.google.code.gson:gson:2.8.6")
   annotationProcessor("org.spongepowered:mixin:0.8.3") {isTransitive = false}
 
-  //implementation(rfg.deobf("slimeknights.mantle:Mantle:1.12-1.3.3.55+"))
-  //implementation(rfg.deobf("slimeknights:TConstruct:1.12.2-2.13.0.183+"))
+  implementation(rfg.deobf("slimeknights.mantle:Mantle:1.12-1.3.3.55"))
+  implementation(rfg.deobf("slimeknights:TConstruct:1.12.2-2.13.0.183"))
   //implementation(rfg.deobf("curse.maven:applied-energistics-2-223794:2747063"))
   compileOnly(rfg.deobf("team.chisel.ctm:CTM:MC1.12.2-1.0.2.31"))
   //implementation(rfg.deobf("team.chisel:Chisel:MC1.12.2-1.0.1.44"))

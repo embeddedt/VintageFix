@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "org.embeddedt.vintagefix.mixin.late",
+  "refmap": "mixins.vintagefix.refmap.json",
+  "plugin": "org.embeddedt.vintagefix.core.MixinConfigPlugin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+  ],
+  "client": [
+    "BakedToolModelListMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
