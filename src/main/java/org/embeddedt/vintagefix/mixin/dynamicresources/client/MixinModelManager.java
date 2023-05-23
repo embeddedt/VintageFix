@@ -32,14 +32,12 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Mixin(ModelManager.class)
 public class MixinModelManager {
@@ -134,9 +132,10 @@ public class MixinModelManager {
         texMap.loadSprites(resourceManager, map -> textures.forEach(map::registerSprite));
 
         // Get the default model, returned by getModel when the model provider returns null
-        defaultModel = modelRegistry.getObject(new ModelResourceLocation("builtin/missing", "missing"));
+        defaultModel = modelRegistry.getObject(DynamicBakedModelProvider.MISSING_MODEL_LOCATION);
         if(defaultModel == null)
             throw new AssertionError("Missing model is missing");
+        DynamicBakedModelProvider.missingModel = defaultModel;
 
         // Register the universal bucket item
         if (FluidRegistry.isUniversalBucketEnabled()) {

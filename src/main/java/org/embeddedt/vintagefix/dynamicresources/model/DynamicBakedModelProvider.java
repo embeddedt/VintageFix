@@ -31,6 +31,8 @@ import java.util.concurrent.TimeUnit;
 public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocation, IBakedModel> {
     private static final Logger LOGGER = LogManager.getLogger();
     public static DynamicBakedModelProvider instance;
+    public static IBakedModel missingModel;
+    public static final ModelResourceLocation MISSING_MODEL_LOCATION = new ModelResourceLocation("builtin/missing", "missing");
 
     private final IRegistry<ResourceLocation, IModel> modelProvider;
     private final Map<ModelResourceLocation, IBakedModel> permanentlyLoadedBakedModels = new Object2ObjectOpenHashMap<>();
@@ -131,9 +133,12 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
         // TODO log when textures missing
         synchronized (DynamicBakedModelProvider.class) {
             IBakedModel bakedModel = model.bake(model.getDefaultState(), format, ModelLoader.defaultTextureGetter());
-            DynamicModelBakeEvent event = new DynamicModelBakeEvent(location, model, bakedModel);
-            MinecraftForge.EVENT_BUS.post(event);
-            return event.bakedModel;
+            if(!MISSING_MODEL_LOCATION.equals(location)) {
+                DynamicModelBakeEvent event = new DynamicModelBakeEvent(location, model, bakedModel);
+                MinecraftForge.EVENT_BUS.post(event);
+                return event.bakedModel;
+            } else
+                return bakedModel;
         }
     }
 

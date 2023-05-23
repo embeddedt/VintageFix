@@ -41,7 +41,7 @@ minecraft {
 
   // Enable assertions in the mod's package when running the client or server
   extraRunJvmArguments.add("-ea:${project.group}")
-  extraRunJvmArguments.addAll("-Xmx450m", "-Xms450m")
+  extraRunJvmArguments.addAll("-Xmx1024m", "-Xms1024m")
 
   // If needed, add extra tweaker classes like for mixins.
   // extraTweakClasses.add("org.spongepowered.asm.launch.MixinTweaker")
@@ -123,11 +123,11 @@ dependencies {
 
   implementation(rfg.deobf("slimeknights.mantle:Mantle:1.12-1.3.3.56"))
   implementation(rfg.deobf("slimeknights:TConstruct:1.12.2-2.13.0.180"))
-  //implementation(rfg.deobf("curse.maven:applied-energistics-2-223794:2747063"))
+  implementation(rfg.deobf("curse.maven:applied-energistics-2-223794:2747063"))
   compileOnly(rfg.deobf("team.chisel.ctm:CTM:MC1.12.2-1.0.2.31"))
   //implementation(rfg.deobf("team.chisel:Chisel:MC1.12.2-1.0.1.44"))
-  implementation(rfg.deobf("curse.maven:codechicken-lib-1-8-242818:2779848"))
-  implementation(rfg.deobf("curse.maven:avaritia-261348:3143349"))
+  //implementation(rfg.deobf("curse.maven:codechicken-lib-1-8-242818:2779848"))
+  //implementation(rfg.deobf("curse.maven:avaritia-261348:3143349"))
   compileOnly("org.reflections:reflections:0.9.10")
   compileOnly(rfg.deobf("curse.maven:unlimited-chisel-works-278493:3319307"))
   embed("com.esotericsoftware:kryo:5.1.1")

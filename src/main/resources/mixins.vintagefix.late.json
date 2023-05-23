@@ -10,7 +10,8 @@
   ],
   "client": [
     "BakedToolModelListMixin",
-    "ucw.MixinModelLoaderEarlyView"
+    "ucw.MixinModelLoaderEarlyView",
+    "ae2.AutoRotatingModelMixin"
   ],
   "injectors": {
     "defaultRequire": 1
