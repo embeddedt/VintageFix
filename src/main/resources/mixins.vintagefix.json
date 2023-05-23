@@ -6,6 +6,7 @@
   "plugin": "org.embeddedt.vintagefix.core.MixinConfigPlugin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
+    "fastmap.ExtendedStateImplementationMixin",
     "fastmap.FastMapStateHolderMixin",
     "dynstructures.MixinTemplateManager"
   ],
