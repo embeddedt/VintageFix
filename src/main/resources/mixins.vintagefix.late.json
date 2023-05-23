@@ -6,6 +6,7 @@
   "plugin": "org.embeddedt.vintagefix.core.MixinConfigPlugin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
+    "agricraft.ResourceHelperMixin"
   ],
   "client": [
     "BakedToolModelListMixin"
