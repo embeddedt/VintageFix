@@ -9,7 +9,8 @@
     "agricraft.ResourceHelperMixin"
   ],
   "client": [
-    "BakedToolModelListMixin"
+    "BakedToolModelListMixin",
+    "ucw.MixinModelLoaderEarlyView"
   ],
   "injectors": {
     "defaultRequire": 1

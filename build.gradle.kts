@@ -129,6 +129,7 @@ dependencies {
   implementation(rfg.deobf("curse.maven:codechicken-lib-1-8-242818:2779848"))
   implementation(rfg.deobf("curse.maven:avaritia-261348:3143349"))
   compileOnly("org.reflections:reflections:0.9.10")
+  compileOnly(rfg.deobf("curse.maven:unlimited-chisel-works-278493:3319307"))
   embed("com.esotericsoftware:kryo:5.1.1")
 }
 
