@@ -157,7 +157,7 @@ public abstract class MixinTextureMap {
         }
         int totalRegisteredSprites = mapRegisteredSprites.size();
         invalidClasses.forEach((clz, i) -> {
-            VintageFix.LOGGER.warn("Can't preload sprite class {} (seen {}/{}times)", clz.getName(), i, totalRegisteredSprites);
+            VintageFix.LOGGER.warn("Can't preload sprite class {} (seen {}/{} times)", clz.getName(), i, totalRegisteredSprites);
         });
         ProgressManager.ProgressBar bar = ProgressManager.push("Texture preloading", 1);
         long timeToBlock = TimeUnit.MILLISECONDS.toNanos(30);
