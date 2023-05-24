@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.IBakedModel;
+import net.minecraft.client.renderer.block.model.ModelBlock;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -16,6 +17,7 @@ import net.minecraft.util.registry.IRegistry;
 import net.minecraft.util.registry.RegistrySimple;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.common.MinecraftForge;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,6 +26,7 @@ import org.embeddedt.vintagefix.util.ExceptionHelper;
 
 import javax.annotation.Nullable;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -82,6 +85,8 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
         }
     }
 
+    private static final FileNotFoundException PARENT_MISSING_EXCEPTION = new FileNotFoundException("Failed to load model parent");
+
     private IBakedModel loadBakedModel(ModelResourceLocation location) {
 //        LOGGER.info("Loading baked model " + location);
 
@@ -96,13 +101,38 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
                 IModel model;
                 try {
                     model = modelProvider.getObject(inventoryVariantLocation);
+                    Optional<ModelBlock> vModel = model.asVanillaModel();
+                    if(vModel.isPresent() && vModel.get().getParentLocation() != null) {
+                        ModelBlock parent = vModel.get().parent;
+                        // TODO magic name
+                        if(parent == null || parent.name.equals("minecraft:builtin/missing"))
+                            throw PARENT_MISSING_EXCEPTION;
+                    }
                 } catch (Throwable t) {
-                    try (IResource ignored = Minecraft.getMinecraft().getResourceManager().getResource(inventoryVariantLocation)) {
-                        throw t;
-                    } catch (FileNotFoundException ignored) {
+                    boolean tryBlockState = false;
+                    // first check if this was triggered by FileNotFoundException
+                    Throwable potentialExc = t;
+                    while(potentialExc != null) {
+                        if(potentialExc instanceof FileNotFoundException) {
+                            tryBlockState = true;
+                            break;
+                        }
+                        potentialExc = potentialExc.getCause();
+                    }
+                    // if not, check if the item model even existed
+                    if(!tryBlockState) {
+                        try(IResource ignored = Minecraft.getMinecraft().getResourceManager().getResource(inventoryVariantLocation)) {
+                        } catch(IOException ignored) {
+                            // didn't exist, assume blockstate
+                            tryBlockState = true;
+                        }
+                    }
+                    if(tryBlockState) {
                         // load from blockstate json
                         ModelLocationInformation.addInventoryVariantLocation(location, location);
                         model = modelProvider.getObject(location);
+                    } else {
+                        throw t;
                     }
                 }
 
