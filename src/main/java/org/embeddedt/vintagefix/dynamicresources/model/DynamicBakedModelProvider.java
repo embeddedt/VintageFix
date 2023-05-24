@@ -104,9 +104,9 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
                     Optional<ModelBlock> vModel = model.asVanillaModel();
                     if(vModel.isPresent() && vModel.get().getParentLocation() != null) {
                         ModelBlock parent = vModel.get().parent;
-                        // TODO magic name
-                        if(parent == null || parent.name.equals("minecraft:builtin/missing"))
+                        if(parent == null || parent == ModelLoaderRegistry.getMissingModel().asVanillaModel().orElse(null)) {
                             throw PARENT_MISSING_EXCEPTION;
+                        }
                     }
                 } catch (Throwable t) {
                     boolean tryBlockState = false;
