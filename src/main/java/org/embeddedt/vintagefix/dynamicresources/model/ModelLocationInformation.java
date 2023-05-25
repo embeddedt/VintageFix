@@ -1,19 +1,32 @@
 package org.embeddedt.vintagefix.dynamicresources.model;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.Lists;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelBakery;
+import net.minecraft.client.renderer.block.model.ModelBlockDefinition;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.block.statemap.BlockStateMapper;
+import net.minecraft.client.resources.IResource;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 public class ModelLocationInformation {
     public static final boolean DEBUG_MODEL_LOAD = Boolean.getBoolean("vintagefix.debugDynamicModelLoading");
@@ -33,11 +46,28 @@ public class ModelLocationInformation {
         inventoryVariantLocations.clear();
         blockstateLocationToBlock.clear();
 
+        LoadingCache<ResourceLocation, Optional<ModelBlockDefinition>> mbdCache = CacheBuilder.newBuilder().maximumSize(100).build(new CacheLoader<ResourceLocation, Optional<ModelBlockDefinition>>() {
+            @Override
+            public Optional<ModelBlockDefinition> load(ResourceLocation key) throws Exception {
+                try {
+                    return Optional.of(ModelLocationInformation.loadModelBlockDefinition(key));
+                } catch(RuntimeException e) {
+                    return Optional.empty();
+                }
+            }
+        });
         // Make inventory variant -> location map
         for (Item item : Item.REGISTRY) {
             for (String s : getVariantNames(item)) {
                 ResourceLocation itemLocation = getItemLocation(s);
                 ModelResourceLocation inventoryVariant = getInventoryVariant(s);
+                Optional<ModelBlockDefinition> def;
+                try {
+                    def = mbdCache.get(new ResourceLocation(inventoryVariant.getNamespace(), inventoryVariant.getPath()));
+                    // we should not point to item/<path> for blockstates that do handle the inventory variant
+                    if(def.isPresent() && def.get().hasVariant(inventoryVariant.getVariant()))
+                        continue;
+                } catch(ExecutionException ignored) {}
                 inventoryVariantLocations.put(inventoryVariant, itemLocation);
             }
         }
@@ -83,4 +113,32 @@ public class ModelLocationInformation {
     public static Block getBlockFromBlockstateLocation(ResourceLocation blockstateLocation) {
         return blockstateLocationToBlock.get(blockstateLocation);
     }
+
+    public static ModelBlockDefinition loadModelBlockDefinition(ResourceLocation location) {
+        ResourceLocation blockstateLocation = new ResourceLocation(location.getNamespace(), "blockstates/" + location.getPath() + ".json");
+
+        List<ModelBlockDefinition> list = Lists.newArrayList();
+        try {
+            for (IResource resource : Minecraft.getMinecraft().getResourceManager().getAllResources(blockstateLocation)) {
+                list.add(loadModelBlockDefinition(location, resource));
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Encountered an exception when loading model definition of model " + blockstateLocation, e);
+        }
+
+        return new ModelBlockDefinition(list);
+    }
+
+    private static ModelBlockDefinition loadModelBlockDefinition(ResourceLocation location, IResource resource) {
+        ModelBlockDefinition definition;
+
+        try (InputStream is = resource.getInputStream()) {
+            definition = ModelBlockDefinition.parseFromReader(new InputStreamReader(is, StandardCharsets.UTF_8), location);
+        } catch (Exception exception) {
+            throw new RuntimeException("Encountered an exception when loading model definition of '" + location + "' from: '" + resource.getResourceLocation() + "' in resourcepack: '" + resource.getResourcePackName() + "'", exception);
+        }
+
+        return definition;
+    }
+
 }

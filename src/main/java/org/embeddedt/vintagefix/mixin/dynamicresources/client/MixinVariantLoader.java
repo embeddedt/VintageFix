@@ -96,36 +96,9 @@ public class MixinVariantLoader {
     private ModelBlockDefinition vfix$getModelBlockDefinition(ResourceLocation location) {
         ResourceLocation simpleLocation = new ResourceLocation(location.getNamespace(), location.getPath());
         try {
-            return modelBlockDefinitionCache.get(simpleLocation, () -> vfix$loadModelBlockDefinition(simpleLocation));
+            return modelBlockDefinitionCache.get(simpleLocation, () -> ModelLocationInformation.loadModelBlockDefinition(simpleLocation));
         } catch (ExecutionException e) {
             throw new RuntimeException(e.getCause());
         }
-    }
-
-    private ModelBlockDefinition vfix$loadModelBlockDefinition(ResourceLocation location) {
-        ResourceLocation blockstateLocation = new ResourceLocation(location.getNamespace(), "blockstates/" + location.getPath() + ".json");
-
-        List<ModelBlockDefinition> list = Lists.newArrayList();
-        try {
-            for (IResource resource : Minecraft.getMinecraft().getResourceManager().getAllResources(blockstateLocation)) {
-                list.add(vfix$loadModelBlockDefinition(location, resource));
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Encountered an exception when loading model definition of model " + blockstateLocation, e);
-        }
-
-        return new ModelBlockDefinition(list);
-    }
-
-    private ModelBlockDefinition vfix$loadModelBlockDefinition(ResourceLocation location, IResource resource) {
-        ModelBlockDefinition definition;
-
-        try (InputStream is = resource.getInputStream()) {
-            definition = ModelBlockDefinition.parseFromReader(new InputStreamReader(is, StandardCharsets.UTF_8), location);
-        } catch (Exception exception) {
-            throw new RuntimeException("Encountered an exception when loading model definition of '" + location + "' from: '" + resource.getResourceLocation() + "' in resourcepack: '" + resource.getResourcePackName() + "'", exception);
-        }
-
-        return definition;
     }
 }
