@@ -53,7 +53,7 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
     @Override
     public IModel getObject(ResourceLocation location) {
         try {
-            return loadedModels.get(location, () -> Optional.ofNullable(loadModel(location))).orElse(null);
+            return loadedModels.get(location, () -> Optional.ofNullable(loadModel(location, new LinkedHashSet<>()))).orElse(null);
         } catch (ExecutionException e) {
             throw new RuntimeException(e.getCause());
         }
@@ -61,13 +61,15 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
 
     private static final Map<ResourceLocation, IModel> MODEL_LOADER_REGISTRY_CACHE = ObfuscationReflectionHelper.getPrivateValue(ModelLoaderRegistry.class, null, "cache");
 
-    private IModel loadModel(ResourceLocation location) throws ModelLoaderRegistry.LoaderException {
-        ResourceLocation alias;
-        synchronized (sideChannelAliases) {
-            alias = sideChannelAliases.get(location);
+    private IModel loadModel(ResourceLocation location, Set<ResourceLocation> loadStack) throws ModelLoaderRegistry.LoaderException {
+        if(loadStack.add(location)) {
+            ResourceLocation alias;
+            synchronized (sideChannelAliases) {
+                alias = sideChannelAliases.get(location);
+            }
+            if(alias != null)
+                return loadModel(alias, loadStack);
         }
-        if(alias != null)
-            return loadModel(alias);
         IModel model = permanentlyLoadedModels.get(location);
         if (model != null) {
             return model;
@@ -127,8 +129,6 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
     }
 
     public void putAlias(ResourceLocation original, ResourceLocation to) {
-        if(original.equals(to))
-            return;
         synchronized (sideChannelAliases) {
             sideChannelAliases.put(original, to);
         }
