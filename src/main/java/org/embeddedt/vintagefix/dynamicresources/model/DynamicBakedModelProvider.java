@@ -148,7 +148,7 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
             }
 
             IModel model = modelProvider.getObject(location);
-            return bakeAndCheckTextures(location, model, DefaultVertexFormats.BLOCK);
+            return bakeAndCheckTextures(location, model, DefaultVertexFormats.ITEM);
         } catch (Throwable t) {
             if(ModelLocationInformation.DEBUG_MODEL_LOAD)
                 LOGGER.error("Error occured while loading model {}", location, t);
