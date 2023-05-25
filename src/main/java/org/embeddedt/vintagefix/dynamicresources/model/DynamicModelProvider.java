@@ -127,6 +127,8 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
     }
 
     public void putAlias(ResourceLocation original, ResourceLocation to) {
+        if(original.equals(to))
+            return;
         synchronized (sideChannelAliases) {
             sideChannelAliases.put(original, to);
         }
