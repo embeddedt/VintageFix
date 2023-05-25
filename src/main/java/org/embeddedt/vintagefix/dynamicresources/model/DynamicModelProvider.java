@@ -36,6 +36,7 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
 
     public DynamicModelProvider(Set<ICustomModelLoader> loaders) {
         this.loaders = loaders;
+        sideChannelAliases.put(new ResourceLocation("block/builtin/entity"), new ResourceLocation("builtin/entity"));
     }
 
     private static final ICustomModelLoader VANILLA_LOADER, VARIANT_LOADER;
