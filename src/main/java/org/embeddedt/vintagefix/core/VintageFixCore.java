@@ -16,6 +16,17 @@ import java.util.Map;
 @IFMLLoadingPlugin.Name("VintageFix")
 @IFMLLoadingPlugin.MCVersion("1.12.2")
 public class VintageFixCore implements IFMLLoadingPlugin, IEarlyMixinLoader {
+
+    public VintageFixCore() {
+        try {
+            Class<?> transformerClass = Class.forName("zone.rong.loliasm.core.LoliTransformer");
+            Field field = transformerClass.getDeclaredField("squashBakedQuads");
+            field.setAccessible(true);
+            field.setBoolean(null, false);
+            System.out.println("Disabled squashBakedQuads due to compatibility issues, please ask Rongmario to fix this someday");
+        } catch(ReflectiveOperationException ignored) {}
+    }
+
     @Override
     public String[] getASMTransformerClass() {
         return new String[0];
