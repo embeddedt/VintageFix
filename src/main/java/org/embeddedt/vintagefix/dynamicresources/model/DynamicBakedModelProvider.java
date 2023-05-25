@@ -56,11 +56,20 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
         return ImmutableMap.of();
     }
 
+    @Nullable
+    private static IBakedModel getMissingIfRegistered(ModelResourceLocation location) {
+        /* check if its known inventory variant */
+        if(ModelLocationInformation.allItemVariants.contains(location))
+            return missingModel;
+        else
+            return null;
+    }
+
     @Override
     @Nullable
     public IBakedModel getObject(ModelResourceLocation location) {
         try {
-            return loadedBakedModels.get(location, () -> Optional.ofNullable(loadBakedModel(location))).orElse(null);
+            return loadedBakedModels.get(location, () -> Optional.ofNullable(loadBakedModel(location))).orElse(getMissingIfRegistered(location));
         } catch (ExecutionException e) {
             throw new RuntimeException(e.getCause());
         }

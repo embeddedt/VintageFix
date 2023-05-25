@@ -5,6 +5,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelBakery;
@@ -22,10 +23,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 public class ModelLocationInformation {
@@ -33,6 +31,7 @@ public class ModelLocationInformation {
     private static Map<Item, List<String>> variantNames;
     private static final Map<ModelResourceLocation, ResourceLocation> inventoryVariantLocations = new Object2ObjectOpenHashMap<>();
     private static final Map<ResourceLocation, Block> blockstateLocationToBlock = new Object2ObjectOpenHashMap<>();
+    public static final Set<ModelResourceLocation> allItemVariants = new ObjectOpenHashSet<>();
 
     public static void init(ModelLoader loader, BlockStateMapper blockStateMapper) {
         Method method = ObfuscationReflectionHelper.findMethod(ModelBakery.class, "func_177592_e", Void.TYPE);
@@ -45,6 +44,7 @@ public class ModelLocationInformation {
 
         inventoryVariantLocations.clear();
         blockstateLocationToBlock.clear();
+        allItemVariants.clear();
 
         LoadingCache<ResourceLocation, Optional<ModelBlockDefinition>> mbdCache = CacheBuilder.newBuilder().maximumSize(100).build(new CacheLoader<ResourceLocation, Optional<ModelBlockDefinition>>() {
             @Override
@@ -61,6 +61,7 @@ public class ModelLocationInformation {
             for (String s : getVariantNames(item)) {
                 ResourceLocation itemLocation = getItemLocation(s);
                 ModelResourceLocation inventoryVariant = getInventoryVariant(s);
+                allItemVariants.add(inventoryVariant);
                 Optional<ModelBlockDefinition> def;
                 try {
                     def = mbdCache.get(new ResourceLocation(inventoryVariant.getNamespace(), inventoryVariant.getPath()));
