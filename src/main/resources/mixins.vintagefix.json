@@ -17,7 +17,6 @@
     "dynamicresources.client.MixinBlockModelShapes",
     "dynamicresources.client.MixinItemModelMesherForge",
     "dynamicresources.client.MixinItemLayerModel",
-    "dynamicresources.client.MixinModelBlockAnimation",
     "dynamicresources.client.MixinModelLoaderRegistry",
     "dynamicresources.client.MixinModelManager",
     "dynamicresources.client.MixinSimpleReloadableResourceManager",
