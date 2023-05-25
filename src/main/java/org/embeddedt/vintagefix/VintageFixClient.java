@@ -48,7 +48,7 @@ public class VintageFixClient {
     }
 
     // target all textures in the listed subfolders, or textures in the root folder
-    private static final Pattern TEXTURE_MATCH_PATTERN = Pattern.compile("^/?assets/(.+?(?=/))/textures/((?:(?:attachment|bettergrass|block.?|cape|item.?|entity/(bed|chest)|model.?|part.?|pipe|ropebridge|solid_block)/.*)|[A-Za-z0-9_\\-]*)\\.png$");
+    private static final Pattern TEXTURE_MATCH_PATTERN = Pattern.compile("^/?assets/(.+?(?=/))/textures/((?:(?:attachment|bettergrass|block.?|cape|item.?|entity/(armor|bed|chest)|model.?|part.?|pipe|ropebridge|solid_block)/.*)|[A-Za-z0-9_\\-]*)\\.png$");
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void collectTextures(TextureStitchEvent.Pre event) {
