@@ -32,6 +32,8 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
                         .softValues()
                         .build();
 
+    private final Map<ResourceLocation, ResourceLocation> sideChannelAliases = new Object2ObjectOpenHashMap<>();
+
     public DynamicModelProvider(Set<ICustomModelLoader> loaders) {
         this.loaders = loaders;
     }
@@ -60,6 +62,12 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
     private static final Map<ResourceLocation, IModel> MODEL_LOADER_REGISTRY_CACHE = ObfuscationReflectionHelper.getPrivateValue(ModelLoaderRegistry.class, null, "cache");
 
     private IModel loadModel(ResourceLocation location) throws ModelLoaderRegistry.LoaderException {
+        ResourceLocation alias;
+        synchronized (sideChannelAliases) {
+            alias = sideChannelAliases.get(location);
+        }
+        if(alias != null)
+            return loadModel(alias);
         IModel model = permanentlyLoadedModels.get(location);
         if (model != null) {
             return model;
@@ -116,6 +124,12 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
     public void putObject(ResourceLocation key, IModel value) {
         permanentlyLoadedModels.put(key, value);
         loadedModels.invalidate(key);
+    }
+
+    public void putAlias(ResourceLocation original, ResourceLocation to) {
+        synchronized (sideChannelAliases) {
+            sideChannelAliases.put(original, to);
+        }
     }
 
     @Override
