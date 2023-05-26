@@ -16,6 +16,7 @@ import java.util.Map;
 @IFMLLoadingPlugin.Name("VintageFix")
 @IFMLLoadingPlugin.MCVersion("1.12.2")
 public class VintageFixCore implements IFMLLoadingPlugin, IEarlyMixinLoader {
+    public static boolean OPTIFINE;
 
     public VintageFixCore() {
         try {
@@ -25,6 +26,15 @@ public class VintageFixCore implements IFMLLoadingPlugin, IEarlyMixinLoader {
             field.setBoolean(null, false);
             System.out.println("Disabled squashBakedQuads due to compatibility issues, please ask Rongmario to fix this someday");
         } catch(ReflectiveOperationException ignored) {}
+    }
+
+    private static boolean classExists(String name) {
+        try {
+            Class.forName(name);
+            return true;
+        } catch(ClassNotFoundException e) {
+            return false;
+        }
     }
 
     @Override
@@ -55,6 +65,7 @@ public class VintageFixCore implements IFMLLoadingPlugin, IEarlyMixinLoader {
     private static boolean mixinFixApplied = false;
 
     private static void applyMixinFix() {
+        OPTIFINE = classExists("ofdev.launchwrapper.OptifineDevTweakerWrapper") || classExists("optifine.OptiFineForgeTweaker");
         /* https://github.com/FabricMC/Mixin/pull/99 */
         try {
             Field groupMembersField = InjectorGroupInfo.class.getDeclaredField("members");

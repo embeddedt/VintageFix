@@ -18,6 +18,7 @@ import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import org.embeddedt.vintagefix.core.VintageFixCore;
 import org.embeddedt.vintagefix.dynamicresources.CTMHelper;
 import org.embeddedt.vintagefix.dynamicresources.ResourcePackHelper;
 import org.embeddedt.vintagefix.impl.Deduplicator;
@@ -42,6 +43,8 @@ public class VintageFixClient {
         if(Loader.isModLoaded("ctm")) {
             MinecraftForge.EVENT_BUS.register(CTMHelper.class);
         }
+        if(VintageFixCore.OPTIFINE)
+            VintageFix.LOGGER.fatal("OptiFine detected, there may be issues");
     }
     @SubscribeEvent
     public void registerListener(ColorHandlerEvent.Block event) {
@@ -119,7 +122,7 @@ public class VintageFixClient {
 
     @SubscribeEvent
     public void onTick(TickEvent.ClientTickEvent event) {
-        if(event.phase == TickEvent.Phase.START)
+        if(event.phase == TickEvent.Phase.START && !VintageFixCore.OPTIFINE)
             tracker.tick();
     }
 
@@ -133,7 +136,9 @@ public class VintageFixClient {
         if (srv != null) {
             event.getLeft().add(2, String.format("Integrated server @ %.0f ms ticks", lastIntegratedTickTime));
         }
-        event.getRight().add(2, String.format("Allocation rate: %03dMB /s", tracker.getAllocationRate()));
+        // only show when OptiFine isn't present, as it adds its own
+        if(!VintageFixCore.OPTIFINE)
+            event.getRight().add(2, String.format("Allocation rate: %03dMB /s", tracker.getAllocationRate()));
     }
 
     private static class AllocationRateTracker {

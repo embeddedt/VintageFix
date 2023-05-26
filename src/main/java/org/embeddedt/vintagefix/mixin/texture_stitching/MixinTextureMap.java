@@ -46,6 +46,7 @@ public abstract class MixinTextureMap {
     @Shadow
     private int mipmapLevels;
     private static final String TEXTURE_LOADER_CORE = "loadTexture(Lnet/minecraft/client/renderer/texture/Stitcher;Lnet/minecraft/client/resources/IResourceManager;Lnet/minecraft/util/ResourceLocation;Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;Lnet/minecraftforge/fml/common/ProgressManager$ProgressBar;II)I";
+    private static final String TEXTURE_LOADER_CORE_OF = "loadTextureAtlas(Lnet/minecraft/client/resources/IResourceManager;)V";
 
     private static final IResource EMPTY_META_RESOURCE = new IResource() {
         @Override
@@ -79,18 +80,19 @@ public abstract class MixinTextureMap {
         }
     };
 
-    @ModifyConstant(method = "loadTextureAtlas", constant = @Constant(stringValue = "Texture stitching"))
+    // not requird as OF doesn't use it ?????
+    @ModifyConstant(method = "loadTextureAtlas", constant = @Constant(stringValue = "Texture stitching"), require = 0)
     private String correctMessage(String original) {
         return "Texture loading";
     }
 
     /* Accelerate texture loading using similar strategy to ModernFix - drop PngSizeInfo entirely, defer height/width checks to later */
-    @Redirect(method = TEXTURE_LOADER_CORE, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/PngSizeInfo;makeFromResource(Lnet/minecraft/client/resources/IResource;)Lnet/minecraft/client/renderer/texture/PngSizeInfo;"))
+    @Redirect(method = { TEXTURE_LOADER_CORE, TEXTURE_LOADER_CORE_OF }, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/PngSizeInfo;makeFromResource(Lnet/minecraft/client/resources/IResource;)Lnet/minecraft/client/renderer/texture/PngSizeInfo;"))
     private PngSizeInfo skipPngLoad(IResource resource) {
         return null;
     }
 
-    @Redirect(method = TEXTURE_LOADER_CORE, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/resources/IResourceManager;getResource(Lnet/minecraft/util/ResourceLocation;)Lnet/minecraft/client/resources/IResource;"))
+    @Redirect(method = { TEXTURE_LOADER_CORE, TEXTURE_LOADER_CORE_OF}, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/resources/IResourceManager;getResource(Lnet/minecraft/util/ResourceLocation;)Lnet/minecraft/client/resources/IResource;"))
     private IResource skipResourceLoad(IResourceManager manager, ResourceLocation location) {
         return EMPTY_META_RESOURCE;
     }
@@ -123,7 +125,7 @@ public abstract class MixinTextureMap {
         SAFE_CLASSES = builder.build();
     }
 
-    @Inject(method = "loadTextureAtlas", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/fml/common/ProgressManager;push(Ljava/lang/String;I)Lnet/minecraftforge/fml/common/ProgressManager$ProgressBar;"))
+    @Inject(method = "loadTextureAtlas", at = @At(value = "INVOKE", target = "Ljava/util/List;clear()V", ordinal = 0))
     private void preloadTextures(IResourceManager resourceManager, CallbackInfo ci) {
         /* parallel texture load go brr */
         Stopwatch watch = Stopwatch.createStarted();
@@ -170,7 +172,7 @@ public abstract class MixinTextureMap {
         ProgressManager.pop(bar);
     }
 
-    @Redirect(method = TEXTURE_LOADER_CORE, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;loadSprite(Lnet/minecraft/client/renderer/texture/PngSizeInfo;Z)V"))
+    @Redirect(method = { TEXTURE_LOADER_CORE, TEXTURE_LOADER_CORE_OF }, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;loadSprite(Lnet/minecraft/client/renderer/texture/PngSizeInfo;Z)V"))
     private void skipResetSprite(TextureAtlasSprite sprite, PngSizeInfo info, boolean flag) throws IOException {
         if(sprite.getClass() != TextureAtlasSprite.class || sprite.getFrameCount() == 0)
             sprite.loadSprite(info, flag);

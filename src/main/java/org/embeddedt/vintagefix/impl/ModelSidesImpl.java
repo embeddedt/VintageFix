@@ -3,6 +3,7 @@ package org.embeddedt.vintagefix.impl;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.util.EnumFacing;
+import org.embeddedt.vintagefix.core.VintageFixCore;
 
 import java.util.EnumMap;
 import java.util.List;
@@ -24,8 +25,13 @@ public class ModelSidesImpl {
         EMPTY = map;
     }
 
+    private static <T> List<T> safeImmutableList(List<T> quadList) {
+        // OptiFine requires list to be mutable
+        return VintageFixCore.OPTIFINE ? quadList : ImmutableList.copyOf(quadList);
+    }
+
     public static List<BakedQuad> minimizeUnculled(List<BakedQuad> quads) {
-        return ImmutableList.copyOf(quads);
+        return safeImmutableList(quads);
     }
 
     public static Map<EnumFacing, List<BakedQuad>> minimizeCulled(Map<EnumFacing, List<BakedQuad>> quadsBySide) {
@@ -38,7 +44,7 @@ public class ModelSidesImpl {
         for (final EnumFacing face : SIDES) {
             final List<BakedQuad> sideQuads = quadsBySide.get(face);
             try {
-                quadsBySide.put(face, ImmutableList.copyOf(sideQuads));
+                quadsBySide.put(face, safeImmutableList(sideQuads));
             } catch(RuntimeException e) {
                 /* some models don't allow putting entries in this map */
             }
