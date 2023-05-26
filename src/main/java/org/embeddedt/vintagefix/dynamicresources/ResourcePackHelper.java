@@ -7,6 +7,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import org.embeddedt.vintagefix.VintageFix;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URI;
@@ -86,6 +87,14 @@ public class ResourcePackHelper {
                 throw new IOException(e);
             }
             paths = zf.stream().map(ZipEntry::getName).filter(filter).collect(Collectors.toList());
+        } else if(pack instanceof FolderResourcePack) {
+            File packFolder = ObfuscationReflectionHelper.getPrivateValue(AbstractResourcePack.class, (AbstractResourcePack)pack, "field_110597_b");
+            Path basePath = packFolder.toPath();
+            try(Stream<Path> stream = Files.walk(basePath)) {
+                paths = stream.map(basePath::relativize).map(Path::toString)
+                    .filter(filter)
+                    .collect(Collectors.toList());
+            }
         } else {
             VintageFix.LOGGER.warn("Cannot list resources from pack {} ({})", pack.getPackName(), pack.getClass().getName());
         }
