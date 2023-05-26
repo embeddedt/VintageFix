@@ -33,6 +33,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class VintageFixClient {
@@ -62,6 +63,7 @@ public class VintageFixClient {
             List<IResourcePack> fallbackPacks = ObfuscationReflectionHelper.getPrivateValue(FallbackResourceManager.class, fallback, "field_110540_a");
             resourcePacks.addAll(fallbackPacks);
         }
+        int numFoundSprites = 0;
         for(IResourcePack pack : resourcePacks) {
             try {
                 Collection<String> paths = ResourcePackHelper.getAllPaths(pack, s -> true);
@@ -69,30 +71,35 @@ public class VintageFixClient {
                     Matcher matcher = TEXTURE_MATCH_PATTERN.matcher(path);
                     if(matcher.matches()) {
                         map.registerSprite(new ResourceLocation(matcher.group(1), matcher.group(2)));
+                        numFoundSprites++;
                     }
                 }
             } catch(IOException e) {
                 VintageFix.LOGGER.error("Error listing resources", e);
             }
         }
+        VintageFix.LOGGER.info("Found {} sprites (some possibly duplicated among resource packs)", numFoundSprites);
         String[] gameFolders = new String[] { "resources" };
         Path gameDirPath = Minecraft.getMinecraft().gameDir.toPath();
         for(String gameFolder : gameFolders) {
             Path base = gameDirPath.resolve(gameFolder);
             try(Stream<Path> stream = Files.walk(base)) {
-                stream.map(base::relativize).map(path -> "assets/" + path).forEach(p -> {
+                Iterator<String> iterator = stream.map(base::relativize).map(path -> "assets/" + path).iterator();
+                while(iterator.hasNext()) {
+                    String p = iterator.next();
                     Matcher matcher = TEXTURE_MATCH_PATTERN.matcher(p);
                     if(matcher.matches()) {
                         map.registerSprite(new ResourceLocation(matcher.group(1), matcher.group(2)));
+                        numFoundSprites++;
                     }
-                });
+                }
             } catch(FileNotFoundException | NoSuchFileException ignored) {
             } catch(IOException e) {
                 VintageFix.LOGGER.error("Error listing resources", e);
             }
         }
         watch.stop();
-        VintageFix.LOGGER.info("Texture search took {}", watch);
+        VintageFix.LOGGER.info("Texture search took {}, total of {} collected sprites", watch, numFoundSprites);
     }
 
     float lastIntegratedTickTime;
