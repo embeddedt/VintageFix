@@ -35,10 +35,7 @@
     "texture_stitching.MixinSimpleTexture",
     "modelsides.SimpleBakedModelMixin",
     "mrl.ModelResourceLocationMixin",
-    "mrl.ResourceLocationAccess",
-    "predicates.AndConditionMixin",
-    "predicates.KeyValueConditionMixin",
-    "predicates.OrConditionMixin"
+    "mrl.ResourceLocationAccess"
   ],
   "injectors": {
     "defaultRequire": 1
