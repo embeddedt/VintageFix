@@ -115,8 +115,19 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
 
         try {
             model = accepted.loadModel(actualLocation);
-            model.getTextures();
         } catch (Exception e) {
+            throw new ModelLoaderRegistry.LoaderException("Exception loading model " + location + " with loader " + accepted, e);
+        }
+
+        if(model == null)
+            throw new ModelLoaderRegistry.LoaderException("Loader " + accepted + " provided null model for " + location);
+
+        if(model == ModelLoaderRegistry.getMissingModel() && location != DynamicBakedModelProvider.MISSING_MODEL_LOCATION)
+            throw new ModelLoaderRegistry.LoaderException("Loader " + accepted + " provided missing model for " + location);
+
+        try {
+            model.getTextures();
+        } catch(Exception e) {
             throw new ModelLoaderRegistry.LoaderException("Exception loading model " + location + " with loader " + accepted, e);
         }
 

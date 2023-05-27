@@ -82,6 +82,8 @@ public class MixinVariantLoader {
             if (definition.hasMultipartData()) {
                 Block block = ModelLocationInformation.getBlockFromBlockstateLocation(new ResourceLocation(variant.getNamespace(), variant.getPath()));
                 if (block != null) {
+                    if(!ModelLocationInformation.isAppropriateMultipart(block, variant))
+                        throw new Exception("Not valid multipart for " + block + ": " + variant);
                     definition.getMultipartData().setStateContainer(block.getBlockState());
                 }
             }
