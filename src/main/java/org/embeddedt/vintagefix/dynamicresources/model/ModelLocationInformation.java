@@ -1,6 +1,5 @@
 package org.embeddedt.vintagefix.dynamicresources.model;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
@@ -29,7 +28,7 @@ public class ModelLocationInformation {
     private static final Map<ModelResourceLocation, ResourceLocation> inventoryVariantLocations = new Object2ObjectOpenHashMap<>();
     private static final Map<ResourceLocation, Block> blockstateLocationToBlock = new Object2ObjectOpenHashMap<>();
     public static final Set<ModelResourceLocation> allItemVariants = new ObjectOpenHashSet<>();
-    private static final Map<Block, Collection<ModelResourceLocation>> validVariantsForBlock = new Object2ObjectOpenHashMap<>();
+    private static final Map<ResourceLocation, Collection<ModelResourceLocation>> validVariantsForBlock = new Object2ObjectOpenHashMap<>();
 
     public static void init(ModelLoader loader, BlockStateMapper blockStateMapper) {
         Method method = ObfuscationReflectionHelper.findMethod(ModelBakery.class, "func_177592_e", Void.TYPE);
@@ -60,14 +59,14 @@ public class ModelLocationInformation {
             for (ResourceLocation location : blockStateMapper.getBlockstateLocations(block)) {
                 blockstateLocationToBlock.put(location, block);
             }
-            ImmutableSet.Builder<ModelResourceLocation> variants = ImmutableSet.builder();
             for(ModelResourceLocation location : blockStateMapper.getVariants(block).values()) {
                 ResourceLocation baseLocation = new ResourceLocation(location.getNamespace(), location.getPath());
-                if(blockstateLocationToBlock.get(baseLocation) == block) {
-                    variants.add(location);
-                }
+                ObjectOpenHashSet<ModelResourceLocation> mrls = (ObjectOpenHashSet<ModelResourceLocation>)validVariantsForBlock.computeIfAbsent(baseLocation, k -> new ObjectOpenHashSet<>());
+                mrls.add(location);
             }
-            validVariantsForBlock.put(block, variants.build());
+        }
+        for(Collection<ModelResourceLocation> c : validVariantsForBlock.values()) {
+            ((ObjectOpenHashSet<ModelResourceLocation>)c).trim();
         }
     }
 
@@ -79,7 +78,7 @@ public class ModelLocationInformation {
         inventoryVariantLocations.put(inventoryVariant, location);
     }
 
-    public static boolean isAppropriateMultipart(Block block, ModelResourceLocation mrl) {
+    public static boolean isAppropriateMultipart(ResourceLocation block, ModelResourceLocation mrl) {
         Collection<ModelResourceLocation> collection = validVariantsForBlock.get(block);
         if(collection == null)
             return false;
@@ -109,7 +108,7 @@ public class ModelLocationInformation {
     }
 
     public static Block getBlockFromBlockstateLocation(ResourceLocation blockstateLocation) {
-        return blockstateLocationToBlock.get(blockstateLocation);
+        return Block.REGISTRY.getObject(blockstateLocation); //blockstateLocationToBlock.get(blockstateLocation);
     }
 
     public static ModelBlockDefinition loadModelBlockDefinition(ResourceLocation location) {
