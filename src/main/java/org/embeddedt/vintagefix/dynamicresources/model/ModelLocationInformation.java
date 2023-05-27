@@ -108,7 +108,7 @@ public class ModelLocationInformation {
     }
 
     public static Block getBlockFromBlockstateLocation(ResourceLocation blockstateLocation) {
-        return Block.REGISTRY.getObject(blockstateLocation); //blockstateLocationToBlock.get(blockstateLocation);
+        return blockstateLocationToBlock.get(blockstateLocation);
     }
 
     public static ModelBlockDefinition loadModelBlockDefinition(ResourceLocation location) {
