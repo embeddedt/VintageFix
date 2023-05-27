@@ -21,6 +21,7 @@ import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.common.MinecraftForge;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.embeddedt.vintagefix.VintageFix;
 import org.embeddedt.vintagefix.event.DynamicModelBakeEvent;
 import org.embeddedt.vintagefix.util.ExceptionHelper;
 
@@ -104,67 +105,53 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
             return bakedModel;
         }
 
+        Throwable blockStateException = null, normalException = null;
+        ResourceLocation inventoryVariantLocation = null;
+
+        IModel model = null;
+
+        // the forge docs are backwards, based on ModelLoader.loadItemModel, the blockstate is tried first, not the item
+        // first, attempt to fetch from the blockstate (by using the MRL)
         try {
-            ResourceLocation inventoryVariantLocation = ModelLocationInformation.getInventoryVariantLocation(location);
+            model = modelProvider.getObject(location);
+        } catch(Throwable e) {
+            blockStateException = e;
+            // check if an inventory variant is registered, and if so, try that
+            inventoryVariantLocation = ModelLocationInformation.getInventoryVariantLocation(location);
             if (inventoryVariantLocation != null) {
-                IModel model;
                 try {
                     model = modelProvider.getObject(inventoryVariantLocation);
-                    Optional<ModelBlock> vModel = model.asVanillaModel();
-                    if(vModel.isPresent() && vModel.get().getParentLocation() != null) {
-                        ModelBlock parent = vModel.get().parent;
-                        if(parent == null || parent == ModelLoaderRegistry.getMissingModel().asVanillaModel().orElse(null)) {
-                            throw PARENT_MISSING_EXCEPTION;
+                    if (VANILLA_MODEL_WRAPPER.isAssignableFrom(model.getClass())) {
+                        for (ResourceLocation dep : model.asVanillaModel().get().getOverrideLocations()) {
+                            if (!location.equals(dep)) {
+                                ModelLocationInformation.addInventoryVariantLocation(ModelLocationInformation.getInventoryVariant(dep.toString()), dep);
+                            }
                         }
                     }
-                } catch (Throwable t) {
-                    boolean tryBlockState = false;
-                    // first check if this was triggered by FileNotFoundException
-                    Throwable potentialExc = t;
-                    while(potentialExc != null) {
-                        if(potentialExc instanceof FileNotFoundException) {
-                            tryBlockState = true;
-                            break;
-                        }
-                        potentialExc = potentialExc.getCause();
-                    }
-                    // if not, check if the item model even existed
-                    if(!tryBlockState) {
-                        try(IResource ignored = Minecraft.getMinecraft().getResourceManager().getResource(inventoryVariantLocation)) {
-                        } catch(IOException ignored) {
-                            // didn't exist, assume blockstate
-                            tryBlockState = true;
-                        }
-                    }
-                    if(tryBlockState) {
-                        // load from blockstate json
-                        ModelLocationInformation.addInventoryVariantLocation(location, location);
-                        model = modelProvider.getObject(location);
-                    } else {
-                        throw t;
-                    }
+                } catch(Throwable e2) {
+                    normalException = e;
                 }
-
-                if (VANILLA_MODEL_WRAPPER.isAssignableFrom(model.getClass())) {
-                    for (ResourceLocation dep : model.asVanillaModel().get().getOverrideLocations()) {
-                        if (!location.equals(dep)) {
-                            ModelLocationInformation.addInventoryVariantLocation(ModelLocationInformation.getInventoryVariant(dep.toString()), dep);
-                        }
-                    }
-                }
-
-                return bakeAndCheckTextures(location, model, DefaultVertexFormats.ITEM);
             }
-
-            IModel model = modelProvider.getObject(location);
-            return bakeAndCheckTextures(location, model, DefaultVertexFormats.ITEM);
-        } catch (Throwable t) {
-            if(ModelLocationInformation.DEBUG_MODEL_LOAD)
-                LOGGER.error("Error occured while loading model {}", location, t);
-            else
-                LOGGER.error("Error occured while loading model {}", location);
         }
 
+        if(model == null) {
+            if(!ModelLocationInformation.DEBUG_MODEL_LOAD)
+                LOGGER.error("Error occured while loading model {}", location);
+            else {
+                LOGGER.error("Failed to load model {} as blockstate", location, blockStateException);
+                if(normalException != null)
+                    LOGGER.error("Failed to load model {} as item {}", location, inventoryVariantLocation, normalException);
+            }
+        } else {
+            try {
+                return bakeAndCheckTextures(location, model, DefaultVertexFormats.ITEM);
+            } catch (Throwable t) {
+                if(ModelLocationInformation.DEBUG_MODEL_LOAD)
+                    LOGGER.error("Error occured while baking model {}", location, t);
+                else
+                    LOGGER.error("Error occured while baking model {}", location);
+            }
+        }
         return null;
     }
 

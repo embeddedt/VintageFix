@@ -1,8 +1,5 @@
 package org.embeddedt.vintagefix.dynamicresources.model;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
@@ -24,7 +21,6 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 
 public class ModelLocationInformation {
     public static final boolean DEBUG_MODEL_LOAD = Boolean.getBoolean("vintagefix.debugDynamicModelLoading");
@@ -46,29 +42,12 @@ public class ModelLocationInformation {
         blockstateLocationToBlock.clear();
         allItemVariants.clear();
 
-        LoadingCache<ResourceLocation, Optional<ModelBlockDefinition>> mbdCache = CacheBuilder.newBuilder().maximumSize(100).build(new CacheLoader<ResourceLocation, Optional<ModelBlockDefinition>>() {
-            @Override
-            public Optional<ModelBlockDefinition> load(ResourceLocation key) throws Exception {
-                try {
-                    return Optional.of(ModelLocationInformation.loadModelBlockDefinition(key));
-                } catch(RuntimeException e) {
-                    return Optional.empty();
-                }
-            }
-        });
         // Make inventory variant -> location map
         for (Item item : Item.REGISTRY) {
             for (String s : getVariantNames(item)) {
                 ResourceLocation itemLocation = getItemLocation(s);
                 ModelResourceLocation inventoryVariant = getInventoryVariant(s);
                 allItemVariants.add(inventoryVariant);
-                Optional<ModelBlockDefinition> def;
-                try {
-                    def = mbdCache.get(new ResourceLocation(inventoryVariant.getNamespace(), inventoryVariant.getPath()));
-                    // we should not point to item/<path> for blockstates that do handle the inventory variant
-                    if(def.isPresent() && def.get().hasVariant(inventoryVariant.getVariant()))
-                        continue;
-                } catch(ExecutionException ignored) {}
                 inventoryVariantLocations.put(inventoryVariant, itemLocation);
             }
         }
