@@ -122,7 +122,7 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
         if(model == null)
             throw new ModelLoaderRegistry.LoaderException("Loader " + accepted + " provided null model for " + location);
 
-        if(model == ModelLoaderRegistry.getMissingModel() && location != DynamicBakedModelProvider.MISSING_MODEL_LOCATION)
+        if(model == ModelLoaderRegistry.getMissingModel() && !location.equals(DynamicBakedModelProvider.MISSING_MODEL_LOCATION))
             throw new ModelLoaderRegistry.LoaderException("Loader " + accepted + " provided missing model for " + location);
 
         try {
