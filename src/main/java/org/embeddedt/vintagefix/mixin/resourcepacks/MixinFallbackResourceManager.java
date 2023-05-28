@@ -44,6 +44,7 @@ public abstract class MixinFallbackResourceManager {
      * @author embeddedt
      * @reason avoid resourceExists (disabled for now until I know whether it helps performance)
      */
+    /*
     @Overwrite
     public IResource getResource(ResourceLocation location) throws IOException {
         this.checkResourcePath(location);
@@ -58,15 +59,16 @@ public abstract class MixinFallbackResourceManager {
                     IOUtils.closeQuietly(metaStream);
                 metaStream = stream;
             } catch(IOException ignored) {
-                /* failed to open it, no problem */
+                // failed to open it, no problem
             }
             try {
                 InputStream mainStream = this.getInputStream(location, candidatePack);
                 return new SimpleResource(candidatePack.getPackName(), location, mainStream, metaStream, this.frmMetadataSerializer);
             } catch(IOException ignored) {
-                /* failed to open it, no problem */
+                // failed to open it, no problem
             }
         }
         throw new FileNotFoundException(location.toString());
     }
+     */
 }
