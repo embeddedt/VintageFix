@@ -4,6 +4,8 @@ import com.google.common.cache.*;
 import com.google.common.collect.ImmutableMap;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
+import org.embeddedt.vintagefix.annotation.LateMixin;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -21,6 +23,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 @Mixin(targets = "slimeknights/tconstruct/library/client/model/BakedToolModel$ToolItemOverrideList")
+@ClientOnlyMixin
+@LateMixin
 public class BakedToolModelListMixin {
     @Shadow
     private Cache<?, IBakedModel> bakedModelCache;

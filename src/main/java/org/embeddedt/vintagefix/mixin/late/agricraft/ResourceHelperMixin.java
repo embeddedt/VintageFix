@@ -1,6 +1,7 @@
 package org.embeddedt.vintagefix.mixin.late.agricraft;
 
 import com.google.common.base.Predicate;
+import org.embeddedt.vintagefix.annotation.LateMixin;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
 import org.spongepowered.asm.mixin.*;
@@ -13,6 +14,7 @@ import java.util.Set;
 
 @Pseudo
 @Mixin(targets = "com/agricraft/agricore/util/ResourceHelper")
+@LateMixin
 public class ResourceHelperMixin {
     @Shadow(remap = false)
     @Final

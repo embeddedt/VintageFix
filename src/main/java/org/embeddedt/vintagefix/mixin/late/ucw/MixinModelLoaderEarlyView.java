@@ -4,6 +4,8 @@ import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.IModel;
 import org.embeddedt.vintagefix.VintageFix;
+import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
+import org.embeddedt.vintagefix.annotation.LateMixin;
 import org.embeddedt.vintagefix.dynamicresources.model.DynamicModelProvider;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -15,6 +17,8 @@ import pl.asie.ucw.util.ModelLoaderEarlyView;
 import java.util.Map;
 
 @Mixin(ModelLoaderEarlyView.class)
+@LateMixin
+@ClientOnlyMixin
 public class MixinModelLoaderEarlyView {
     private IModel missing;
 
