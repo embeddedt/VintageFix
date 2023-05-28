@@ -3,6 +3,7 @@ package org.embeddedt.vintagefix.mixin.resourcepacks;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.client.resources.FileResourcePack;
+import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.embeddedt.vintagefix.util.CachedResourcePath;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -18,6 +19,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 @Mixin(FileResourcePack.class)
+@ClientOnlyMixin
 public abstract class MixinFileResourcePack {
     @Shadow
     protected abstract ZipFile getResourcePackZipFile() throws IOException;

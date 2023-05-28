@@ -21,6 +21,7 @@ import net.minecraftforge.common.ForgeModContainer;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import org.embeddedt.vintagefix.VintageFix;
+import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.embeddedt.vintagefix.dynamicresources.DeferredListeners;
 import org.embeddedt.vintagefix.dynamicresources.EventUtil;
 import org.embeddedt.vintagefix.dynamicresources.ResourcePackHelper;
@@ -40,6 +41,7 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 @Mixin(ModelManager.class)
+@ClientOnlyMixin
 public class MixinModelManager {
     @Shadow private IRegistry<ModelResourceLocation, IBakedModel> modelRegistry;
     @Shadow private IBakedModel defaultModel;

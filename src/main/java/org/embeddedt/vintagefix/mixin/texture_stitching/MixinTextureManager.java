@@ -5,6 +5,7 @@ import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
+import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.embeddedt.vintagefix.stitcher.IAsyncTexture;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,6 +20,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 @Mixin(TextureManager.class)
+@ClientOnlyMixin
 public class MixinTextureManager {
     @Shadow
     @Final

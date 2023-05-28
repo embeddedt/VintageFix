@@ -9,6 +9,7 @@ import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.resources.data.TextureMetadataSection;
 import net.minecraft.util.ResourceLocation;
 import org.embeddedt.vintagefix.VintageFix;
+import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.embeddedt.vintagefix.stitcher.IAsyncTexture;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,6 +24,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 @Mixin(SimpleTexture.class)
+@ClientOnlyMixin
 public abstract class MixinSimpleTexture extends AbstractTexture implements IAsyncTexture {
     @Shadow
     @Final

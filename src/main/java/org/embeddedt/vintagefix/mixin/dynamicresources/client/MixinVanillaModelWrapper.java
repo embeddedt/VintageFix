@@ -8,6 +8,7 @@ import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.common.model.IModelState;
+import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.embeddedt.vintagefix.dynamicresources.model.DynamicModelProvider;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,6 +24,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 @Mixin(targets = "net/minecraftforge/client/model/ModelLoader$VanillaModelWrapper")
+@ClientOnlyMixin
 public abstract class MixinVanillaModelWrapper {
     @Shadow
     @Final

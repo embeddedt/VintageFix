@@ -15,6 +15,7 @@ import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.ProgressManager;
 import org.apache.logging.log4j.Logger;
 import org.embeddedt.vintagefix.VintageFix;
+import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -33,6 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.LockSupport;
 
 @Mixin(TextureMap.class)
+@ClientOnlyMixin
 public abstract class MixinTextureMap {
     @Shadow
     protected abstract ResourceLocation getResourceLocation(TextureAtlasSprite p_184396_1_);

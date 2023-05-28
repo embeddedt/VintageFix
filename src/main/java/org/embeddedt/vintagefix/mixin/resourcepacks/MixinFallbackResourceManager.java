@@ -7,6 +7,7 @@ import net.minecraft.client.resources.SimpleResource;
 import net.minecraft.client.resources.data.MetadataSerializer;
 import net.minecraft.util.ResourceLocation;
 import org.apache.commons.io.IOUtils;
+import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -18,6 +19,7 @@ import java.io.InputStream;
 import java.util.List;
 
 @Mixin(FallbackResourceManager.class)
+@ClientOnlyMixin
 public abstract class MixinFallbackResourceManager {
     @Shadow
     static ResourceLocation getLocationMcmeta(ResourceLocation location) {

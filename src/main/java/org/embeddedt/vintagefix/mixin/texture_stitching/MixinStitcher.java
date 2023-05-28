@@ -2,6 +2,7 @@ package org.embeddedt.vintagefix.mixin.texture_stitching;
 
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraftforge.fml.common.ProgressManager;
+import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.embeddedt.vintagefix.stitcher.TooBigException;
 import org.embeddedt.vintagefix.stitcher.TurboStitcher;
 import org.spongepowered.asm.mixin.Final;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.Set;
 
 @Mixin(Stitcher.class)
+@ClientOnlyMixin
 public abstract class MixinStitcher {
     @Shadow
     @Final

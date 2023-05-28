@@ -5,6 +5,7 @@ import net.minecraft.client.renderer.BlockModelShapes;
 import net.minecraft.client.renderer.BlockRendererDispatcher;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.embeddedt.vintagefix.dynamicresources.IBlockModelShapes;
 import org.embeddedt.vintagefix.dynamicresources.model.DynamicBakedModelProvider;
 import org.spongepowered.asm.mixin.Mixin;
@@ -13,6 +14,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import team.chisel.ctm.client.asm.CTMCoreMethods;
 
 @Mixin(CTMCoreMethods.class)
+@ClientOnlyMixin
 public class MixinCTMCoreMethods {
     @Redirect(method = "canRenderInLayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/BlockRendererDispatcher;getModelForState(Lnet/minecraft/block/state/IBlockState;)Lnet/minecraft/client/renderer/block/model/IBakedModel;"))
     private static IBakedModel getModelForState(BlockRendererDispatcher dispatcher, IBlockState state) {

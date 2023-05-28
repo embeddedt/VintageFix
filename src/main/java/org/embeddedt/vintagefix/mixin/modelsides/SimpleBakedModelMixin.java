@@ -1,5 +1,6 @@
 package org.embeddedt.vintagefix.mixin.modelsides;
 
+import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.embeddedt.vintagefix.impl.ModelSidesImpl;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.SimpleBakedModel;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 @Mixin(SimpleBakedModel.class)
+@ClientOnlyMixin
 public class SimpleBakedModelMixin {
     @Shadow
     @Final

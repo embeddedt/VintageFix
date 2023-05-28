@@ -6,36 +6,8 @@
   "plugin": "org.embeddedt.vintagefix.core.MixinConfigPlugin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "fastmap.ExtendedStateImplementationMixin",
-    "fastmap.FastMapStateHolderMixin",
-    "dynstructures.MixinTemplateManager"
   ],
   "client": [
-    "dedupbakedquad.SimpleModelBuilderMixin",
-    "dedupmultipart.MixinMultipartBuilder",
-    "dedupmultipart.MixinMultipartModel",
-    "dynamicresources.client.MixinBlockModelShapes",
-    "dynamicresources.client.MixinItemModelMesherForge",
-    "dynamicresources.client.MixinItemLayerModel",
-    "dynamicresources.client.MixinModelLoaderRegistry",
-    "dynamicresources.client.MixinModelManager",
-    "dynamicresources.client.MixinSimpleReloadableResourceManager",
-    "dynamicresources.client.MixinVanillaModelWrapper",
-    "dynamicresources.client.MixinVariantLoader",
-    "dynamicresources.client.MixinWeightedRandomModel",
-    "dynamicresources.client.MixinCTMCoreMethods",
-    "resourcepacks.MixinDefaultResourcePack",
-    "resourcepacks.MixinFileResourcePack",
-    "resourcepacks.MixinResourceIndex",
-    "texture_stitching.MixinStitcher",
-    "texture_stitching.MixinStitcherSlot",
-    "texture_stitching.MixinTextureAtlasSprite",
-    "texture_stitching.MixinTextureMap",
-    "texture_stitching.MixinTextureManager",
-    "texture_stitching.MixinSimpleTexture",
-    "modelsides.SimpleBakedModelMixin",
-    "mrl.ModelResourceLocationMixin",
-    "mrl.ResourceLocationAccess"
   ],
   "injectors": {
     "defaultRequire": 1

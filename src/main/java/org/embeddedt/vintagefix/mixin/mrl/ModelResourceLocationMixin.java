@@ -1,5 +1,6 @@
 package org.embeddedt.vintagefix.mixin.mrl;
 
+import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.embeddedt.vintagefix.impl.Deduplicator;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.util.ResourceLocation;
@@ -12,6 +13,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ModelResourceLocation.class)
+@ClientOnlyMixin
 public class ModelResourceLocationMixin {
     @Shadow
     @Final

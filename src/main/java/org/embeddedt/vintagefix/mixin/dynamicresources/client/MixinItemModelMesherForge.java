@@ -9,6 +9,7 @@ import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.Item;
 import net.minecraftforge.client.ItemModelMesherForge;
 import net.minecraftforge.registries.IRegistryDelegate;
+import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -16,6 +17,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import java.util.Map;
 
 @Mixin(ItemModelMesherForge.class)
+@ClientOnlyMixin
 public class MixinItemModelMesherForge extends ItemModelMesher {
     @Shadow Map<IRegistryDelegate<Item>, Int2ObjectMap<ModelResourceLocation>> locations;
 

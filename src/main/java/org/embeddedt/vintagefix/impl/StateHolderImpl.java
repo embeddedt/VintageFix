@@ -3,7 +3,6 @@ package org.embeddedt.vintagefix.impl;
 import org.embeddedt.vintagefix.classloading.FastImmutableMapDefiner;
 import org.embeddedt.vintagefix.ducks.FastMapStateHolder;
 import org.embeddedt.vintagefix.fastmap.FastMap;
-import org.embeddedt.vintagefix.config.FerriteConfig;
 import net.minecraft.block.properties.IProperty;
 
 import java.util.Map;
@@ -27,14 +26,14 @@ public class StateHolderImpl {
         } else {
             LAST_STATE_MAP.set(states);
             FastMap<S> globalTable = new FastMap<>(
-                    holder.getVanillaPropertyMap().keySet(), states, FerriteConfig.COMPACT_FAST_MAP.isEnabled()
+                    holder.getVanillaPropertyMap().keySet(), states, false //FerriteConfig.COMPACT_FAST_MAP.isEnabled()
             );
             holder.setStateMap(globalTable);
             LAST_FAST_STATE_MAP.set(globalTable);
         }
         int index = holder.getStateMap().getIndexOf(holder.getVanillaPropertyMap());
         holder.setStateIndex(index);
-        if (FerriteConfig.PROPERTY_MAP.isEnabled()) {
+        if (true) { //FerriteConfig.PROPERTY_MAP.isEnabled()) {
             holder.replacePropertyMap(FastImmutableMapDefiner.makeMap(holder));
         }
         /* TODO: figure out how to fake an ImmutableTable on 1.12 */

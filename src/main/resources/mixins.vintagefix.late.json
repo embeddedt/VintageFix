@@ -1,17 +1,13 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "org.embeddedt.vintagefix.mixin.late",
+  "package": "org.embeddedt.vintagefix.mixin",
   "refmap": "mixins.vintagefix.refmap.json",
   "plugin": "org.embeddedt.vintagefix.core.MixinConfigPlugin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "agricraft.ResourceHelperMixin"
   ],
   "client": [
-    "BakedToolModelListMixin",
-    "ucw.MixinModelLoaderEarlyView",
-    "ae2.AutoRotatingModelMixin"
   ],
   "injectors": {
     "defaultRequire": 1

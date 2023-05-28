@@ -1,6 +1,7 @@
 package org.embeddedt.vintagefix.mixin.dedupmultipart;
 
 import net.minecraft.client.renderer.block.model.MultipartBakedModel;
+import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.spongepowered.asm.mixin.Mixin;
 
 /**
@@ -8,6 +9,7 @@ import org.spongepowered.asm.mixin.Mixin;
  */
 @SuppressWarnings({"UnresolvedMixinReference", "SynchronizationOnLocalVariableOrMethodParameter"})
 @Mixin(value = MultipartBakedModel.class, priority = 1100)
+@ClientOnlyMixin
 public class MixinMultipartModel {
     /*
     @Redirect(

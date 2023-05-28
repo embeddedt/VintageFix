@@ -6,6 +6,7 @@ import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.client.model.ItemLayerModel;
 import net.minecraftforge.common.model.TRSRTransformation;
+import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
@@ -13,6 +14,7 @@ import javax.vecmath.Vector4f;
 import java.util.Optional;
 
 @Mixin(ItemLayerModel.class)
+@ClientOnlyMixin
 public class MixinItemLayerModel {
     private static final Vector4f bakePosition = new Vector4f();
     @Overwrite(remap = false)

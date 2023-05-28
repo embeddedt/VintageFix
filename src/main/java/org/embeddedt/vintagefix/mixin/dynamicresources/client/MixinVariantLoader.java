@@ -14,6 +14,7 @@ import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoader;
+import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.embeddedt.vintagefix.dynamicresources.model.ModelLocationInformation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -34,6 +35,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 @Mixin(targets = "net/minecraftforge/client/model/ModelLoader$VariantLoader")
+@ClientOnlyMixin
 public class MixinVariantLoader {
     private Cache<ResourceLocation, ModelBlockDefinition> modelBlockDefinitionCache =
         CacheBuilder.newBuilder()
