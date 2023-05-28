@@ -128,6 +128,8 @@ dependencies {
   compileOnly(rfg.deobf("curse.maven:mysticallib-277064:3483816"))
   compileOnly(rfg.deobf("curse.maven:blockcraftery-278882:2716712"))
   compileOnly(rfg.deobf("team.chisel.ctm:CTM:MC1.12.2-1.0.2.31"))
+  // server build, put client build in run/mods
+  compileOnly(rfg.deobf("curse.maven:betweenlands-243363:4479692"))
   //implementation(rfg.deobf("team.chisel:Chisel:MC1.12.2-1.0.1.44"))
   //implementation(rfg.deobf("curse.maven:codechicken-lib-1-8-242818:2779848"))
   //implementation(rfg.deobf("curse.maven:avaritia-261348:3143349"))
