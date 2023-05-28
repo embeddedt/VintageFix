@@ -91,4 +91,13 @@ public abstract class FastMapStateHolderMixin implements FastMapStateHolder<IBlo
     public ImmutableTable<IProperty<?>, Comparable<?>, IBlockState> getNeighborTable() {
         return propertyValueTable;
     }
+
+    /**
+     * @author embeddedt
+     * @reason states are unique, no need to waste time hashing the map
+     */
+    @Overwrite
+    public int hashCode() {
+        return System.identityHashCode(this);
+    }
 }
