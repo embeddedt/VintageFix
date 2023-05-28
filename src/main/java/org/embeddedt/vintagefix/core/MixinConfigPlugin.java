@@ -110,11 +110,15 @@ public class MixinConfigPlugin implements IMixinConfigPlugin {
         MixinEnvironment.Phase phase = MixinEnvironment.getCurrentEnvironment().getPhase();
         if(phase == MixinEnvironment.Phase.DEFAULT) {
             MixinEnvironment.Side side = MixinEnvironment.getCurrentEnvironment().getSide();
-            return allMixins.stream()
+            List<String> list = allMixins.stream()
                 .filter(p -> !p.isClientOnly || side == MixinEnvironment.Side.CLIENT)
                 .map(p -> p.className)
                 .map(clz -> clz.replace("org.embeddedt.vintagefix.mixin.", ""))
                 .collect(Collectors.toList());
+            for(String mixin : list) {
+                LOGGER.debug("loading {}", mixin);
+            }
+            return list;
         }
         return null;
     }
