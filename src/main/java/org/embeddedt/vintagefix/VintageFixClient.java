@@ -54,6 +54,13 @@ public class VintageFixClient {
     // target all textures in the listed subfolders, or textures in the root folder
     private static final Pattern TEXTURE_MATCH_PATTERN = Pattern.compile("^/?assets/(.+?(?=/))/textures/((?:(?:attachment|bettergrass|block.?|cape|item.?|entity/(armor|bed|chest)|model.?|part.?|pipe|ropebridge|solid_block)/.*)|[A-Za-z0-9_\\-]*)\\.png$");
 
+    private void registerSpriteSafe(TextureMap map, ResourceLocation location) {
+        try {
+            map.registerSprite(location);
+        } catch(RuntimeException ignored) {
+        }
+    }
+
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void collectTextures(TextureStitchEvent.Pre event) {
         /* take every texture from these folders (1.19.3+ emulation) */
@@ -73,7 +80,7 @@ public class VintageFixClient {
                 for(String path : paths) {
                     Matcher matcher = TEXTURE_MATCH_PATTERN.matcher(path);
                     if(matcher.matches()) {
-                        map.registerSprite(new ResourceLocation(matcher.group(1), matcher.group(2)));
+                        registerSpriteSafe(map, new ResourceLocation(matcher.group(1), matcher.group(2)));
                         numFoundSprites++;
                     }
                 }
@@ -92,7 +99,7 @@ public class VintageFixClient {
                     String p = iterator.next();
                     Matcher matcher = TEXTURE_MATCH_PATTERN.matcher(p);
                     if(matcher.matches()) {
-                        map.registerSprite(new ResourceLocation(matcher.group(1), matcher.group(2)));
+                        registerSpriteSafe(map, new ResourceLocation(matcher.group(1), matcher.group(2)));
                         numFoundSprites++;
                     }
                 }
