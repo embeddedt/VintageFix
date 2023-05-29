@@ -1,6 +1,8 @@
 package org.embeddedt.vintagefix.mixin.dynamicresources.client;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.client.renderer.BlockModelShapes;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ModelBakery;
@@ -20,6 +22,7 @@ import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.common.ForgeModContainer;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import net.minecraftforge.fml.common.ProgressManager;
 import org.embeddedt.vintagefix.VintageFix;
 import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.embeddedt.vintagefix.dynamicresources.DeferredListeners;
@@ -35,8 +38,7 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -50,6 +52,103 @@ public class MixinModelManager {
     @Shadow
     @Final
     private TextureMap texMap;
+
+    private void doEarlyModelLoading(IResourceManager manager) {
+        // load some models early (e.g. TConstruct)
+        Pattern loadsEarly = Pattern.compile("^.*\\.(tmat|tcon|mod)\\.json");
+
+        Predicate<String> shouldLoadEarly = p -> {
+            return loadsEarly.matcher(p).matches();
+        };
+        Predicate<String> shouldPersistEarly = p -> {
+            return p.endsWith(".tmat.json");
+        };
+
+        Collection<String> earlyModelPaths = ResourcePackHelper.getAllPaths((SimpleReloadableResourceManager)manager, shouldLoadEarly);
+        VintageFix.LOGGER.info("Early loading {} models", earlyModelPaths.size());
+
+        int permLoaded = 0;
+
+        for(String path : earlyModelPaths) {
+            ResourceLocation rl = ResourcePackHelper.pathToResourceLocation(path, ResourcePackHelper.ResourceLocationMatchType.SHORT);
+            if(rl != null) {
+                try {
+                    //VintageFix.LOGGER.info("Loading {}", rl);
+                    IModel theModel = DynamicModelProvider.instance.getObject(rl);
+                    if(theModel != null && shouldPersistEarly.test(path)) {
+                        DynamicModelProvider.instance.putObject(rl, theModel);
+                        permLoaded++;
+                    }
+                } catch(Exception e) {
+                    VintageFix.LOGGER.error("Early load error for {}", rl, e);
+                }
+            } else
+                VintageFix.LOGGER.warn("Path {} is not a valid model location", path);
+        }
+
+        VintageFix.LOGGER.info("Permanently loaded {} models", permLoaded);
+    }
+
+    private boolean shouldLoadBlacklisted(ModelResourceLocation mrl) {
+        return mrl.getNamespace().equals("thebetweenlands");
+    }
+
+    private boolean shouldPersistBlacklisted(ModelResourceLocation mrl) {
+        return false; // for now
+    }
+
+    private Map<ModelResourceLocation, IModel> blackListedModels;
+
+    private void doBlacklistedModelLoading(IResourceManager manager) {
+        blackListedModels = new Object2ObjectOpenHashMap<>();
+        List<ModelResourceLocation> modelList = new ArrayList<>();
+        for(ModelResourceLocation mrl : ModelLocationInformation.inventoryVariantLocations.keySet()) {
+            if(shouldLoadBlacklisted(mrl))
+                modelList.add(mrl);
+        }
+        for(Collection<ModelResourceLocation> c : ModelLocationInformation.validVariantsForBlock.values()) {
+            for(ModelResourceLocation mrl : c) {
+                if(shouldLoadBlacklisted(mrl))
+                    modelList.add(mrl);
+            }
+        }
+        if(modelList.size() == 0)
+            return;
+        ProgressManager.ProgressBar bar = ProgressManager.push("Incompatible model loading", modelList.size());
+        int errors = 0;
+        for(ModelResourceLocation mrl : modelList) {
+            bar.step(mrl.toString());
+            try {
+                IModel model = DynamicModelProvider.instance.getObject(mrl);
+                if(shouldPersistBlacklisted(mrl))
+                    DynamicModelProvider.instance.putObject(mrl, model);
+                blackListedModels.put(mrl, model);
+            } catch(RuntimeException e) {
+                VintageFix.LOGGER.error("Error loading blacklisted model {}: {}", mrl, e);
+                errors++;
+            }
+        }
+        VintageFix.LOGGER.info("{}/{} models had errors loading", errors, modelList.size());
+        ProgressManager.pop(bar);
+    }
+
+    private void doBlacklistedModelBaking(IResourceManager manager) {
+        if(blackListedModels.size() > 0) {
+            ProgressManager.ProgressBar bar = ProgressManager.push("Incompatible model baking", blackListedModels.size());
+            for(Map.Entry<ModelResourceLocation, IModel> entry : blackListedModels.entrySet()) {
+                bar.step(entry.getKey().toString());
+                try {
+                    IBakedModel model = DynamicBakedModelProvider.instance.getObject(entry.getKey());
+                    if(shouldPersistBlacklisted(entry.getKey()))
+                        DynamicBakedModelProvider.instance.putObject(entry.getKey(), model);
+                } catch(RuntimeException e) {
+                    VintageFix.LOGGER.error("Error baking blacklisted model {}: {}", entry.getKey(), e);
+                }
+            }
+            ProgressManager.pop(bar);
+        }
+        blackListedModels = null;
+    }
 
     /**
      * @reason Don't set up the ModelLoader. Instead, set up the caching DynamicModelProvider
@@ -86,39 +185,9 @@ public class MixinModelManager {
         DynamicBakedModelProvider.instance = dynamicBakedModelProvider;
         modelRegistry = dynamicBakedModelProvider;
 
-        // load some models early (e.g. TConstruct)
-        Pattern loadsEarly = Pattern.compile("^.*\\.(tmat|tcon|mod)\\.json");
-
-        Predicate<String> shouldLoadEarly = p -> {
-            return loadsEarly.matcher(p).matches();
-        };
-        Predicate<String> shouldPersistEarly = p -> {
-            return p.endsWith(".tmat.json");
-        };
-
-        Collection<String> earlyModelPaths = ResourcePackHelper.getAllPaths((SimpleReloadableResourceManager)resourceManager, shouldLoadEarly);
-        VintageFix.LOGGER.info("Early loading {} models", earlyModelPaths.size());
-
-        int permLoaded = 0;
-
-        for(String path : earlyModelPaths) {
-            ResourceLocation rl = ResourcePackHelper.pathToResourceLocation(path, ResourcePackHelper.ResourceLocationMatchType.SHORT);
-            if(rl != null) {
-                try {
-                    //VintageFix.LOGGER.info("Loading {}", rl);
-                    IModel theModel = dynamicModelProvider.getObject(rl);
-                    if(theModel != null && shouldPersistEarly.test(path)) {
-                        dynamicModelProvider.putObject(rl, theModel);
-                        permLoaded++;
-                    }
-                } catch(Exception e) {
-                    VintageFix.LOGGER.error("Early load error for {}", rl, e);
-                }
-            } else
-                VintageFix.LOGGER.warn("Path {} is not a valid model location", path);
-        }
-
-        VintageFix.LOGGER.info("Permanently loaded {} models", permLoaded);
+        doEarlyModelLoading(resourceManager);
+        // now do the blacklisted model loading
+        doBlacklistedModelLoading(resourceManager);
 
         Method getTexturesMethod = ObfuscationReflectionHelper.findMethod(ModelLoaderRegistry.class, "getTextures", Iterable.class);
         final Set<ResourceLocation> textures;
@@ -138,6 +207,8 @@ public class MixinModelManager {
         if(defaultModel == null)
             throw new AssertionError("Missing model is missing");
         DynamicBakedModelProvider.missingModel = defaultModel;
+
+        doBlacklistedModelBaking(resourceManager);
 
         // Register the universal bucket item
         if (FluidRegistry.isUniversalBucketEnabled()) {

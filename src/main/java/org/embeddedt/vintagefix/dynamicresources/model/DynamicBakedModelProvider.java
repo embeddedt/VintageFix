@@ -118,19 +118,19 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
             blockStateException = e;
             // check if an inventory variant is registered, and if so, try that
             inventoryVariantLocation = ModelLocationInformation.getInventoryVariantLocation(location);
-            if (inventoryVariantLocation != null) {
-                try {
-                    model = modelProvider.getObject(inventoryVariantLocation);
-                    if (VANILLA_MODEL_WRAPPER.isAssignableFrom(model.getClass())) {
-                        for (ResourceLocation dep : model.asVanillaModel().get().getOverrideLocations()) {
-                            if (!location.equals(dep)) {
-                                ModelLocationInformation.addInventoryVariantLocation(ModelLocationInformation.getInventoryVariant(dep.toString()), dep);
-                            }
+            if(inventoryVariantLocation == null)
+                inventoryVariantLocation = new ResourceLocation(location.getNamespace(), location.getPath());
+            try {
+                model = modelProvider.getObject(inventoryVariantLocation);
+                if (VANILLA_MODEL_WRAPPER.isAssignableFrom(model.getClass())) {
+                    for (ResourceLocation dep : model.asVanillaModel().get().getOverrideLocations()) {
+                        if (!location.equals(dep)) {
+                            ModelLocationInformation.addInventoryVariantLocation(ModelLocationInformation.getInventoryVariant(dep.toString()), dep);
                         }
                     }
-                } catch(Throwable e2) {
-                    normalException = e;
                 }
+            } catch(Throwable e2) {
+                normalException = e;
             }
         }
 
