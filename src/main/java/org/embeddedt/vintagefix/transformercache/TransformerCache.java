@@ -9,6 +9,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -23,6 +24,8 @@ import net.minecraft.launchwrapper.IClassNameTransformer;
 import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraft.launchwrapper.LaunchClassLoader;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import net.minecraftforge.fml.common.asm.ASMTransformerWrapper;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import org.embeddedt.vintagefix.VintageFix;
 import org.embeddedt.vintagefix.util.Util;
@@ -94,20 +97,48 @@ public class TransformerCache {
         });
     }
 
+    private static final Field TRANSFORMER_WRAPPER_PARENT_FIELD = ObfuscationReflectionHelper.findField(ASMTransformerWrapper.TransformerWrapper.class, "parent");
+
+    private static IClassTransformer getWrappedParent(IClassTransformer transformer) {
+        try {
+            return (IClassTransformer)TRANSFORMER_WRAPPER_PARENT_FIELD.get(transformer);
+        } catch(ReflectiveOperationException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private static String getUniqueTransformerName(IClassTransformer transformer) {
+        if(transformer instanceof ASMTransformerWrapper.TransformerWrapper) {
+            IClassTransformer wrapped = getWrappedParent(transformer);
+            if(wrapped != null)
+                return wrapped.getClass().getCanonicalName();
+            else
+                return "UNKNOWN.ASM";
+        } else
+            return transformer.getClass().getCanonicalName();
+    }
+
     private void hookClassLoader() {
         LaunchClassLoader lcl = (LaunchClassLoader)Launch.classLoader;
         List<IClassTransformer> transformers = (List<IClassTransformer>) ReflectionHelper.getPrivateValue(LaunchClassLoader.class, lcl, "transformers");
         for(int i = 0; i < transformers.size(); i++) {
             IClassTransformer transformer = transformers.get(i);
+            IClassTransformer matchAgainst = transformer;
+            if(transformer instanceof ASMTransformerWrapper.TransformerWrapper) {
+                IClassTransformer wrapped = getWrappedParent(transformer);
+                if(wrapped != null)
+                    matchAgainst = wrapped;
+            }
             boolean matches = false;
             for(Class<?> clz : transformersToCache) {
-                if(clz.isAssignableFrom(transformer.getClass())) {
+                if(clz.isAssignableFrom(matchAgainst.getClass())) {
                     matches = true;
                     break;
                 }
             }
             if(matches) {
-                LOGGER.info("Replacing " + transformer.getClass().getCanonicalName() + " with cached proxy");
+                LOGGER.info("Replacing " + getUniqueTransformerName(transformer) + " with cached proxy");
 
                 IClassTransformer newTransformer = transformer instanceof IClassNameTransformer
                         ? new CachedNameTransformerProxy(transformer) : new CachedTransformerProxy(transformer);
@@ -231,7 +262,7 @@ public class TransformerCache {
         try(FileWriter fw = new FileWriter(TRANSFORMERCACHE_PROFILER_CSV)){
             fw.write("class,name,runs,misses\n");
             for(IClassTransformer transformer : myTransformers) {
-                String className = transformer.getClass().getCanonicalName();
+                String className = getUniqueTransformerName(transformer);
                 String name = transformer.toString();
                 int runs = 0;
                 int misses = 0;

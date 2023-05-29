@@ -109,6 +109,9 @@ public class MixinConfigPlugin implements IMixinConfigPlugin {
     public List<String> getMixins() {
         MixinEnvironment.Phase phase = MixinEnvironment.getCurrentEnvironment().getPhase();
         if(phase == MixinEnvironment.Phase.DEFAULT) {
+            if(!LateMixins.atLateStage && Boolean.getBoolean("vintagefix.transformerCache")) {
+                TransformerCache.instance.init();
+            }
             MixinEnvironment.Side side = MixinEnvironment.getCurrentEnvironment().getSide();
             List<String> list = allMixins.stream()
                 .filter(p -> !p.isClientOnly || side == MixinEnvironment.Side.CLIENT)
