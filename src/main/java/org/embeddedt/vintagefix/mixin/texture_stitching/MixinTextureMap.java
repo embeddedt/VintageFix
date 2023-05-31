@@ -187,4 +187,17 @@ public abstract class MixinTextureMap {
             cir.setReturnValue(true);
         }
     }
+
+    @Inject(method = "generateMipmaps", at = @At("RETURN"), cancellable = true)
+    private void skipStitchEmptySprite(IResourceManager manager, TextureAtlasSprite sprite, CallbackInfoReturnable<Boolean> cir) {
+        if(cir.getReturnValueZ()) {
+            try {
+                sprite.getFrameTextureData(0);
+            } catch(RuntimeException e) {
+                VintageFix.LOGGER.warn("Skipped stitching empty sprite {}", sprite.getIconName());
+                // data is missing, do not stitch
+                cir.setReturnValue(false);
+            }
+        }
+    }
 }
