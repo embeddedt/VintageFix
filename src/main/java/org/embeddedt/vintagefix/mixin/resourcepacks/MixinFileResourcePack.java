@@ -2,8 +2,8 @@ package org.embeddedt.vintagefix.mixin.resourcepacks;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.collect.ImmutableMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import com.google.common.collect.ImmutableSet;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.client.resources.FileResourcePack;
 import org.embeddedt.vintagefix.VintageFix;
 import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
@@ -18,6 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
@@ -29,42 +30,34 @@ public abstract class MixinFileResourcePack {
     @Shadow
     protected abstract ZipFile getResourcePackZipFile() throws IOException;
 
-    private static final Cache<String, Object2ObjectOpenHashMap<CachedResourcePath, ZipEntry>> containedPathsByFile = CacheBuilder.newBuilder()
+    private static final Cache<String, ObjectOpenHashSet<CachedResourcePath>> containedPathsByFile = CacheBuilder.newBuilder()
         .concurrencyLevel(4)
         .expireAfterAccess(5, TimeUnit.MINUTES)
         .build();
 
-    private Map<CachedResourcePath, ZipEntry> genCache() {
+    private Set<CachedResourcePath> genCache() {
         ZipFile file;
         try {
             file = this.getResourcePackZipFile();
             return containedPathsByFile.get(file.getName(), () -> {
-                Object2ObjectOpenHashMap<CachedResourcePath, ZipEntry> containedPaths = new Object2ObjectOpenHashMap<>(file.size());
+                ObjectOpenHashSet<CachedResourcePath> containedPaths = new ObjectOpenHashSet<>(file.size());
                 Enumeration<? extends ZipEntry> entryEnum = file.entries();
                 while(entryEnum.hasMoreElements()) {
                     ZipEntry entry = entryEnum.nextElement();
                     if(entry.getName().startsWith("assets/") || entry.getName().indexOf('/') == -1)
-                        containedPaths.put(new CachedResourcePath(entry.getName(), true), entry);
+                        containedPaths.add(new CachedResourcePath(entry.getName(), true));
                 }
                 containedPaths.trim();
                 return containedPaths;
             });
         } catch(IOException | ExecutionException e) {
             VintageFix.LOGGER.error("Exception creating cache", e);
-            return ImmutableMap.of();
+            return ImmutableSet.of();
         }
     }
 
     @Inject(method = "hasResourceName", at = @At("HEAD"), cancellable = true)
     private void fastHasResource(String name, CallbackInfoReturnable<Boolean> cir) {
-        cir.setReturnValue(genCache().containsKey(new CachedResourcePath(name, false)));
-    }
-
-    @Redirect(method = "getInputStreamByName", at = @At(value = "INVOKE", target = "Ljava/util/zip/ZipFile;getEntry(Ljava/lang/String;)Ljava/util/zip/ZipEntry;"))
-    private ZipEntry getZipEntryFast(ZipFile file, String name) {
-        // avoid generating cache from ResourcePackRepository
-        if(name.equals("pack.mcmeta"))
-            return file.getEntry("pack.mcmeta");
-        return genCache().get(new CachedResourcePath(name, false));
+        cir.setReturnValue(genCache().contains(new CachedResourcePath(name, false)));
     }
 }
