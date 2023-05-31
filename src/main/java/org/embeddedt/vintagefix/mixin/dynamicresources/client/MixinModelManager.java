@@ -55,7 +55,7 @@ public class MixinModelManager {
 
     private void doEarlyModelLoading(IResourceManager manager) {
         // load some models early (e.g. TConstruct)
-        Pattern loadsEarly = Pattern.compile("^.*\\.(tmat|tcon|mod)\\.json");
+        Pattern loadsEarly = Pattern.compile("^.*\\.(tmat|tcon|mod|conarm)\\.json");
 
         Predicate<String> shouldLoadEarly = p -> {
             return loadsEarly.matcher(p).matches();
