@@ -11,10 +11,13 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 
-@Mod(modid = "vintagefix", name = "VintageFix", version = Tags.VERSION, dependencies = "after:foamfix@[INCOMPATIBLE]")
+@Mod(modid = "vintagefix", name = "VintageFix", version = Tags.VERSION, dependencies = "after:foamfix@[INCOMPATIBLE];" +
+    "after:loliasm@[" + VintageFix.REQUIRED_XASM_VERSION + ",);" +
+    "after:normalasm@[" + VintageFix.REQUIRED_XASM_VERSION + ",)")
 public class VintageFix {
 
     public static final Logger LOGGER = LogManager.getLogger("VintageFix");
+    public static final String REQUIRED_XASM_VERSION = "5.10";
 
     public static final File MY_DIR = new File(Launch.minecraftHome, "vintagefix");
     public static final File OUT_DIR = new File(MY_DIR, "out");
