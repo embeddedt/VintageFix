@@ -1,44 +1,37 @@
 package org.embeddedt.vintagefix.dynamicresources;
 
 import com.google.common.collect.ImmutableList;
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.client.resources.*;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import org.embeddedt.vintagefix.VintageFix;
+import org.embeddedt.vintagefix.dynamicresources.helpers.DefaultPackAdapter;
+import org.embeddedt.vintagefix.dynamicresources.helpers.FilePackAdapter;
+import org.embeddedt.vintagefix.dynamicresources.helpers.FolderPackAdapter;
+import org.embeddedt.vintagefix.dynamicresources.helpers.RemappingAdapter;
 
-import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Method;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.*;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 public class ResourcePackHelper {
-    private static final Method GET_FILE_PACK_ZIP_FILE = ObfuscationReflectionHelper.findMethod(FileResourcePack.class, "func_110599_c", ZipFile.class);
+    private static final Map<Class<? extends IResourcePack>, Adapter<? extends IResourcePack>> ADAPTERS = new Object2ObjectArrayMap<>();
 
-    private static FileSystem obtainFileSystem(Class<?> clz) throws IOException {
-        try {
-            URI uri = clz.getResource("/assets/.mcassetsroot").toURI();
-            if ("jar".equals(uri.getScheme())) {
-                try {
-                    return FileSystems.getFileSystem(uri);
-                } catch (FileSystemNotFoundException var11) {
-                    return FileSystems.newFileSystem(uri, Collections.emptyMap());
-                }
-            } else
-                throw new IOException("Wrong URI scheme: " + uri.getScheme());
-        } catch (URISyntaxException e) {
-            throw new IOException("Couldn't list vanilla resources", e);
-        }
+    public static <T extends IResourcePack> void registerAdapter(Class<T> clz, Adapter<T> adapter) {
+        ADAPTERS.put(clz, adapter);
+    }
+
+    static {
+        registerAdapter(LegacyV2Adapter.class, new RemappingAdapter<>(pack -> {
+            return ObfuscationReflectionHelper.getPrivateValue(LegacyV2Adapter.class, pack, "field_191383_a");
+        }));
+        registerAdapter(DefaultResourcePack.class, new DefaultPackAdapter());
+        registerAdapter(FileResourcePack.class, new FilePackAdapter());
+        registerAdapter(FolderResourcePack.class, new FolderPackAdapter());
     }
 
     public static Collection<IResourcePack> getAllPacks(SimpleReloadableResourceManager manager) {
@@ -64,41 +57,24 @@ public class ResourcePackHelper {
         return paths;
     }
 
-    public static Collection<String> getAllPaths(IResourcePack pack, Predicate<String> filter) throws IOException {
-        if (pack instanceof LegacyV2Adapter) {
-            IResourcePack wrappedPack = ObfuscationReflectionHelper.getPrivateValue(LegacyV2Adapter.class, (LegacyV2Adapter) pack, "field_191383_a");
-            return getAllPaths(wrappedPack, filter);
-        }
-        List<String> paths = ImmutableList.of();
-        if (pack instanceof DefaultResourcePack) {
-            try (FileSystem fs = obtainFileSystem(DefaultResourcePack.class)) {
-                Path basePath = fs.getPath("/assets");
-                try (Stream<Path> stream = Files.walk(basePath)) {
-                    paths = stream.map(Path::toString)
-                        .filter(filter)
-                        .collect(Collectors.toList());
-                }
-            }
-        } else if (pack instanceof FileResourcePack) {
-            ZipFile zf;
-            try {
-                zf = (ZipFile) GET_FILE_PACK_ZIP_FILE.invoke(pack);
-            } catch (ReflectiveOperationException e) {
-                throw new IOException(e);
-            }
-            paths = zf.stream().map(ZipEntry::getName).filter(filter).collect(Collectors.toList());
-        } else if(pack instanceof FolderResourcePack) {
-            File packFolder = ObfuscationReflectionHelper.getPrivateValue(AbstractResourcePack.class, (AbstractResourcePack)pack, "field_110597_b");
-            Path basePath = packFolder.toPath();
-            try(Stream<Path> stream = Files.walk(basePath)) {
-                paths = stream.map(basePath::relativize).map(Path::toString)
-                    .filter(filter)
-                    .collect(Collectors.toList());
-            }
-        } else {
-            VintageFix.LOGGER.warn("Cannot list resources from pack {} ({})", pack.getPackName(), pack.getClass().getName());
-        }
+    @SuppressWarnings("unchecked")
+    private static <T extends IResourcePack> Collection<String> applyAdapter(IResourcePack pack, Predicate<String> filter, Adapter<T> adapter) throws IOException {
+        List<String> paths = new ArrayList<>();
+        Iterator<String> incomingPaths = adapter.getAllPaths((T)pack, filter);
+        while(incomingPaths.hasNext())
+            paths.add(incomingPaths.next());
         return paths;
+    }
+
+    public static Collection<String> getAllPaths(IResourcePack pack, Predicate<String> filter) throws IOException {
+        for(Map.Entry<Class<? extends IResourcePack>, Adapter<? extends IResourcePack>> adapterEntry : ADAPTERS.entrySet()) {
+            if(adapterEntry.getKey().isAssignableFrom(pack.getClass())) {
+                return applyAdapter(pack, filter, adapterEntry.getValue());
+            }
+        }
+        // no adapters found, give up
+        VintageFix.LOGGER.warn("Cannot list resources from pack {} ({})", pack.getPackName(), pack.getClass().getName());
+        return ImmutableList.of();
     }
 
     public static final Pattern PATH_TO_RESLOC_REGEX = Pattern.compile("^/?assets/(.+?(?=/))/(.*)$");
@@ -125,5 +101,21 @@ public class ResourcePackHelper {
             return new ResourceLocation(matcher.group(1), matcher.group(2));
         else
             return null;
+    }
+
+    @FunctionalInterface
+    public interface Adapter<T extends IResourcePack> {
+        /**
+         * Get all paths matching the filter in the given resource pack.
+         * <br>
+         * Implementations need to be careful to return an Iterator that will still work after return
+         * (hence why the current ones collect to a list first).
+         *
+         * @param pack resource pack to get paths from
+         * @param filter a filter to apply to each path
+         * @return an iterator that provides a list of all the paths. May be lazily populated
+         * @throws IOException if any error occurs during this process
+         */
+        Iterator<String> getAllPaths(T pack, Predicate<String> filter) throws IOException;
     }
 }
