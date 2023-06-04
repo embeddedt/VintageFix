@@ -9,7 +9,7 @@ plugins {
   id("org.jetbrains.gradle.plugin.idea-ext") version "1.1.7"
   id("eclipse")
   id("com.gtnewhorizons.retrofuturagradle") version "1.3.14"
-  id("com.palantir.git-version") version "1.0.0"
+  id("com.palantir.git-version") version "3.0.0"
 }
 
 // Project properties
