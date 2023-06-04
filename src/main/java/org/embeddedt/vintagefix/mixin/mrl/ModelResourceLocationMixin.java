@@ -14,17 +14,21 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ModelResourceLocation.class)
 @ClientOnlyMixin
-public class ModelResourceLocationMixin {
+public abstract class ModelResourceLocationMixin extends ResourceLocation {
     @Shadow
     @Final
     @Mutable
     private String variant;
 
+    protected ModelResourceLocationMixin(int unused, String... resourceName) {
+        super(unused, resourceName);
+    }
+
     @Inject(method = "<init>(Lnet/minecraft/util/ResourceLocation;Ljava/lang/String;)V", at = @At("TAIL"))
     private void constructTail(ResourceLocation location, String variantIn, CallbackInfo ci) {
         // Do not use new strings for path and namespace, and deduplicate the variant string
-        ((ResourceLocationAccess) this).setPath(location.getPath());
-        ((ResourceLocationAccess) this).setNamespace(location.getNamespace());
+        this.path = location.getPath();
+        this.namespace = location.getNamespace();
         this.variant = Deduplicator.deduplicateVariant(this.variant);
     }
 }

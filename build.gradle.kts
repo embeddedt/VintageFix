@@ -178,11 +178,14 @@ tasks.processResources {
   dependsOn(tasks.compileJava)
 }
 
+tasks.deobfuscateMergedJarToSrg.configure {accessTransformerFiles.from("src/main/resources/vintagefix_at.cfg")}
+
 tasks.named<Jar>("jar") {
   manifest {
     attributes(
       "FMLCorePlugin" to ("org.embeddedt.vintagefix.core.VintageFixCore"),
       "FMLCorePluginContainsFMLMod" to "true",
+      "FMLAT" to "vintagefix_at.cfg",
       "ForceLoadAsMod" to "true"
     )
   }
