@@ -18,8 +18,10 @@ import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import org.embeddedt.vintagefix.core.MixinConfigPlugin;
 import org.embeddedt.vintagefix.core.VintageFixCore;
 import org.embeddedt.vintagefix.dynamicresources.CTMHelper;
+import org.embeddedt.vintagefix.dynamicresources.IWeakTextureMap;
 import org.embeddedt.vintagefix.dynamicresources.ResourcePackHelper;
 import org.embeddedt.vintagefix.impl.Deduplicator;
 
@@ -56,60 +58,62 @@ public class VintageFixClient {
 
     private void registerSpriteSafe(TextureMap map, ResourceLocation location) {
         try {
-            map.registerSprite(location);
+            ((IWeakTextureMap)map).registerSpriteWeak(location);
         } catch(RuntimeException ignored) {
         }
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void collectTextures(TextureStitchEvent.Pre event) {
-        /* take every texture from these folders (1.19.3+ emulation) */
-        Stopwatch watch = Stopwatch.createStarted();
-        TextureMap map = event.getMap();
-        Set<IResourcePack> resourcePacks = new LinkedHashSet<>();
-        SimpleReloadableResourceManager manager = (SimpleReloadableResourceManager)Minecraft.getMinecraft().getResourceManager();
-        Map<String, FallbackResourceManager> domainManagers = ObfuscationReflectionHelper.getPrivateValue(SimpleReloadableResourceManager.class, manager, "field_110548_a");
-        for(FallbackResourceManager fallback : domainManagers.values()) {
-            List<IResourcePack> fallbackPacks = ObfuscationReflectionHelper.getPrivateValue(FallbackResourceManager.class, fallback, "field_110540_a");
-            resourcePacks.addAll(fallbackPacks);
-        }
-        int numFoundSprites = 0;
-        for(IResourcePack pack : resourcePacks) {
-            try {
-                Collection<String> paths = ResourcePackHelper.getAllPaths(pack, s -> true);
-                for(String path : paths) {
-                    Matcher matcher = TEXTURE_MATCH_PATTERN.matcher(path);
-                    if(matcher.matches()) {
-                        registerSpriteSafe(map, new ResourceLocation(matcher.group(1), matcher.group(2)));
-                        numFoundSprites++;
-                    }
-                }
-            } catch(IOException e) {
-                VintageFix.LOGGER.error("Error listing resources", e);
+        if(MixinConfigPlugin.isMixinClassApplied("dynamicresources.client.TextureCollectionMixin")) {
+            /* take every texture from these folders (1.19.3+ emulation) */
+            Stopwatch watch = Stopwatch.createStarted();
+            TextureMap map = event.getMap();
+            Set<IResourcePack> resourcePacks = new LinkedHashSet<>();
+            SimpleReloadableResourceManager manager = (SimpleReloadableResourceManager)Minecraft.getMinecraft().getResourceManager();
+            Map<String, FallbackResourceManager> domainManagers = ObfuscationReflectionHelper.getPrivateValue(SimpleReloadableResourceManager.class, manager, "field_110548_a");
+            for(FallbackResourceManager fallback : domainManagers.values()) {
+                List<IResourcePack> fallbackPacks = ObfuscationReflectionHelper.getPrivateValue(FallbackResourceManager.class, fallback, "field_110540_a");
+                resourcePacks.addAll(fallbackPacks);
             }
-        }
-        VintageFix.LOGGER.info("Found {} sprites (some possibly duplicated among resource packs)", numFoundSprites);
-        String[] gameFolders = new String[] { "resources" };
-        Path gameDirPath = Minecraft.getMinecraft().gameDir.toPath();
-        for(String gameFolder : gameFolders) {
-            Path base = gameDirPath.resolve(gameFolder);
-            try(Stream<Path> stream = Files.walk(base)) {
-                Iterator<String> iterator = stream.map(base::relativize).map(path -> "assets/" + path).iterator();
-                while(iterator.hasNext()) {
-                    String p = iterator.next();
-                    Matcher matcher = TEXTURE_MATCH_PATTERN.matcher(p);
-                    if(matcher.matches()) {
-                        registerSpriteSafe(map, new ResourceLocation(matcher.group(1), matcher.group(2)));
-                        numFoundSprites++;
+            int numFoundSprites = 0;
+            for(IResourcePack pack : resourcePacks) {
+                try {
+                    Collection<String> paths = ResourcePackHelper.getAllPaths(pack, s -> true);
+                    for(String path : paths) {
+                        Matcher matcher = TEXTURE_MATCH_PATTERN.matcher(path);
+                        if(matcher.matches()) {
+                            registerSpriteSafe(map, new ResourceLocation(matcher.group(1), matcher.group(2)));
+                            numFoundSprites++;
+                        }
                     }
+                } catch(IOException e) {
+                    VintageFix.LOGGER.error("Error listing resources", e);
                 }
-            } catch(FileNotFoundException | NoSuchFileException ignored) {
-            } catch(IOException e) {
-                VintageFix.LOGGER.error("Error listing resources", e);
             }
+            VintageFix.LOGGER.info("Found {} sprites (some possibly duplicated among resource packs)", numFoundSprites);
+            String[] gameFolders = new String[] { "resources" };
+            Path gameDirPath = Minecraft.getMinecraft().gameDir.toPath();
+            for(String gameFolder : gameFolders) {
+                Path base = gameDirPath.resolve(gameFolder);
+                try(Stream<Path> stream = Files.walk(base)) {
+                    Iterator<String> iterator = stream.map(base::relativize).map(path -> "assets/" + path).iterator();
+                    while(iterator.hasNext()) {
+                        String p = iterator.next();
+                        Matcher matcher = TEXTURE_MATCH_PATTERN.matcher(p);
+                        if(matcher.matches()) {
+                            registerSpriteSafe(map, new ResourceLocation(matcher.group(1), matcher.group(2)));
+                            numFoundSprites++;
+                        }
+                    }
+                } catch(FileNotFoundException | NoSuchFileException ignored) {
+                } catch(IOException e) {
+                    VintageFix.LOGGER.error("Error listing resources", e);
+                }
+            }
+            watch.stop();
+            VintageFix.LOGGER.info("Texture search took {}, total of {} collected sprites", watch, numFoundSprites);
         }
-        watch.stop();
-        VintageFix.LOGGER.info("Texture search took {}, total of {} collected sprites", watch, numFoundSprites);
     }
 
     float lastIntegratedTickTime;

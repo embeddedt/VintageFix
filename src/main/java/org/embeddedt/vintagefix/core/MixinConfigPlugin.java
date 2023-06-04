@@ -97,12 +97,24 @@ public class MixinConfigPlugin implements IMixinConfigPlugin {
     }
 
     @Override
-    public boolean shouldApplyMixin(String s, String s1) {
+    public boolean shouldApplyMixin(String targetName, String className) {
+        System.out.println(className);
         return true;
     }
 
     @Override
     public void acceptTargets(Set<String> set, Set<String> set1) {
+    }
+
+    public static boolean isMixinClassApplied(String name) {
+        // temporary hack until a config system is written
+        String categoryName = name.substring(0, name.lastIndexOf('.'));
+        String prop = System.getProperty("vintagefix." + categoryName);
+        if(Objects.equals(prop, "false")) {
+            LOGGER.warn("Disabled mixin {}", name);
+            return false;
+        }
+        return true;
     }
 
     @Override
@@ -117,6 +129,7 @@ public class MixinConfigPlugin implements IMixinConfigPlugin {
                 .filter(p -> !p.isClientOnly || side == MixinEnvironment.Side.CLIENT)
                 .map(p -> p.className)
                 .map(clz -> clz.replace("org.embeddedt.vintagefix.mixin.", ""))
+                .filter(MixinConfigPlugin::isMixinClassApplied)
                 .collect(Collectors.toList());
             for(String mixin : list) {
                 LOGGER.debug("loading {}", mixin);
