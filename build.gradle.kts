@@ -9,11 +9,13 @@ plugins {
   id("org.jetbrains.gradle.plugin.idea-ext") version "1.1.7"
   id("eclipse")
   id("com.gtnewhorizons.retrofuturagradle") version "1.3.14"
+  id("com.palantir.git-version") version "1.0.0"
 }
 
 // Project properties
 group = "org.embeddedt.vintagefix"
-version = "1.0.0"
+val gitVersion: groovy.lang.Closure<String> by extra
+version = gitVersion()
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -196,6 +198,16 @@ tasks.named<Jar>("jar") {
   }
   from(googleimpl.output)
   from(embed.map { if (it.isDirectory) it else zipTree(it) })
+}
+
+val copyJarToBin = tasks.register<Copy>("copyJarToBin") {
+  from(tasks.reobfJar)
+  into(rootProject.file("out"))
+  rename { name -> "vintagefix.jar" }
+}
+
+tasks.build {
+  dependsOn(copyJarToBin)
 }
 
 
