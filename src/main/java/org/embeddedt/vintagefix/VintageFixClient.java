@@ -1,6 +1,7 @@
 package org.embeddedt.vintagefix;
 
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableListMultimap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.resources.FallbackResourceManager;
@@ -63,6 +64,10 @@ public class VintageFixClient {
         }
     }
 
+    private static final ImmutableListMultimap<String, ResourceLocation> EXTRA_TEXTURES_BY_MOD = ImmutableListMultimap.<String, ResourceLocation>builder()
+        .put("mekanism", new ResourceLocation("mekanism", "entities/robit"))
+        .build();
+
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void collectTextures(TextureStitchEvent.Pre event) {
         if(MixinConfigPlugin.isMixinClassApplied("mixin.dynamic_resources.TextureCollectionMixin")) {
@@ -110,6 +115,10 @@ public class VintageFixClient {
                 } catch(IOException e) {
                     VintageFix.LOGGER.error("Error listing resources", e);
                 }
+            }
+            for(Map.Entry<String, ResourceLocation> entry : EXTRA_TEXTURES_BY_MOD.entries()) {
+                registerSpriteSafe(map, entry.getValue());
+                numFoundSprites++;
             }
             watch.stop();
             VintageFix.LOGGER.info("Texture search took {}, total of {} collected sprites", watch, numFoundSprites);
