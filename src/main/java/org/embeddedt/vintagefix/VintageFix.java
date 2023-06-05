@@ -13,7 +13,7 @@ import java.io.File;
 
 @Mod(modid = "vintagefix", name = "VintageFix", version = Tags.VERSION, dependencies = "after:foamfix@[INCOMPATIBLE];" +
     "after:loliasm@[" + VintageFix.REQUIRED_XASM_VERSION + ",);" +
-    "after:normalasm@[" + VintageFix.REQUIRED_XASM_VERSION + ",)")
+    "after:normalasm@[" + VintageFix.REQUIRED_XASM_VERSION + ",)", acceptableRemoteVersions = "*")
 public class VintageFix {
 
     public static final Logger LOGGER = LogManager.getLogger("VintageFix");
