@@ -1,4 +1,4 @@
-package org.embeddedt.vintagefix.mixin.modopts.agricraft;
+package org.embeddedt.vintagefix.mixin.mod_opts.agricraft;
 
 import com.google.common.base.Predicate;
 import org.embeddedt.vintagefix.annotation.LateMixin;

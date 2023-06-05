@@ -1,4 +1,4 @@
-package org.embeddedt.vintagefix.mixin.dynamicresources;
+package org.embeddedt.vintagefix.mixin.dynamic_resources;
 
 import com.google.common.collect.ImmutableSet;
 import net.minecraft.client.resources.IResourceManagerReloadListener;

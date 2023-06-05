@@ -1,4 +1,4 @@
-package org.embeddedt.vintagefix.mixin.dynamicresources;
+package org.embeddedt.vintagefix.mixin.dynamic_resources;
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;

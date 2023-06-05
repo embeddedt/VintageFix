@@ -1,4 +1,4 @@
-package org.embeddedt.vintagefix.mixin.dynamicresources;
+package org.embeddedt.vintagefix.mixin.dynamic_resources;
 
 import net.minecraft.client.resources.AbstractResourcePack;
 import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;

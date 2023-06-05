@@ -1,4 +1,4 @@
-package org.embeddedt.vintagefix.mixin.model_optimizations.dedupbakedquad;
+package org.embeddedt.vintagefix.mixin.model_optimizations.dedup_baked_quad;
 
 import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.embeddedt.vintagefix.impl.Deduplicator;

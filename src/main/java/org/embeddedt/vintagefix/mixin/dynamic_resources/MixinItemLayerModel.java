@@ -1,4 +1,4 @@
-package org.embeddedt.vintagefix.mixin.dynamicresources;
+package org.embeddedt.vintagefix.mixin.dynamic_resources;
 
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;

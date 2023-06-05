@@ -1,4 +1,4 @@
-package org.embeddedt.vintagefix.mixin.dynamicresources;
+package org.embeddedt.vintagefix.mixin.dynamic_resources;
 
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.IModel;

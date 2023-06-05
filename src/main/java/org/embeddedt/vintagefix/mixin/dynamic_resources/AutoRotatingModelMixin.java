@@ -1,4 +1,4 @@
-package org.embeddedt.vintagefix.mixin.dynamicresources;
+package org.embeddedt.vintagefix.mixin.dynamic_resources;
 
 import appeng.bootstrap.components.ModelOverrideComponent;
 import net.minecraft.client.renderer.block.model.IBakedModel;

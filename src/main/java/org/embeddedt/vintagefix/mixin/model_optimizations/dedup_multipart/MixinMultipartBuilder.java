@@ -1,4 +1,4 @@
-package org.embeddedt.vintagefix.mixin.model_optimizations.dedupmultipart;
+package org.embeddedt.vintagefix.mixin.model_optimizations.dedup_multipart;
 
 import com.google.common.base.Predicate;
 import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;

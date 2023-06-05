@@ -1,4 +1,4 @@
-package org.embeddedt.vintagefix.mixin.model_optimizations.dedupmultipart;
+package org.embeddedt.vintagefix.mixin.model_optimizations.dedup_multipart;
 
 import net.minecraft.client.renderer.block.model.MultipartBakedModel;
 import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;

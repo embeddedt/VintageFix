@@ -1,4 +1,4 @@
-package org.embeddedt.vintagefix.mixin.model_optimizations.modelsides;
+package org.embeddedt.vintagefix.mixin.model_optimizations.dedup_quad_lists;
 
 import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.embeddedt.vintagefix.impl.ModelSidesImpl;

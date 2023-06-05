@@ -1,8 +1,7 @@
-package org.embeddedt.vintagefix.mixin.dynamicresources;
+package org.embeddedt.vintagefix.mixin.dynamic_resources;
 
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.embeddedt.vintagefix.annotation.LateMixin;

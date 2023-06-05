@@ -1,4 +1,4 @@
-package org.embeddedt.vintagefix.mixin.model_optimizations.mrl;
+package org.embeddedt.vintagefix.mixin.model_optimizations.location_canon;
 
 import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.embeddedt.vintagefix.impl.Deduplicator;
