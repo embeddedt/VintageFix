@@ -65,7 +65,7 @@ public class VintageFixClient {
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void collectTextures(TextureStitchEvent.Pre event) {
-        if(MixinConfigPlugin.isMixinClassApplied("dynamicresources.client.TextureCollectionMixin")) {
+        if(MixinConfigPlugin.isMixinClassApplied("dynamicresources.TextureCollectionMixin")) {
             /* take every texture from these folders (1.19.3+ emulation) */
             Stopwatch watch = Stopwatch.createStarted();
             TextureMap map = event.getMap();

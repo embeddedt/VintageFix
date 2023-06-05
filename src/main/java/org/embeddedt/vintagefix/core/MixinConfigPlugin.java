@@ -1,7 +1,10 @@
 package org.embeddedt.vintagefix.core;
 
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
+import net.minecraft.launchwrapper.Launch;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.relauncher.Side;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -13,8 +16,8 @@ import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
-import java.io.IOException;
-import java.io.InputStream;
+import javax.annotation.Nullable;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.*;
@@ -25,6 +28,8 @@ import java.util.stream.Stream;
 
 public class MixinConfigPlugin implements IMixinConfigPlugin {
     private static final Logger LOGGER = LogManager.getLogger("VintageFix Mixin Loader");
+
+    private static final String PACKAGE_PREFIX = "org.embeddedt.vintagefix.";
 
     private static final ImmutableMap<String, Consumer<PotentialMixin>> MIXIN_PROCESSING_MAP = ImmutableMap.<String, Consumer<PotentialMixin>>builder()
         .put("Lorg/spongepowered/asm/mixin/Mixin;", p -> p.valid = true)
@@ -39,7 +44,7 @@ public class MixinConfigPlugin implements IMixinConfigPlugin {
         boolean isLate;
     }
 
-    private final List<PotentialMixin> allMixins = new ArrayList<>();
+    private static final List<PotentialMixin> allMixins = new ArrayList<>();
 
     private void considerClass(String pathString) throws IOException {
         try(InputStream stream = MixinConfigPlugin.class.getClassLoader().getResourceAsStream("org/embeddedt/vintagefix/mixin/" + pathString)) {
@@ -57,38 +62,83 @@ public class MixinConfigPlugin implements IMixinConfigPlugin {
                 if(consumer != null)
                     consumer.accept(mixin);
             }
-            if(mixin.valid && LateMixins.atLateStage == mixin.isLate)
+            if(mixin.valid)
                 allMixins.add(mixin);
         }
     }
+
+    private static Properties config;
+
+    private static String mixinClassNameToBaseName(String mixinClassName) {
+        String noPrefix = mixinClassName.replace(PACKAGE_PREFIX, "");
+        return noPrefix.substring(0, noPrefix.lastIndexOf('.'));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void writeOrderedProperties(Properties props, OutputStream stream) throws IOException {
+        try(PrintWriter writer = new PrintWriter(stream)) {
+            writer.println("# VintageFix config file");
+            writer.println();
+            List<String> lst = new ArrayList<>((Set<String>)(Set<?>)props.keySet());
+            lst.sort(Comparator.naturalOrder());
+            for(String k : lst) {
+                writer.println(k + "=" + props.getProperty(k));
+            }
+        }
+    }
+
     @Override
     public void onLoad(String s) {
-        try {
-            URI uri = Objects.requireNonNull(MixinConfigPlugin.class.getResource("/mixins.vintagefix.json")).toURI();
-            FileSystem fs;
+        if(allMixins.size() == 0) {
             try {
-                fs = FileSystems.getFileSystem(uri);
-            } catch (FileSystemNotFoundException var11) {
-                fs = FileSystems.newFileSystem(uri, Collections.emptyMap());
-            }
-            List<Path> list;
-            Path basePath = fs.getPath("org", "embeddedt", "vintagefix", "mixin").toAbsolutePath();
-            try(Stream<Path> stream = Files.walk(basePath)) {
-                list = stream.collect(Collectors.toList());
-            }
-            for(Path p : list) {
-                if(p == null)
-                    continue;
-                p = basePath.relativize(p.toAbsolutePath());
-                String pathString = p.toString();
-                if(pathString.endsWith(".class")) {
-                    considerClass(pathString);
+                URI uri = Objects.requireNonNull(MixinConfigPlugin.class.getResource("/mixins.vintagefix.json")).toURI();
+                FileSystem fs;
+                try {
+                    fs = FileSystems.getFileSystem(uri);
+                } catch (FileSystemNotFoundException var11) {
+                    fs = FileSystems.newFileSystem(uri, Collections.emptyMap());
                 }
+                List<Path> list;
+                Path basePath = fs.getPath("org", "embeddedt", "vintagefix", "mixin").toAbsolutePath();
+                try(Stream<Path> stream = Files.walk(basePath)) {
+                    list = stream.collect(Collectors.toList());
+                }
+                for(Path p : list) {
+                    if(p == null)
+                        continue;
+                    p = basePath.relativize(p.toAbsolutePath());
+                    String pathString = p.toString();
+                    if(pathString.endsWith(".class")) {
+                        considerClass(pathString);
+                    }
+                }
+            } catch(IOException | URISyntaxException e) {
+                throw new RuntimeException(e);
             }
-        } catch(IOException | URISyntaxException e) {
-            throw new RuntimeException(e);
+            LOGGER.info("Found {} mixins", allMixins.size());
+            config = new Properties();
+            File targetConfig = new File(Launch.minecraftHome, "config" + File.separator + "vintagefix.properties");
+            try {
+                if(targetConfig.exists()) {
+                    try(InputStream stream = Files.newInputStream(targetConfig.toPath())) {
+                        config.load(stream);
+                    } catch(IllegalArgumentException ignored) {}
+                }
+                for(PotentialMixin m : allMixins) {
+                    String baseName = mixinClassNameToBaseName(m.className);
+                    if(!config.containsKey(baseName)) {
+                        LOGGER.warn("Added missing entry '{}' to config file", baseName);
+                        config.put(baseName, "true");
+                    }
+                }
+                try(OutputStream stream = Files.newOutputStream(targetConfig.toPath())) {
+                    writeOrderedProperties(config, stream);
+                }
+                LOGGER.info("Successfully saved config file");
+            } catch(IOException e) {
+                LOGGER.error("Exception handling config", e);
+            }
         }
-        LOGGER.info("Found {} {} mixins", allMixins.size(), LateMixins.atLateStage ? "late" : "early");
     }
 
     @Override
@@ -98,7 +148,6 @@ public class MixinConfigPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetName, String className) {
-        System.out.println(className);
         return true;
     }
 
@@ -107,14 +156,12 @@ public class MixinConfigPlugin implements IMixinConfigPlugin {
     }
 
     public static boolean isMixinClassApplied(String name) {
-        // temporary hack until a config system is written
-        String categoryName = name.substring(0, name.lastIndexOf('.'));
-        String prop = System.getProperty("vintagefix." + categoryName);
-        if(Objects.equals(prop, "false")) {
-            LOGGER.warn("Disabled mixin {}", name);
-            return false;
+        String baseName = mixinClassNameToBaseName(name);
+        boolean isEnabled = Boolean.parseBoolean(config.getProperty(baseName, ""));
+        if(!isEnabled) {
+            LOGGER.warn("Not applying mixin '{}' as '{}' is disabled in config", name, baseName);
         }
-        return true;
+        return isEnabled;
     }
 
     @Override
@@ -127,9 +174,10 @@ public class MixinConfigPlugin implements IMixinConfigPlugin {
             MixinEnvironment.Side side = MixinEnvironment.getCurrentEnvironment().getSide();
             List<String> list = allMixins.stream()
                 .filter(p -> !p.isClientOnly || side == MixinEnvironment.Side.CLIENT)
+                .filter(p -> p.isLate == LateMixins.atLateStage)
                 .map(p -> p.className)
-                .map(clz -> clz.replace("org.embeddedt.vintagefix.mixin.", ""))
                 .filter(MixinConfigPlugin::isMixinClassApplied)
+                .map(clz -> clz.replace("org.embeddedt.vintagefix.mixin.", ""))
                 .collect(Collectors.toList());
             for(String mixin : list) {
                 LOGGER.debug("loading {}", mixin);
