@@ -1,4 +1,4 @@
-package org.embeddedt.vintagefix.mixin.fastmap;
+package org.embeddedt.vintagefix.mixin.blockstates;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableTable;
