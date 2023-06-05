@@ -5,6 +5,7 @@ import net.minecraft.client.resources.DefaultResourcePack;
 import net.minecraft.client.resources.ResourceIndex;
 import net.minecraft.util.ResourceLocation;
 import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
+import org.embeddedt.vintagefix.core.VintageFixCore;
 import org.embeddedt.vintagefix.dynamicresources.ResourcePackHelper;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -15,16 +16,21 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 
 @Mixin(DefaultResourcePack.class)
 @ClientOnlyMixin
-public class MixinDefaultResourcePack {
+public abstract class MixinDefaultResourcePack {
     @Shadow
     @Final
     private ResourceIndex resourceIndex;
+
+    @Shadow
+    @Nullable
+    protected abstract InputStream getResourceStream(ResourceLocation location);
 
     private static final ObjectOpenHashSet<String> containedPaths = new ObjectOpenHashSet<>();
 
@@ -51,6 +57,11 @@ public class MixinDefaultResourcePack {
     public boolean resourceExists(ResourceLocation location)
     {
         String path = "/assets/" + location.getNamespace() + "/" + location.getPath();
-        return containedPaths.contains(path) || this.resourceIndex.isFileExisting(location);
+        if(containedPaths.contains(path) || this.resourceIndex.isFileExisting(location))
+            return true;
+        // hack so that OptiFine resources load
+        if(VintageFixCore.OPTIFINE)
+            return this.getResourceStream(location) != null;
+        return false;
     }
 }
