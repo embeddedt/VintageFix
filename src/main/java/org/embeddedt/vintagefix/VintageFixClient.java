@@ -25,6 +25,7 @@ import org.embeddedt.vintagefix.dynamicresources.CTMHelper;
 import org.embeddedt.vintagefix.dynamicresources.IWeakTextureMap;
 import org.embeddedt.vintagefix.dynamicresources.ResourcePackHelper;
 import org.embeddedt.vintagefix.impl.Deduplicator;
+import org.embeddedt.vintagefix.util.Util;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -97,12 +98,12 @@ public class VintageFixClient {
                 }
             }
             VintageFix.LOGGER.info("Found {} sprites (some possibly duplicated among resource packs)", numFoundSprites);
-            String[] gameFolders = new String[] { "resources" };
+            String[] gameFolders = new String[] { "resources", "oresources" };
             Path gameDirPath = Minecraft.getMinecraft().gameDir.toPath();
             for(String gameFolder : gameFolders) {
                 Path base = gameDirPath.resolve(gameFolder);
                 try(Stream<Path> stream = Files.walk(base)) {
-                    Iterator<String> iterator = stream.map(base::relativize).map(path -> "assets/" + path).iterator();
+                    Iterator<String> iterator = stream.map(base::relativize).map(path -> "assets/" + Util.normalizePathToString(path)).iterator();
                     while(iterator.hasNext()) {
                         String p = iterator.next();
                         Matcher matcher = TEXTURE_MATCH_PATTERN.matcher(p);

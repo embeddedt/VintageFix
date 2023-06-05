@@ -1,6 +1,9 @@
 package org.embeddedt.vintagefix.util;
 
+import com.google.common.base.Joiner;
+
 import java.io.File;
+import java.nio.file.Path;
 
 import javax.lang.model.SourceVersion;
 
@@ -19,4 +22,9 @@ public class Util {
         return SourceVersion.isName(className);
     }
 
+    private static final Joiner SLASH_JOINER = Joiner.on('/');
+
+    public static String normalizePathToString(Path path) {
+        return SLASH_JOINER.join(path);
+    }
 }

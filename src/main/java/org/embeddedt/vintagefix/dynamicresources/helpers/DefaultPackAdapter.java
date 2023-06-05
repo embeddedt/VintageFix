@@ -2,6 +2,7 @@ package org.embeddedt.vintagefix.dynamicresources.helpers;
 
 import net.minecraft.client.resources.DefaultResourcePack;
 import org.embeddedt.vintagefix.dynamicresources.ResourcePackHelper;
+import org.embeddedt.vintagefix.util.Util;
 
 import java.io.IOException;
 import java.net.URI;
@@ -35,7 +36,7 @@ public class DefaultPackAdapter implements ResourcePackHelper.Adapter<DefaultRes
         try (FileSystem fs = obtainFileSystem(DefaultResourcePack.class)) {
             Path basePath = fs.getPath("/assets");
             try (Stream<Path> stream = Files.walk(basePath)) {
-                return stream.map(Path::toString)
+                return stream.map(basePath::relativize).map(p -> "/assets/" + Util.normalizePathToString(p))
                     .filter(filter)
                     .collect(Collectors.toList())
                     .iterator();
