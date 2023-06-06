@@ -7,6 +7,7 @@
     "description": "A backport of FerriteCore to 1.12.2",
     "url": "https://github.com/GTNewHorizons/RetroFuturaGradle/",
     "credits": "",
+    "logoFile": "vintagefix.png",
     "authorList": ["embeddedt"],
     "dependencies": ["mixinbooter"]
   }

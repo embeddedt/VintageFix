@@ -10,6 +10,8 @@ plugins {
   id("eclipse")
   id("com.gtnewhorizons.retrofuturagradle") version "1.3.14"
   id("com.palantir.git-version") version "3.0.0"
+  id("com.matthewprenger.cursegradle") version "1.4.0"
+  id("com.modrinth.minotaur") version "2.+"
 }
 
 // Project properties
@@ -282,4 +284,34 @@ idea {
 
 tasks.processIdeaSettings.configure {
   dependsOn(tasks.injectTags)
+}
+
+curseforge {
+  if (System.getenv("CURSEFORGE_TOKEN") != null) {
+    apiKey = System.getenv("CURSEFORGE_TOKEN")
+    project(closureOf<com.matthewprenger.cursegradle.CurseProject> {
+      id = "871198"
+      releaseType = "release"
+      gameVersionStrings.add("Forge")
+      gameVersionStrings.add("1.12.2")
+      gameVersionStrings.add("Java 8")
+      mainArtifact(tasks.reobfJar.get().archivePath, closureOf<com.matthewprenger.cursegradle.CurseArtifact> {
+        displayName = "VintageFix ${project.version}"
+      })
+    })
+  }
+}
+
+modrinth {
+  token.set(System.getenv("MODRINTH_TOKEN"))
+  projectId.set("vintagefix") // This can be the project ID or the slug. Either will work!
+  versionType.set("release") // This is the default -- can also be `beta` or `alpha`
+  uploadFile.set(tasks.reobfJar)
+  gameVersions.add("1.12.2")
+  loaders.add("forge")
+}
+
+tasks.register("publishToModSites") {
+  dependsOn(tasks.modrinth)
+  dependsOn(tasks.curseforge)
 }
