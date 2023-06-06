@@ -110,8 +110,6 @@ public abstract class MixinTextureMap {
         net.minecraftforge.fml.client.FMLClientHandler.instance().trackMissingTexture(resourcelocation);
     }
 
-    private static final Executor TEXTURE_LOADER_POOL = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-
     private static final AtomicInteger loadedCount = new AtomicInteger(0);
 
     private static final Set<Class<?>> SAFE_CLASSES;
@@ -137,7 +135,7 @@ public abstract class MixinTextureMap {
             TextureAtlasSprite sprite = entry.getValue();
             if(sprite != null) {
                 if(!FMLClientHandler.instance().hasError() && SAFE_CLASSES.contains(sprite.getClass())) {
-                    TEXTURE_LOADER_POOL.execute(() -> {
+                    VintageFix.WORKER_POOL.execute(() -> {
                         try {
                             sprite.loadSprite(null, false);
                             ResourceLocation fileLocation = this.getResourceLocation(sprite);

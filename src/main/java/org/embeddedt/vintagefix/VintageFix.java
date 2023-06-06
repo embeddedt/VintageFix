@@ -10,6 +10,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
 
 @Mod(modid = "vintagefix", name = "VintageFix", version = Tags.VERSION, dependencies = "after:foamfix@[INCOMPATIBLE];" +
     "after:loliasm@[" + VintageFix.REQUIRED_XASM_VERSION + ",);" +
@@ -22,6 +24,8 @@ public class VintageFix {
     public static final File MY_DIR = new File(Launch.minecraftHome, "vintagefix");
     public static final File OUT_DIR = new File(MY_DIR, "out");
     public static final File CACHE_DIR = new File(MY_DIR, "transformerCache");
+
+    public static final ExecutorService WORKER_POOL = new ForkJoinPool();
 
     @Mod.EventHandler
     @SuppressWarnings("unused")
