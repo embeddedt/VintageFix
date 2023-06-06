@@ -100,7 +100,8 @@ public class VintageFixClient {
             resourcePackList = getResourcePackList();
             CompletableFuture<List<ResourceLocation>> modelTextures = CompletableFuture.supplyAsync(VintageFixClient::collectModelTextures, VintageFix.WORKER_POOL);
             int numFoundSprites = 0;
-            ProgressManager.ProgressBar textureBar = ProgressManager.push("Scanning resource packs", resourcePackList.size());
+            String[] gameFolders = new String[] { "resources", "oresources" };
+            ProgressManager.ProgressBar textureBar = ProgressManager.push("Scanning resource packs", resourcePackList.size() + gameFolders.length + 1);
             for(IResourcePack pack : resourcePackList) {
                 textureBar.step(pack.getPackName());
                 try {
@@ -116,11 +117,11 @@ public class VintageFixClient {
                     VintageFix.LOGGER.error("Error listing resources", e);
                 }
             }
-            ProgressManager.pop(textureBar);
+
             VintageFix.LOGGER.info("Found {} sprites (some possibly duplicated among resource packs)", numFoundSprites);
-            String[] gameFolders = new String[] { "resources", "oresources" };
             Path gameDirPath = Minecraft.getMinecraft().gameDir.toPath();
             for(String gameFolder : gameFolders) {
+                textureBar.step(gameFolder);
                 Path base = gameDirPath.resolve(gameFolder);
                 try(Stream<Path> stream = Files.walk(base)) {
                     Iterator<String> iterator = stream.map(base::relativize).map(path -> "assets/" + Util.normalizePathToString(path)).iterator();
@@ -137,14 +138,17 @@ public class VintageFixClient {
                     VintageFix.LOGGER.error("Error listing resources", e);
                 }
             }
+
             for(Map.Entry<String, ResourceLocation> entry : EXTRA_TEXTURES_BY_MOD.entries()) {
                 registerSpriteSafe(map, entry.getValue());
                 numFoundSprites++;
             }
+            textureBar.step("Model scanning");
             for(ResourceLocation location : modelTextures.join()) {
                 registerSpriteSafe(map, location);
                 numFoundSprites++;
             }
+            ProgressManager.pop(textureBar);
             watch.stop();
             VintageFix.LOGGER.info("Texture search took {}, total of {} collected sprites", watch, numFoundSprites);
         }
