@@ -161,12 +161,13 @@ public class MixinModelManager {
             listener.onResourceManagerReload(resourceManager);
         }
 
-        ProgressManager.ProgressBar overallBar = ProgressManager.push("Setting up dynamic models", 5);
-        overallBar.step("Generate model locations");
         // Generate information about model locations, such as the blockstate location to block map
         // and the item variant to model location map.
 
         ModelLoader loader = new ModelLoader(resourceManager, texMap, modelProvider);
+
+        ProgressManager.ProgressBar overallBar = ProgressManager.push("Setting up dynamic models", 5);
+        overallBar.step("Generate model locations");
         ModelLocationInformation.init(loader, modelProvider.getBlockStateMapper());
 
 
