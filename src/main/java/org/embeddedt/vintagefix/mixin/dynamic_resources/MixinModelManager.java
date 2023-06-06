@@ -161,7 +161,7 @@ public class MixinModelManager {
             listener.onResourceManagerReload(resourceManager);
         }
 
-        ProgressManager.ProgressBar overallBar = ProgressManager.push("Setting up dynamic models", 4);
+        ProgressManager.ProgressBar overallBar = ProgressManager.push("Setting up dynamic models", 5);
         overallBar.step("Generate model locations");
         // Generate information about model locations, such as the blockstate location to block map
         // and the item variant to model location map.
@@ -205,6 +205,7 @@ public class MixinModelManager {
         textures.remove(TextureMap.LOCATION_MISSING_TEXTURE);
         textures.addAll(ObfuscationReflectionHelper.getPrivateValue(ModelBakery.class, null, "field_177602_b"));
 
+        overallBar.step("Load textures");
         texMap.loadSprites(resourceManager, map -> textures.forEach(map::registerSprite));
 
         // Get the default model, returned by getModel when the model provider returns null

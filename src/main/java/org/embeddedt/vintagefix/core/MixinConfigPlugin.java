@@ -157,6 +157,10 @@ public class MixinConfigPlugin implements IMixinConfigPlugin {
 
     public static boolean isMixinClassApplied(String name) {
         String baseName = mixinClassNameToBaseName(name);
+        // texture optimization causes issues when OF is installed
+        if(baseName.startsWith("mixin.textures") && VintageFixCore.OPTIFINE) {
+            return false;
+        }
         boolean isEnabled = Boolean.parseBoolean(config.getProperty(baseName, ""));
         if(!isEnabled) {
             LOGGER.warn("Not applying mixin '{}' as '{}' is disabled in config", name, baseName);
