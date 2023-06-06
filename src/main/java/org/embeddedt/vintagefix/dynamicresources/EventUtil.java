@@ -8,11 +8,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.Field;
+import java.util.function.Consumer;
 
 public class EventUtil {
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public static void postEventAllowingErrors(Event event) {
+    public static IEventListener[] getListenersForEvent(Event event) {
         int busID;
         try {
             Field busIDField = EventBus.class.getDeclaredField("busID");
@@ -23,12 +24,6 @@ public class EventUtil {
         }
 
         IEventListener[] listeners = event.getListenerList().getListeners(busID);
-        for (IEventListener listener : listeners) {
-            try {
-                listener.invoke(event);
-            } catch (Throwable t) {
-                LOGGER.error(event + " listener '" + listener + "' threw exception, models may be broken", t);
-            }
-        }
+        return listeners;
     }
 }

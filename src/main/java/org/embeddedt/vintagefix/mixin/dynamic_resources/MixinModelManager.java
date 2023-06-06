@@ -22,6 +22,7 @@ import net.minecraftforge.common.ForgeModContainer;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.ProgressManager;
+import net.minecraftforge.fml.common.eventhandler.IEventListener;
 import org.embeddedt.vintagefix.VintageFix;
 import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.embeddedt.vintagefix.dynamicresources.DeferredListeners;
@@ -159,6 +160,9 @@ public class MixinModelManager {
         for(IResourceManagerReloadListener listener : DeferredListeners.deferredListeners) {
             listener.onResourceManagerReload(resourceManager);
         }
+
+        ProgressManager.ProgressBar overallBar = ProgressManager.push("Setting up dynamic models", 4);
+        overallBar.step("Generate model locations");
         // Generate information about model locations, such as the blockstate location to block map
         // and the item variant to model location map.
 
@@ -184,7 +188,9 @@ public class MixinModelManager {
         DynamicBakedModelProvider.instance = dynamicBakedModelProvider;
         modelRegistry = dynamicBakedModelProvider;
 
+        overallBar.step("Early model loading");
         doEarlyModelLoading(resourceManager);
+        overallBar.step("Blacklisted model loading");
         // now do the blacklisted model loading
         doBlacklistedModelLoading(resourceManager);
 
@@ -216,8 +222,20 @@ public class MixinModelManager {
 
         // Post the event, but just log an error if a listener throws an exception. The ModelLoader is
         // null, but very few mods use it. Custom support will be needed for those that do.
-        EventUtil.postEventAllowingErrors(new ModelBakeEvent((ModelManager) (Object) this, modelRegistry, null));
-
+        ModelBakeEvent event = new ModelBakeEvent((ModelManager) (Object) this, modelRegistry, null);
+        IEventListener[] listeners = EventUtil.getListenersForEvent(event);
+        overallBar.step("Baking");
+        ProgressManager.ProgressBar bakeEventBar = ProgressManager.push("Posting bake events", listeners.length);
+        for (IEventListener listener : listeners) {
+            bakeEventBar.step(listener.toString());
+            try {
+                listener.invoke(event);
+            } catch (Throwable t) {
+                VintageFix.LOGGER.error(event + " listener '" + listener + "' threw exception, models may be broken", t);
+            }
+        }
+        ProgressManager.pop(bakeEventBar);
+        ProgressManager.pop(overallBar);
         // Make the model provider load blockstate to model information. See MixinBlockModelShapes
         modelProvider.reloadModels();
     }
