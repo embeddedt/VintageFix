@@ -43,11 +43,9 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class VintageFixClient {
@@ -65,7 +63,7 @@ public class VintageFixClient {
     }
 
     // target all textures in the listed subfolders, or textures in the root folder
-    private static final Pattern TEXTURE_MATCH_PATTERN = Pattern.compile("^/?assets/(.+?(?=/))/textures/((?:(?:attachment|bettergrass|block.?|cape|decors|item.?|entity/(armor|bed|chest)|fluid.?|model.?|part.?|pipe|rendering|ropebridge|solid_block|tile.?)/.*)|[A-Za-z0-9_\\-]*)\\.png$");
+    private static final Pattern TEXTURE_MATCH_PATTERN = Pattern.compile("^/?assets/(.+?(?=/))/textures/((?:attachment|bettergrass|block.?|cape|decors|item.?|entity/(armor|bed|chest)|fluid.?|model.?|part.?|pipe|rendering|ropebridge|solid_block|tile.?)/.*)\\.png$");
 
     private void registerSpriteSafe(TextureMap map, ResourceLocation location) {
         try {
@@ -192,14 +190,11 @@ public class VintageFixClient {
 
     private static boolean resourceExists(ResourceLocation loc) {
         return doesResourceExist.computeIfAbsent(loc, rl -> {
-            boolean exists = false;
-            for(IResourcePack pack : resourcePackList) {
-                if(pack.resourceExists(rl)) {
-                    exists = true;
-                    break;
-                }
+            try(IResource ignored1 = Minecraft.getMinecraft().getResourceManager().getResource(rl)) {
+                return true;
+            } catch(IOException ignored) {
             }
-            return exists;
+            return false;
         });
     }
 
