@@ -7,8 +7,8 @@ plugins {
   id("java-library")
   id("maven-publish")
   id("org.jetbrains.gradle.plugin.idea-ext") version "1.1.7"
+  id("com.gtnewhorizons.retrofuturagradle") version "1.3.19"
   id("eclipse")
-  id("com.gtnewhorizons.retrofuturagradle") version "1.3.14"
   id("com.palantir.git-version") version "3.0.0"
   id("com.matthewprenger.cursegradle") version "1.4.0"
   id("com.modrinth.minotaur") version "2.+"
@@ -132,6 +132,8 @@ dependencies {
   compileOnly(rfg.deobf("curse.maven:mysticallib-277064:3483816"))
   compileOnly(rfg.deobf("curse.maven:blockcraftery-278882:2716712"))
   compileOnly(rfg.deobf("team.chisel.ctm:CTM:MC1.12.2-1.0.2.31"))
+  compileOnly(rfg.deobf("curse.maven:base-246996:3440963"))
+  compileOnly(rfg.deobf("curse.maven:rloader-226447:2477566"))
   // server build, put client build in run/mods
   compileOnly(rfg.deobf("curse.maven:betweenlands-243363:4479692"))
   //implementation(rfg.deobf("team.chisel:Chisel:MC1.12.2-1.0.1.44"))
@@ -202,7 +204,7 @@ tasks.named<Jar>("jar") {
       }
   }
   from(googleimpl.output)
-  from(embed.map { if (it.isDirectory) it else zipTree(it) })
+  from(provider { configurations["embed"].map { if (it.isDirectory) it else zipTree(it) } })
 }
 
 val copyJarToBin = tasks.register<Copy>("copyJarToBin") {
@@ -267,15 +269,6 @@ idea {
           self.add(Gradle("4. Run Obfuscated Server").apply {
             setProperty("taskNames", listOf("runObfServer"))
           })
-        }
-        "compiler" {
-          val self = this.delegate as org.jetbrains.gradle.ext.IdeaCompilerConfiguration
-          afterEvaluate {
-            self.javac.moduleJavacAdditionalOptions = mapOf(
-              (project.name + ".main") to
-                tasks.compileJava.get().options.compilerArgs.map { '"' + it + '"' }.joinToString(" ")
-            )
-          }
         }
       }
     }
