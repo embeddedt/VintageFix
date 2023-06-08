@@ -1,5 +1,6 @@
 package org.embeddedt.vintagefix.core;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import net.minecraft.launchwrapper.Launch;
@@ -87,6 +88,8 @@ public class MixinConfigPlugin implements IMixinConfigPlugin {
         }
     }
 
+    private static final ImmutableList<String> extraBaseNames = ImmutableList.of("mixin.dynamic_resources.background_item_bake");
+
     @Override
     public void onLoad(String s) {
         if(allMixins.size() == 0) {
@@ -130,6 +133,10 @@ public class MixinConfigPlugin implements IMixinConfigPlugin {
                         LOGGER.warn("Added missing entry '{}' to config file", baseName);
                         config.put(baseName, "true");
                     }
+                }
+                for(String extraBaseName : extraBaseNames) {
+                    if(!config.containsKey(extraBaseName))
+                        config.put(extraBaseName, "true");
                 }
                 try(OutputStream stream = Files.newOutputStream(targetConfig.toPath())) {
                     writeOrderedProperties(config, stream);

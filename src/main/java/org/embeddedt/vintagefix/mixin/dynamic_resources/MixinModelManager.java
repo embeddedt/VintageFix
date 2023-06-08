@@ -27,6 +27,7 @@ import org.embeddedt.vintagefix.VintageFix;
 import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.embeddedt.vintagefix.dynamicresources.DeferredListeners;
 import org.embeddedt.vintagefix.dynamicresources.EventUtil;
+import org.embeddedt.vintagefix.dynamicresources.ItemBakeThread;
 import org.embeddedt.vintagefix.dynamicresources.ResourcePackHelper;
 import org.embeddedt.vintagefix.dynamicresources.model.DynamicBakedModelProvider;
 import org.embeddedt.vintagefix.dynamicresources.model.DynamicModelProvider;
@@ -156,6 +157,7 @@ public class MixinModelManager {
      */
     @Overwrite
     public void onResourceManagerReload(IResourceManager resourceManager) {
+        ItemBakeThread.stopAndJoin();
         // Run the "end of model loading" listeners first
         for(IResourceManagerReloadListener listener : DeferredListeners.deferredListeners) {
             listener.onResourceManagerReload(resourceManager);

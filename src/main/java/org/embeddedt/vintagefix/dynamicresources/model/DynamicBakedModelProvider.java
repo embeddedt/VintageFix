@@ -39,7 +39,7 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
     public static final ModelResourceLocation MISSING_MODEL_LOCATION = new ModelResourceLocation("builtin/missing", "missing");
 
     private final IRegistry<ResourceLocation, IModel> modelProvider;
-    private final Map<ModelResourceLocation, IBakedModel> permanentlyLoadedBakedModels = new Object2ObjectOpenHashMap<>();
+    private final Map<ModelResourceLocation, IBakedModel> permanentlyLoadedBakedModels = Collections.synchronizedMap(new Object2ObjectOpenHashMap<>());
     private final Cache<ModelResourceLocation, Optional<IBakedModel>> loadedBakedModels =
             CacheBuilder.newBuilder()
                         .expireAfterAccess(3, TimeUnit.MINUTES)
