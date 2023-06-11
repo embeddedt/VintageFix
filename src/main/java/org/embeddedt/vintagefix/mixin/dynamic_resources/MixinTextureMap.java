@@ -59,7 +59,7 @@ public abstract class MixinTextureMap implements IWeakTextureMap {
         this.weakRegisteredSprites.add(location.toString());
     }
 
-    @Redirect(method = "finishLoading", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/Stitcher;doStitch()V"))
+    @Redirect(method = "finishLoading", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/Stitcher;doStitch()V"), require = 0)
     private void tryStitchAndDropTexture(Stitcher stitcher) {
         if(!(stitcher instanceof IDroppingStitcher)) {
             stitcher.doStitch();
