@@ -58,20 +58,19 @@ public abstract class MixinStitcher implements IDroppingStitcher {
         require = 1)
     private void doTurboStitch(CallbackInfo ci) {
         ci.cancel();
+        ProgressManager.ProgressBar bar = ProgressManager.push("Texture stitching", 1);
+        bar.step("Stitching master atlas");
         try {
-            ProgressManager.ProgressBar bar = ProgressManager.push("Texture stitching", 2);
-            bar.step("Stitching master atlas");
             masterStitcher.stitch();
             currentWidth = masterStitcher.width;
             currentHeight = masterStitcher.height;
-            bar.step("Extracting stitched textures");
             stitchSlots.clear();
             stitchSlots.addAll(masterStitcher.getSlots());
-            ProgressManager.pop(bar);
         } catch (TooBigException ignored) {
             throw new StitcherException(null,
                 "Unable to fit all textures into atlas. Maybe try a lower resolution resourcepack?");
         } finally {
+            ProgressManager.pop(bar);
             masterStitcher.reset();
         }
     }
