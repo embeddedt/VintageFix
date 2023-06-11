@@ -1,17 +1,20 @@
 package org.embeddedt.vintagefix.stitcher;
 
 import net.minecraft.client.renderer.texture.Stitcher;
+import org.embeddedt.vintagefix.VintageFix;
 import org.embeddedt.vintagefix.stitcher.packing2d.Algorithm;
 import org.embeddedt.vintagefix.stitcher.packing2d.Packer;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class TurboStitcher extends SpriteSlot {
     private final int maxWidth;
     private final int maxHeight;
     private final boolean forcePowerOf2;
-    private List<SpriteSlot> slots = new ArrayList<>();
+    private List<SpriteSlot> slots = new LinkedList<>();
+    private List<SpriteSlot> finalizedSlots = null;
+    private boolean needsSorting = false;
+    private int trackedArea = 0;
     private StitcherState state = StitcherState.SETUP;
     private static final boolean OPTIMAL_PACKING = true;
 
@@ -39,11 +42,28 @@ public class TurboStitcher extends SpriteSlot {
     public void addSprite(SpriteSlot rect) {
         verifyState(StitcherState.SETUP);
         slots.add(rect);
+        trackedArea += rect.width * rect.height;
+        needsSorting = true;
     }
 
     public void reset() {
-        slots = new ArrayList<>();
         state = StitcherState.SETUP;
+    }
+
+    public void dropFirst() {
+        verifyState(StitcherState.SETUP);
+        if(slots.size() > 0) {
+            SpriteSlot slot = slots.remove(0);
+            String name;
+            if (slot instanceof HolderSlot) {
+                name = ((HolderSlot) slot).getHolder().getAtlasSprite().getIconName();
+            } else {
+                name = "unknown";
+            }
+            VintageFix.LOGGER.warn("Dropping {}x{} texture '{}' from atlas as it's too large", slot.width, slot.height, name);
+            trackedArea -= slot.width * slot.height;
+        } else
+            throw new IllegalStateException();
     }
 
     public void stitch() throws TooBigException {
@@ -54,6 +74,15 @@ public class TurboStitcher extends SpriteSlot {
             state = StitcherState.STITCHED;
             return;
         }
+        // ensure we have largest sprites first
+        if(needsSorting) {
+            Collections.sort(slots);
+            needsSorting = false;
+        }
+        if(trackedArea > (maxWidth * maxHeight)) {
+            throw new TooBigException();
+        }
+        // start with a really simple check, if the total area is larger than we could handle, we know this will fail
         for (SpriteSlot slot : slots) {
             width = Math.max(width, slot.width);
         }
@@ -65,6 +94,7 @@ public class TurboStitcher extends SpriteSlot {
         }
         width = Math.max(width >>> 1, 1);
         List<SpriteSlot> packedSlots;
+        List<SpriteSlot> toPack = new ArrayList<>(slots);
         do {
             if (width == maxWidth) {
                 throw new TooBigException();
@@ -77,7 +107,7 @@ public class TurboStitcher extends SpriteSlot {
             if (width > maxWidth) {
                 width = maxWidth;
             }
-            packedSlots = Packer.pack(slots, Algorithm.FIRST_FIT_DECREASING_HEIGHT, width);
+            packedSlots = Packer.pack(toPack, Algorithm.FIRST_FIT_DECREASING_HEIGHT, width);
             height = 0;
             for (SpriteSlot sprite : packedSlots) {
                 height = Math.max(height, sprite.y + sprite.height);
@@ -86,7 +116,7 @@ public class TurboStitcher extends SpriteSlot {
                 height = nextPowerOfTwo(height);
             }
         } while (height > maxHeight || height > width);
-        slots = packedSlots;
+        finalizedSlots = packedSlots;
         state = StitcherState.STITCHED;
     }
 
@@ -98,7 +128,7 @@ public class TurboStitcher extends SpriteSlot {
         verifyState(StitcherState.STITCHED);
         ArrayList<Stitcher.Slot> mineSlots = new ArrayList<Stitcher.Slot>();
         Rect2D offset = new Rect2D(x + parent.x, y + parent.y, width, height);
-        for (SpriteSlot slot : slots) {
+        for (SpriteSlot slot : finalizedSlots) {
             mineSlots.addAll(slot.getSlots(offset));
         }
         return mineSlots;

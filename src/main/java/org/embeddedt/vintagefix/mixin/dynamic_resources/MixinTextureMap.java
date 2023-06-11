@@ -1,15 +1,19 @@
 package org.embeddedt.vintagefix.mixin.dynamic_resources;
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import net.minecraft.client.renderer.StitcherException;
+import net.minecraft.client.renderer.texture.Stitcher;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.util.ResourceLocation;
+import org.embeddedt.vintagefix.ducks.IDroppingStitcher;
 import org.embeddedt.vintagefix.dynamicresources.IWeakTextureMap;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -53,5 +57,31 @@ public abstract class MixinTextureMap implements IWeakTextureMap {
     public void registerSpriteWeak(ResourceLocation location) {
         this.registerSprite(location);
         this.weakRegisteredSprites.add(location.toString());
+    }
+
+    @Redirect(method = "finishLoading", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/Stitcher;doStitch()V"))
+    private void tryStitchAndDropTexture(Stitcher stitcher) {
+        if(!(stitcher instanceof IDroppingStitcher)) {
+            stitcher.doStitch();
+        } else {
+            boolean stitchSuccess;
+            while(true) {
+                stitchSuccess = false;
+                try {
+                    stitcher.doStitch();
+                    stitchSuccess = true;
+                } catch(StitcherException ignored) {}
+                if(stitchSuccess)
+                    return;
+                else {
+                    /* drop largest sprite */
+                    try {
+                        ((IDroppingStitcher) stitcher).dropLargestSprite();
+                    } catch(IllegalStateException e) {
+                        throw new StitcherException(null, "Could not stitch even with all sprites removed");
+                    }
+                }
+            }
+        }
     }
 }

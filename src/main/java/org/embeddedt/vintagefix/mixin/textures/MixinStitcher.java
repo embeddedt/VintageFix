@@ -2,6 +2,7 @@ package org.embeddedt.vintagefix.mixin.textures;
 
 import net.minecraftforge.fml.common.ProgressManager;
 import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
+import org.embeddedt.vintagefix.ducks.IDroppingStitcher;
 import org.embeddedt.vintagefix.stitcher.TooBigException;
 import org.embeddedt.vintagefix.stitcher.TurboStitcher;
 import org.spongepowered.asm.mixin.Final;
@@ -15,12 +16,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import net.minecraft.client.renderer.StitcherException;
 import net.minecraft.client.renderer.texture.Stitcher;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 @Mixin(Stitcher.class)
 @ClientOnlyMixin
-public abstract class MixinStitcher {
+public abstract class MixinStitcher implements IDroppingStitcher {
     @Shadow
     @Final
     private List<Stitcher.Slot> stitchSlots;
@@ -30,6 +32,7 @@ public abstract class MixinStitcher {
     @Shadow
     private int currentWidth;
     private TurboStitcher masterStitcher;
+    private List<Stitcher.Holder> holdersToReadd = new ArrayList<>();
 
     @Inject(method = "<init>",
         at = @At(value = "RETURN"),
@@ -43,7 +46,9 @@ public abstract class MixinStitcher {
             target = "Ljava/util/Set;add(Ljava/lang/Object;)Z"),
         require = 1)
     private boolean hijackAdd(Set<Stitcher.Holder> instance, Object e) {
-        masterStitcher.addSprite((Stitcher.Holder) e);
+        Stitcher.Holder holder = (Stitcher.Holder)e;
+        masterStitcher.addSprite(holder);
+        holdersToReadd.add(holder);
         return true;
     }
 
@@ -69,5 +74,10 @@ public abstract class MixinStitcher {
         } finally {
             masterStitcher.reset();
         }
+    }
+
+    @Override
+    public void dropLargestSprite() {
+        masterStitcher.dropFirst();
     }
 }

@@ -14,6 +14,10 @@ public class HolderSlot extends SpriteSlot {
         height = holder.getHeight();
     }
 
+    public Stitcher.Holder getHolder() {
+        return holder;
+    }
+
     @Override
     public List<Stitcher.Slot> getSlots(Rect2D parent) {
         Stitcher.Slot slot = new Stitcher.Slot(x + parent.x, y + parent.y, width, height);
