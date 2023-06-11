@@ -189,10 +189,12 @@ public abstract class PropertyIndexer<T extends Comparable<T>> {
             // use a mutable map first to detect repeated values
             Map<Comparable<?>, Integer> tempMap = new LinkedHashMap<>();
             for (int i = 0; i < this.valuesInOrder.length; i++) {
-                Integer oldI = tempMap.put(this.valuesInOrder[i], i);
+                tempMap.put(this.valuesInOrder[i], i);
+                /*
                 if(oldI != null) {
                     VintageFix.LOGGER.warn("Property {} uses the same value {} multiple times", property.getClass().getName(), this.valuesInOrder[i]);
                 }
+                */
             }
             this.toValueIndex = ImmutableMap.copyOf(tempMap);
         }
