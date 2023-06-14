@@ -135,6 +135,12 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
         }
 
         if(model == null) {
+            /* see if anyone injects */
+            DynamicModelBakeEvent event = new DynamicModelBakeEvent(location, null, missingModel);
+            MinecraftForge.EVENT_BUS.post(event);
+            if(event.bakedModel != missingModel)
+                return event.bakedModel;
+
             if(!ModelLocationInformation.DEBUG_MODEL_LOAD)
                 LOGGER.error("Error occured while loading model {}", location);
             else {
