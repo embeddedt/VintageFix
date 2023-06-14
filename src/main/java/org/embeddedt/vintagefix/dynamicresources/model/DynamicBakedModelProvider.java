@@ -183,4 +183,9 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
     public Iterator<IBakedModel> iterator() {
         return permanentlyLoadedBakedModels.values().iterator();
     }
+
+    public void invalidateThrough(ModelResourceLocation key) {
+        loadedBakedModels.invalidate(key);
+        ((DynamicModelProvider)modelProvider).invalidate(key);
+    }
 }

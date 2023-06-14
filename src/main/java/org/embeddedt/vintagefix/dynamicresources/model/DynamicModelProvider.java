@@ -155,4 +155,8 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
     public Iterator<IModel> iterator() {
         return permanentlyLoadedModels.values().iterator();
     }
+
+    public void invalidate(ResourceLocation key) {
+        loadedModels.invalidate(key);
+    }
 }
