@@ -1,4 +1,4 @@
-rootProject.name = "VintageFix"
+rootProject.name = "vintagefix"
 
 pluginManagement {
   repositories {
