@@ -3,6 +3,7 @@ package org.embeddedt.vintagefix.dynamicresources;
 import com.google.common.base.Stopwatch;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ItemOverride;
 import net.minecraft.client.renderer.block.model.ItemOverrideList;
@@ -35,7 +36,7 @@ public class ItemBakeThread extends Thread {
 
     public static void restartBake() {
         stopAndJoin();
-        if(FMLClientHandler.instance().hasError() || !MixinConfigPlugin.isMixinClassApplied("mixin.dynamic_resources.background_item_bake.BakeMixin"))
+        if(FMLClientHandler.instance().hasError() || Minecraft.getMinecraft().world != null || !MixinConfigPlugin.isMixinClassApplied("mixin.dynamic_resources.background_item_bake.BakeMixin"))
             return;
         ItemModelMesherForge immf = (ItemModelMesherForge)net.minecraft.client.Minecraft.getMinecraft().getRenderItem().getItemModelMesher();
         Map<IRegistryDelegate<Item>, Int2ObjectMap<ModelResourceLocation>> theMap = ObfuscationReflectionHelper.getPrivateValue(ItemModelMesherForge.class, immf, "locations");
