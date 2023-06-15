@@ -29,6 +29,7 @@ public class ModelLocationInformation {
     private static final Map<ResourceLocation, Block> blockstateLocationToBlock = new Object2ObjectOpenHashMap<>();
     public static final Set<ModelResourceLocation> allItemVariants = new ObjectOpenHashSet<>();
     public static final Map<ResourceLocation, Collection<ModelResourceLocation>> validVariantsForBlock = new Object2ObjectOpenHashMap<>();
+    private static boolean firstInit = true;
 
     public static void init(ModelLoader loader, BlockStateMapper blockStateMapper) {
         Method method = ObfuscationReflectionHelper.findMethod(ModelBakery.class, "func_177592_e", Void.TYPE);
@@ -39,34 +40,38 @@ public class ModelLocationInformation {
             throw new RuntimeException(e);
         }
 
-        inventoryVariantLocations.clear();
-        blockstateLocationToBlock.clear();
-        allItemVariants.clear();
-        validVariantsForBlock.clear();
+        if(firstInit) {
+            inventoryVariantLocations.clear();
+            blockstateLocationToBlock.clear();
+            allItemVariants.clear();
+            validVariantsForBlock.clear();
 
-        // Make inventory variant -> location map
-        for (Item item : Item.REGISTRY) {
-            for (String s : getVariantNames(item)) {
-                ResourceLocation itemLocation = getItemLocation(s);
-                ModelResourceLocation inventoryVariant = getInventoryVariant(s);
-                allItemVariants.add(inventoryVariant);
-                inventoryVariantLocations.put(inventoryVariant, itemLocation);
+            // Make inventory variant -> location map
+            for (Item item : Item.REGISTRY) {
+                for (String s : getVariantNames(item)) {
+                    ResourceLocation itemLocation = getItemLocation(s);
+                    ModelResourceLocation inventoryVariant = getInventoryVariant(s);
+                    allItemVariants.add(inventoryVariant);
+                    inventoryVariantLocations.put(inventoryVariant, itemLocation);
+                }
             }
-        }
 
-        // Make blockstate -> block map
-        for (Block block : Block.REGISTRY) {
-            for (ResourceLocation location : blockStateMapper.getBlockstateLocations(block)) {
-                blockstateLocationToBlock.put(location, block);
+            // Make blockstate -> block map
+            for (Block block : Block.REGISTRY) {
+                for (ResourceLocation location : blockStateMapper.getBlockstateLocations(block)) {
+                    blockstateLocationToBlock.put(location, block);
+                }
+                for(ModelResourceLocation location : blockStateMapper.getVariants(block).values()) {
+                    ResourceLocation baseLocation = new ResourceLocation(location.getNamespace(), location.getPath());
+                    ObjectOpenHashSet<ModelResourceLocation> mrls = (ObjectOpenHashSet<ModelResourceLocation>)validVariantsForBlock.computeIfAbsent(baseLocation, k -> new ObjectOpenHashSet<>());
+                    mrls.add(location);
+                }
             }
-            for(ModelResourceLocation location : blockStateMapper.getVariants(block).values()) {
-                ResourceLocation baseLocation = new ResourceLocation(location.getNamespace(), location.getPath());
-                ObjectOpenHashSet<ModelResourceLocation> mrls = (ObjectOpenHashSet<ModelResourceLocation>)validVariantsForBlock.computeIfAbsent(baseLocation, k -> new ObjectOpenHashSet<>());
-                mrls.add(location);
+            for(Collection<ModelResourceLocation> c : validVariantsForBlock.values()) {
+                ((ObjectOpenHashSet<ModelResourceLocation>)c).trim();
             }
-        }
-        for(Collection<ModelResourceLocation> c : validVariantsForBlock.values()) {
-            ((ObjectOpenHashSet<ModelResourceLocation>)c).trim();
+
+            firstInit = false;
         }
     }
 
