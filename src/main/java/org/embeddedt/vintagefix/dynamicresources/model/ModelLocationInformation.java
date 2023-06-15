@@ -1,6 +1,7 @@
 package org.embeddedt.vintagefix.dynamicresources.model;
 
 import com.google.common.collect.Lists;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.block.Block;
@@ -14,6 +15,7 @@ import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import org.embeddedt.vintagefix.VintageFix;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,6 +31,10 @@ public class ModelLocationInformation {
     private static final Map<ResourceLocation, Block> blockstateLocationToBlock = new Object2ObjectOpenHashMap<>();
     public static final Set<ModelResourceLocation> allItemVariants = new ObjectOpenHashSet<>();
     public static final Map<ResourceLocation, Collection<ModelResourceLocation>> validVariantsForBlock = new Object2ObjectOpenHashMap<>();
+    private static final Object2IntOpenHashMap<String> errorsByNamespace = new Object2IntOpenHashMap<>();
+    static {
+        errorsByNamespace.defaultReturnValue(0);
+    }
     private static boolean firstInit = true;
 
     public static void init(ModelLoader loader, BlockStateMapper blockStateMapper) {
@@ -39,6 +45,8 @@ public class ModelLocationInformation {
         } catch(ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
+
+        errorsByNamespace.clear();
 
         if(firstInit) {
             inventoryVariantLocations.clear();
@@ -143,4 +151,20 @@ public class ModelLocationInformation {
         return definition;
     }
 
+    private static final int ERROR_THRESHOLD = 6;
+
+    public static boolean canLogError(String namespace) {
+        int curNumErrors;
+        synchronized (errorsByNamespace) {
+            curNumErrors = errorsByNamespace.getInt(namespace);
+        }
+        if(curNumErrors < ERROR_THRESHOLD) {
+            synchronized (errorsByNamespace) {
+                errorsByNamespace.put(namespace, curNumErrors + 1);
+            }
+            return true;
+        } else if(curNumErrors == ERROR_THRESHOLD)
+            VintageFix.LOGGER.error("Suppressing further model loading errors for namespace '{}'", namespace);
+        return false;
+    }
 }

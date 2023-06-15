@@ -110,19 +110,23 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
             if(event.bakedModel != missingModel)
                 return event.bakedModel;
 
-            if(!ModelLocationInformation.DEBUG_MODEL_LOAD)
-                LOGGER.error("Error occured while loading model {}", location);
-            else {
-                LOGGER.error("Failed to load model {}", location, mException);
+            if(ModelLocationInformation.canLogError(location.getNamespace())) {
+                if(!ModelLocationInformation.DEBUG_MODEL_LOAD)
+                    LOGGER.error("Error occured while loading model {}", location);
+                else {
+                    LOGGER.error("Failed to load model {}", location, mException);
+                }
             }
         } else {
             try {
                 return bakeAndCheckTextures(location, model, DefaultVertexFormats.ITEM);
             } catch (Throwable t) {
-                if(ModelLocationInformation.DEBUG_MODEL_LOAD)
-                    LOGGER.error("Error occured while baking model {}", location, t);
-                else
-                    LOGGER.error("Error occured while baking model {}", location);
+                if(ModelLocationInformation.canLogError(location.getNamespace())) {
+                    if(ModelLocationInformation.DEBUG_MODEL_LOAD)
+                        LOGGER.error("Error occured while baking model {}", location, t);
+                    else
+                        LOGGER.error("Error occured while baking model {}", location);
+                }
             }
         }
         return null;
