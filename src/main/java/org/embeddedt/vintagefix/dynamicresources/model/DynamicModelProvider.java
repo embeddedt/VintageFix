@@ -11,6 +11,8 @@ import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.embeddedt.vintagefix.VintageFix;
 
 import javax.annotation.Nullable;
@@ -19,7 +21,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel> {
-    //    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger LOGGER = LogManager.getLogger();
     public static DynamicModelProvider instance;
 
     private final Set<ICustomModelLoader> loaders;
@@ -54,13 +56,62 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
     @Override
     public IModel getObject(ResourceLocation location) {
         try {
-            return loadedModels.get(location, () -> Optional.ofNullable(loadModel(location, new LinkedHashSet<>()))).orElse(null);
+            return loadedModels.get(location, () -> Optional.ofNullable(loadModelFromBlockstateOrInventory(location))).orElse(null);
         } catch (ExecutionException e) {
             throw new RuntimeException(e.getCause());
         }
     }
 
     private static final Map<ResourceLocation, IModel> MODEL_LOADER_REGISTRY_CACHE = ObfuscationReflectionHelper.getPrivateValue(ModelLoaderRegistry.class, null, "cache");
+
+    private static final Class<?> VANILLA_MODEL_WRAPPER;
+
+    static {
+        try {
+            VANILLA_MODEL_WRAPPER = Class.forName("net.minecraftforge.client.model.ModelLoader$VanillaModelWrapper");
+        } catch(ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private IModel loadModelFromBlockstateOrInventory(ResourceLocation location) throws ModelLoaderRegistry.LoaderException {
+        ResourceLocation inventoryVariantLocation = null;
+        Throwable blockStateException = null, normalException = null;
+        IModel model = null;
+
+        // first, attempt to fetch from the blockstate (by using the MRL)
+        try {
+            model = loadModel(location, new LinkedHashSet<>());
+        } catch(Throwable e) {
+            blockStateException = e;
+            if(location instanceof ModelResourceLocation) {
+                // check if an inventory variant is registered, and if so, try that
+                inventoryVariantLocation = ModelLocationInformation.getInventoryVariantLocation((ModelResourceLocation)location);
+                if(inventoryVariantLocation == null)
+                    inventoryVariantLocation = new ResourceLocation(location.getNamespace(), location.getPath());
+                try {
+                    model = loadModel(inventoryVariantLocation, new LinkedHashSet<>());
+                    if (VANILLA_MODEL_WRAPPER.isAssignableFrom(model.getClass())) {
+                        for (ResourceLocation dep : model.asVanillaModel().get().getOverrideLocations()) {
+                            if (!location.equals(dep)) {
+                                ModelLocationInformation.addInventoryVariantLocation(ModelLocationInformation.getInventoryVariant(dep.toString()), dep);
+                            }
+                        }
+                    }
+                } catch(Throwable e2) {
+                    normalException = e;
+                }
+            }
+        }
+
+        if(model == null) {
+            LOGGER.error("Failed to load model {}", location, blockStateException);
+            if(normalException != null)
+                LOGGER.error("Failed to load model {} as item {}", location, inventoryVariantLocation, normalException);
+            throw new ModelLoaderRegistry.LoaderException("Model loading failure");
+        }
+        return model;
+    }
 
     private IModel loadModel(ResourceLocation location, Set<ResourceLocation> loadStack) throws ModelLoaderRegistry.LoaderException {
         if(loadStack.add(location)) {

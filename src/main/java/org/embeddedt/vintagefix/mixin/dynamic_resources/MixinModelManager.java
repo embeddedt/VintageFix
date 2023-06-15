@@ -224,9 +224,8 @@ public class MixinModelManager {
             ModelLoader.setBucketModelDefinition(ForgeModContainer.getInstance().universalBucket);
         }
 
-        // Post the event, but just log an error if a listener throws an exception. The ModelLoader is
-        // null, but very few mods use it. Custom support will be needed for those that do.
-        ModelBakeEvent event = new ModelBakeEvent((ModelManager) (Object) this, modelRegistry, null);
+        // Post the event, but just log an error if a listener throws an exception.
+        ModelBakeEvent event = new ModelBakeEvent((ModelManager) (Object) this, modelRegistry, loader);
         IEventListener[] listeners = EventUtil.getListenersForEvent(event);
         overallBar.step("Baking");
         ProgressManager.ProgressBar bakeEventBar = ProgressManager.push("Posting bake events", listeners.length);

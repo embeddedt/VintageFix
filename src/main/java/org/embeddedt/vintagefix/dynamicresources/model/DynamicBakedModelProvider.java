@@ -85,16 +85,6 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
             return null;
     }
 
-    private static final Class<?> VANILLA_MODEL_WRAPPER;
-
-    static {
-        try {
-            VANILLA_MODEL_WRAPPER = Class.forName("net.minecraftforge.client.model.ModelLoader$VanillaModelWrapper");
-        } catch(ReflectiveOperationException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     private static final FileNotFoundException PARENT_MISSING_EXCEPTION = new FileNotFoundException("Failed to load model parent");
 
     private IBakedModel loadBakedModel(ModelResourceLocation location) {
@@ -105,33 +95,12 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
             return bakedModel;
         }
 
-        Throwable blockStateException = null, normalException = null;
-        ResourceLocation inventoryVariantLocation = null;
-
+        Throwable mException = null;
         IModel model = null;
-
-        // the forge docs are backwards, based on ModelLoader.loadItemModel, the blockstate is tried first, not the item
-        // first, attempt to fetch from the blockstate (by using the MRL)
         try {
             model = modelProvider.getObject(location);
         } catch(Throwable e) {
-            blockStateException = e;
-            // check if an inventory variant is registered, and if so, try that
-            inventoryVariantLocation = ModelLocationInformation.getInventoryVariantLocation(location);
-            if(inventoryVariantLocation == null)
-                inventoryVariantLocation = new ResourceLocation(location.getNamespace(), location.getPath());
-            try {
-                model = modelProvider.getObject(inventoryVariantLocation);
-                if (VANILLA_MODEL_WRAPPER.isAssignableFrom(model.getClass())) {
-                    for (ResourceLocation dep : model.asVanillaModel().get().getOverrideLocations()) {
-                        if (!location.equals(dep)) {
-                            ModelLocationInformation.addInventoryVariantLocation(ModelLocationInformation.getInventoryVariant(dep.toString()), dep);
-                        }
-                    }
-                }
-            } catch(Throwable e2) {
-                normalException = e;
-            }
+            mException = e;
         }
 
         if(model == null) {
@@ -144,9 +113,7 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
             if(!ModelLocationInformation.DEBUG_MODEL_LOAD)
                 LOGGER.error("Error occured while loading model {}", location);
             else {
-                LOGGER.error("Failed to load model {} as blockstate", location, blockStateException);
-                if(normalException != null)
-                    LOGGER.error("Failed to load model {} as item {}", location, inventoryVariantLocation, normalException);
+                LOGGER.error("Failed to load model {}", location, mException);
             }
         } else {
             try {
