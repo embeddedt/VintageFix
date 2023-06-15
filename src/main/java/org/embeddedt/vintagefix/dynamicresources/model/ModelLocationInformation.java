@@ -158,13 +158,14 @@ public class ModelLocationInformation {
         synchronized (errorsByNamespace) {
             curNumErrors = errorsByNamespace.getInt(namespace);
         }
-        if(curNumErrors < ERROR_THRESHOLD) {
+        if(curNumErrors <= ERROR_THRESHOLD) {
+            if(curNumErrors == ERROR_THRESHOLD)
+                VintageFix.LOGGER.error("Suppressing further model loading errors for namespace '{}'", namespace);
             synchronized (errorsByNamespace) {
                 errorsByNamespace.put(namespace, curNumErrors + 1);
             }
-            return true;
-        } else if(curNumErrors == ERROR_THRESHOLD)
-            VintageFix.LOGGER.error("Suppressing further model loading errors for namespace '{}'", namespace);
+            return curNumErrors < ERROR_THRESHOLD;
+        }
         return false;
     }
 }
