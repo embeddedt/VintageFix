@@ -22,7 +22,7 @@ public abstract class MixinBlockModelShapes implements IBlockModelShapes {
     @Shadow @Final private BlockStateMapper blockStateMapper;
     @Shadow public abstract ModelManager getModelManager();
 
-    private Map<IBlockState, ModelResourceLocation> modelLocations;
+    private static Map<IBlockState, ModelResourceLocation> modelLocations;
 
     /**
      * @reason Don't get all models during init (with dynamic loading, that would
@@ -30,7 +30,8 @@ public abstract class MixinBlockModelShapes implements IBlockModelShapes {
      **/
     @Overwrite
     public void reloadModels() {
-        modelLocations = blockStateMapper.putAllStateModelLocations();
+        if(modelLocations == null)
+            modelLocations = blockStateMapper.putAllStateModelLocations();
     }
 
     /**
