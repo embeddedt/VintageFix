@@ -59,14 +59,24 @@ public class MixinVariantLoader {
         modelBlockDefinitionCache.invalidateAll();
     }
 
+    private VariantList normalizeAndGetVariant(ModelBlockDefinition definition, String variant) {
+        if(definition.hasVariant(variant))
+            return definition.getVariant(variant);
+        else if(variant.equals("normal") && definition.hasVariant(""))
+            return definition.getVariant("");
+        else
+            return null;
+    }
+
     @Overwrite(remap = false)
     public IModel loadModel(ResourceLocation modelLocation) throws Exception {
         ModelResourceLocation variant = (ModelResourceLocation) modelLocation;
         ModelBlockDefinition definition = vfix$getModelBlockDefinition(variant);
+        VariantList vList = normalizeAndGetVariant(definition, variant.getVariant());
 
-        if (definition.hasVariant(variant.getVariant())) {
+        if (vList != null) {
             try {
-                return (IModel)WEIGHTED_CONSTRUCTOR.invoke(variant, definition.getVariant(variant.getVariant()));
+                return (IModel)WEIGHTED_CONSTRUCTOR.invoke(variant, vList);
             } catch(Throwable e) {
                 throw (Exception)e;
             }
