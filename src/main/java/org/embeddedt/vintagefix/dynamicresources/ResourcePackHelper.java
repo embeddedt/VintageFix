@@ -17,6 +17,8 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ResourcePackHelper {
     private static final Map<Class<? extends IResourcePack>, Adapter<? extends IResourcePack>> ADAPTERS = new Object2ObjectArrayMap<>();
@@ -67,6 +69,12 @@ public class ResourcePackHelper {
     }
 
     public static Collection<String> getAllPaths(IResourcePack pack, Predicate<String> filter) throws IOException {
+        if(pack instanceof ICachedResourcePack) {
+            ICachedResourcePack cachePack = (ICachedResourcePack)pack;
+            Stream<String> paths = cachePack.getAllPaths();
+            if(paths != null)
+                return paths.filter(filter).collect(Collectors.toList());
+        }
         for(Map.Entry<Class<? extends IResourcePack>, Adapter<? extends IResourcePack>> adapterEntry : ADAPTERS.entrySet()) {
             if(adapterEntry.getKey().isAssignableFrom(pack.getClass())) {
                 return applyAdapter(pack, filter, adapterEntry.getValue());

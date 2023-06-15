@@ -6,6 +6,7 @@ import net.minecraft.client.resources.ResourceIndex;
 import net.minecraft.util.ResourceLocation;
 import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.embeddedt.vintagefix.core.VintageFixCore;
+import org.embeddedt.vintagefix.dynamicresources.ICachedResourcePack;
 import org.embeddedt.vintagefix.dynamicresources.ResourcePackHelper;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -20,10 +21,11 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.stream.Stream;
 
 @Mixin(DefaultResourcePack.class)
 @ClientOnlyMixin
-public abstract class MixinDefaultResourcePack {
+public abstract class MixinDefaultResourcePack implements ICachedResourcePack {
     @Shadow
     @Final
     private ResourceIndex resourceIndex;
@@ -48,6 +50,13 @@ public abstract class MixinDefaultResourcePack {
         }
     }
 
+    @Nullable
+    @Override
+    public Stream<String> getAllPaths() {
+        if(containedPaths.size() == 0)
+            return null;
+        return containedPaths.stream();
+    }
 
     /**
      * @author embeddedt

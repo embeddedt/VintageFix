@@ -56,10 +56,11 @@ public class MixinModelManager {
 
     private void doEarlyModelLoading(IResourceManager manager) {
         // load some models early (e.g. TConstruct)
-        Pattern loadsEarly = Pattern.compile("^.*\\.(tmat|tcon|mod|conarm)\\.json");
-
         Predicate<String> shouldLoadEarly = p -> {
-            return loadsEarly.matcher(p).matches();
+            if(p.length() < 6)
+                return false;
+            String customName = p.substring(0, p.length() - 5);
+            return customName.endsWith("tmat") || customName.endsWith("tcon") || customName.endsWith("mod") || customName.endsWith("conarm");
         };
         Predicate<String> shouldPersistEarly = p -> {
             return p.endsWith(".tmat.json");

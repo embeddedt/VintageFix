@@ -7,6 +7,7 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.client.resources.FileResourcePack;
 import org.embeddedt.vintagefix.VintageFix;
 import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
+import org.embeddedt.vintagefix.dynamicresources.ICachedResourcePack;
 import org.embeddedt.vintagefix.util.CachedResourcePath;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -15,18 +16,20 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 @Mixin(FileResourcePack.class)
 @ClientOnlyMixin
-public abstract class MixinFileResourcePack {
+public abstract class MixinFileResourcePack implements ICachedResourcePack {
     @Shadow
     protected abstract ZipFile getResourcePackZipFile() throws IOException;
 
@@ -56,8 +59,25 @@ public abstract class MixinFileResourcePack {
         }
     }
 
+    private Set<CachedResourcePath> getCache() {
+        ZipFile file;
+        try {
+            file = this.getResourcePackZipFile();
+            return containedPathsByFile.getIfPresent(file.getName());
+        } catch(IOException e) {
+            return null;
+        }
+    }
+
     @Inject(method = "hasResourceName", at = @At("HEAD"), cancellable = true)
     private void fastHasResource(String name, CallbackInfoReturnable<Boolean> cir) {
         cir.setReturnValue(genCache().contains(new CachedResourcePath(name, false)));
+    }
+
+    @Nullable
+    @Override
+    public Stream<String> getAllPaths() {
+        Set<CachedResourcePath> paths = getCache();
+        return paths != null ? paths.stream().map(CachedResourcePath::toString) : null;
     }
 }

@@ -42,8 +42,10 @@ public class CachedResourcePath {
         return Arrays.equals(pathComponents, that.pathComponents);
     }
 
+    private static final Joiner JOINER = Joiner.on('/');
+
     @Override
     public String toString() {
-        return Joiner.on('/').join(pathComponents);
+        return JOINER.join(pathComponents);
     }
 }
