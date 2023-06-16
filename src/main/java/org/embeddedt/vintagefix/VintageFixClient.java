@@ -41,6 +41,7 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -57,9 +58,19 @@ public class VintageFixClient {
         if(VintageFixCore.OPTIFINE)
             VintageFix.LOGGER.fatal("OptiFine detected, there may be issues");
     }
+
+    public static boolean modernityPresent = false;
+
     @SubscribeEvent
     public void registerListener(ColorHandlerEvent.Block event) {
         Deduplicator.registerReloadListener();
+        ((SimpleReloadableResourceManager)Minecraft.getMinecraft().getResourceManager()).registerReloadListener(new IResourceManagerReloadListener() {
+            @Override
+            public void onResourceManagerReload(IResourceManager resourceManager) {
+                List<IResourcePack> theList = getResourcePackList();
+                modernityPresent = theList.stream().anyMatch(pack -> pack.getPackName().toLowerCase(Locale.ROOT).contains("modernity"));
+            }
+        });
     }
 
     // target all textures in the listed subfolders, or textures in the root folder
