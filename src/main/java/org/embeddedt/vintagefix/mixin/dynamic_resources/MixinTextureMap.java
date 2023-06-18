@@ -59,7 +59,7 @@ public abstract class MixinTextureMap implements IWeakTextureMap {
         this.weakRegisteredSprites.add(location.toString());
     }
 
-    @Inject(method = "finishLoading", at = @At("HEAD"), remap = false)
+    @Inject(method = "loadTextureAtlas", at = @At("HEAD"))
     private void ignoreWeakTextures(CallbackInfo ci) {
         // at this point "weak"-ness no longer exists, it is only used to allow us to emulate vanilla during TextureStitchEvent.Pre
         // we need to treat registrations as strong for buggy mods like Binnie that try registering in Post
