@@ -291,6 +291,9 @@ curseforge {
       gameVersionStrings.add("Java 8")
       mainArtifact(tasks.reobfJar.get().archivePath, closureOf<com.matthewprenger.cursegradle.CurseArtifact> {
         displayName = "VintageFix ${project.version}"
+        relations(closureOf<com.matthewprenger.cursegradle.CurseRelation> {
+          requiredDependency("mixin-booter")
+        })
       })
     })
   }
