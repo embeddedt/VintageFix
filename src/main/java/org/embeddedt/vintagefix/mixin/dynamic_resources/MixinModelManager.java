@@ -60,7 +60,7 @@ public class MixinModelManager {
             if(p.length() < 6)
                 return false;
             String customName = p.substring(0, p.length() - 5);
-            return customName.endsWith("tmat") || customName.endsWith("tcon") || customName.endsWith("mod") || customName.endsWith("conarm");
+            return (customName.endsWith("tmat") || customName.endsWith("tcon") || customName.endsWith("mod") || customName.endsWith("conarm")) && p.endsWith(".json");
         };
         Predicate<String> shouldPersistEarly = p -> {
             return p.endsWith(".tmat.json");
