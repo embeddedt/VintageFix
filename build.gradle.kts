@@ -143,6 +143,7 @@ dependencies {
   compileOnly(rfg.deobf("curse.maven:unlimited-chisel-works-278493:3319307"))
   compileOnly(rfg.deobf("curse.maven:hammercore-247401:3611193"))
   compileOnly(rfg.deobf("curse.maven:refinedstorage-243076:2940914"))
+  compileOnly(rfg.deobf("curse.maven:opencomputers-223008:4566834"))
   embed("com.esotericsoftware:kryo:5.1.1")
 }
 
