@@ -14,6 +14,7 @@ import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.embeddedt.vintagefix.VintageFix;
+import org.embeddedt.vintagefix.core.MixinConfigPlugin;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -35,6 +36,7 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
                         .build();
 
     private final Map<ResourceLocation, ResourceLocation> sideChannelAliases = new Object2ObjectOpenHashMap<>();
+    public static final boolean HIDE_MODEL_ERRORS = MixinConfigPlugin.isMixinClassApplied("mixin.dynamic_resources.hide_model_exceptions.ModelErrorMixin");
 
     public DynamicModelProvider(Set<ICustomModelLoader> loaders) {
         this.loaders = loaders;
@@ -105,6 +107,10 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
         }
 
         if(model == null) {
+            if(HIDE_MODEL_ERRORS) {
+                blockStateException = null;
+                normalException = null;
+            }
             if(ModelLocationInformation.canLogError(location.getNamespace())) {
                 LOGGER.error("Failed to load model {}", location, blockStateException);
                 if(normalException != null)

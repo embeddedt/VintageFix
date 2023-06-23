@@ -88,7 +88,10 @@ public class MixinConfigPlugin implements IMixinConfigPlugin {
         }
     }
 
-    private static final ImmutableList<String> extraBaseNames = ImmutableList.of("mixin.dynamic_resources.background_item_bake");
+    private static final ImmutableMap<String, Boolean> extraBaseNames = ImmutableMap.<String, Boolean>builder()
+        .put("mixin.dynamic_resources.background_item_bake", true)
+        .put("mixin.dynamic_resources.hide_model_exceptions", false)
+        .build();
 
     @Override
     public void onLoad(String s) {
@@ -134,9 +137,9 @@ public class MixinConfigPlugin implements IMixinConfigPlugin {
                         config.put(baseName, "true");
                     }
                 }
-                for(String extraBaseName : extraBaseNames) {
-                    if(!config.containsKey(extraBaseName))
-                        config.put(extraBaseName, "true");
+                for(Map.Entry<String, Boolean> entry : extraBaseNames.entrySet()) {
+                    if(!config.containsKey(entry.getKey()))
+                        config.put(entry.getKey(), entry.getValue().toString());
                 }
                 try(OutputStream stream = Files.newOutputStream(targetConfig.toPath())) {
                     writeOrderedProperties(config, stream);
