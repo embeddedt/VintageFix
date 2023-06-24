@@ -68,9 +68,6 @@ public abstract class MixinDefaultResourcePack implements ICachedResourcePack {
         String path = "/assets/" + location.getNamespace() + "/" + location.getPath();
         if(containedPaths.contains(path) || this.resourceIndex.isFileExisting(location))
             return true;
-        // hack so that OptiFine resources load
-        if(VintageFixCore.OPTIFINE)
-            return this.getResourceStream(location) != null;
         return false;
     }
 }
