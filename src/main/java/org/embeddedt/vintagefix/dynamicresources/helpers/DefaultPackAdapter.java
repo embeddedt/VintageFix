@@ -16,6 +16,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.ZipError;
 
 public class DefaultPackAdapter implements ResourcePackHelper.Adapter<DefaultResourcePack> {
     @FunctionalInterface
@@ -61,7 +62,7 @@ public class DefaultPackAdapter implements ResourcePackHelper.Adapter<DefaultRes
                         set.addAll(newList);
                     if(needClose)
                         fs.close();
-                } catch(IOException | URISyntaxException | RuntimeException ignored) {
+                } catch(IOException | URISyntaxException | RuntimeException | ZipError ignored) {
                 }
             }
         }
