@@ -14,6 +14,8 @@ import net.minecraftforge.client.event.ColorHandlerEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
@@ -156,6 +158,13 @@ public class VintageFixClient {
             for(ResourceLocation location : modelTextures.join()) {
                 registerSpriteSafe(map, location);
                 numFoundSprites++;
+            }
+            // register all fluid textures
+            for(Fluid f : FluidRegistry.getRegisteredFluids().values()) {
+                if(f.getStill() != null)
+                    registerSpriteSafe(map, f.getStill());
+                if(f.getFlowing() != null)
+                    registerSpriteSafe(map, f.getFlowing());
             }
             ProgressManager.pop(textureBar);
             watch.stop();
