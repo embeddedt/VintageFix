@@ -8,6 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ModelBlock;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.renderer.vertex.VertexFormat;
@@ -31,6 +32,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocation, IBakedModel> {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -132,10 +134,21 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
         return null;
     }
 
+    private static final Function<ResourceLocation, TextureAtlasSprite> loggingTextureGetter = location -> {
+        TextureMap map = Minecraft.getMinecraft().getTextureMapBlocks();
+        String name = location.toString();
+        TextureAtlasSprite sprite = map.getAtlasSprite(name);
+        // validate that its not an explicit request for missingno
+        if(sprite == map.getMissingSprite() && !sprite.getIconName().equals(name) && !(location.getNamespace().equals("minecraft") && sprite.getIconName().equals(location.getPath()))) {
+            LOGGER.warn("Texture {} was not discovered during texture pass", name);
+        }
+        return sprite;
+    };
+
     private static IBakedModel bakeAndCheckTextures(ResourceLocation location, IModel model, VertexFormat format) {
         // TODO log when textures missing
         synchronized (DynamicBakedModelProvider.class) {
-            IBakedModel bakedModel = model.bake(model.getDefaultState(), format, ModelLoader.defaultTextureGetter());
+            IBakedModel bakedModel = model.bake(model.getDefaultState(), format, loggingTextureGetter);
             if(!MISSING_MODEL_LOCATION.equals(location)) {
                 DynamicModelBakeEvent event = new DynamicModelBakeEvent(location, model, bakedModel);
                 MinecraftForge.EVENT_BUS.post(event);
