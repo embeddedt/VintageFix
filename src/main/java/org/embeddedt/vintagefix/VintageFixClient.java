@@ -85,6 +85,15 @@ public class VintageFixClient {
         }
     }
 
+    private void registerSpriteIfPresent(TextureMap map, ResourceLocation location) {
+        boolean present = false;
+        try(IResource ignored1 = Minecraft.getMinecraft().getResourceManager().getResource(new ResourceLocation(location.getNamespace(), "textures/" + location.getPath() + ".png"))) {
+            present = true;
+        } catch(Exception ignored) {}
+        if(present)
+            registerSpriteSafe(map, location);
+    }
+
     private static final ImmutableListMultimap<String, ResourceLocation> EXTRA_TEXTURES_BY_MOD = ImmutableListMultimap.<String, ResourceLocation>builder()
         .put("mekanism", new ResourceLocation("mekanism", "entities/robit"))
         .build();
@@ -162,9 +171,9 @@ public class VintageFixClient {
             // register all fluid textures
             for(Fluid f : FluidRegistry.getRegisteredFluids().values()) {
                 if(f.getStill() != null)
-                    registerSpriteSafe(map, f.getStill());
+                    registerSpriteIfPresent(map, f.getStill());
                 if(f.getFlowing() != null)
-                    registerSpriteSafe(map, f.getFlowing());
+                    registerSpriteIfPresent(map, f.getFlowing());
             }
             ProgressManager.pop(textureBar);
             watch.stop();
