@@ -139,7 +139,7 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
         String name = location.toString();
         TextureAtlasSprite sprite = map.getAtlasSprite(name);
         // validate that its not an explicit request for missingno
-        if(sprite == map.getMissingSprite() && !sprite.getIconName().equals(name) && !(location.getNamespace().equals("minecraft") && sprite.getIconName().equals(location.getPath()))) {
+        if(sprite == map.getMissingSprite() && !sprite.getIconName().equals(name) && !(location.getNamespace().equals("minecraft") && sprite.getIconName().equals(location.getPath())) && !name.equals("minecraft:builtin/white")) {
             LOGGER.warn("Texture {} was not discovered during texture pass", name);
         }
         return sprite;
