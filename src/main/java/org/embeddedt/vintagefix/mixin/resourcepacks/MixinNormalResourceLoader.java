@@ -29,6 +29,8 @@ public class MixinNormalResourceLoader {
         vfix_cache = new FolderPackCache(new File(Minecraft.getMinecraft().gameDir, ourFolderName));
     }
 
+    /*
+
     @Inject(method = "resourceExists", at = @At("HEAD"), cancellable = true)
     private void useFastCheck(ResourceLocation rl, CallbackInfoReturnable<Boolean> cir) {
         cir.setReturnValue(vfix_cache.hasPath(rl.getNamespace() + "/" + rl.getPath()));
@@ -42,4 +44,6 @@ public class MixinNormalResourceLoader {
             cir.setReturnValue(null);
         }
     }
+
+     */
 }

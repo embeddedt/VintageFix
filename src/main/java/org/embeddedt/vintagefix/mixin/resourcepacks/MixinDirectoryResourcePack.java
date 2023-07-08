@@ -25,8 +25,11 @@ public class MixinDirectoryResourcePack {
         vfix_cache = new FolderPackCache(new File(Minecraft.getMinecraft().gameDir, "resources"));
     }
 
+    /*
     @Inject(method = "hasResourceName", at = @At("HEAD"), cancellable = true)
     private void useFastCheck(String name, CallbackInfoReturnable<Boolean> cir) {
         cir.setReturnValue(vfix_cache.hasPath(name.replace("assets/", "")));
     }
+
+     */
 }
