@@ -172,10 +172,12 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
             throw new ModelLoaderRegistry.LoaderException("No suitable loader found for the model " + location);
         }
 
-        try {
-            model = accepted.loadModel(actualLocation);
-        } catch (Exception e) {
-            throw new ModelLoaderRegistry.LoaderException("Exception loading model " + location + " with loader " + accepted, e);
+        synchronized (DynamicModelProvider.class) {
+            try {
+                model = accepted.loadModel(actualLocation);
+            } catch (Exception e) {
+                throw new ModelLoaderRegistry.LoaderException("Exception loading model " + location + " with loader " + accepted, e);
+            }
         }
 
         if(model == null)
