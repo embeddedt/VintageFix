@@ -17,6 +17,7 @@ import java.util.Optional;
 @ClientOnlyMixin
 public class MixinItemLayerModel {
     private static final Vector4f bakePosition = new Vector4f();
+    /*
     @Overwrite(remap = false)
     private static BakedQuad buildQuad(
         VertexFormat format, Optional<TRSRTransformation> transform, EnumFacing side, TextureAtlasSprite sprite, int tint,
@@ -40,6 +41,8 @@ public class MixinItemLayerModel {
         net.minecraftforge.client.ForgeHooksClient.fillNormal(vertexData, side);
         return new BakedQuad(vertexData, tint, side, sprite, true, net.minecraft.client.renderer.vertex.DefaultVertexFormats.ITEM);
     }
+
+     */
 
     private static void pumpVertex(int[] data, int off, float x, float y, float z, float u, float v, TRSRTransformation transform) {
         off = off * 7;
