@@ -131,7 +131,9 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
                 }
             }
         }
-        return null;
+        /* emulate non-null for known variants */
+        Collection<ModelResourceLocation> knownVariants = ModelLocationInformation.validVariantsForBlock.get(new ResourceLocation(location.getNamespace(), location.getPath()));
+        return (knownVariants != null && knownVariants.contains(location)) ? missingModel : null;
     }
 
     private static final Function<ResourceLocation, TextureAtlasSprite> loggingTextureGetter = location -> {
