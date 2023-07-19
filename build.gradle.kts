@@ -131,7 +131,7 @@ dependencies {
   compileOnly(rfg.deobf("curse.maven:immersive-engineering-231951:2974106"))
   compileOnly(rfg.deobf("curse.maven:mysticallib-277064:3483816"))
   compileOnly(rfg.deobf("curse.maven:blockcraftery-278882:2716712"))
-  compileOnly(rfg.deobf("team.chisel.ctm:CTM:MC1.12.2-1.0.2.31"))
+  implementation(rfg.deobf("team.chisel.ctm:CTM:MC1.12.2-1.0.2.31"))
   compileOnly(rfg.deobf("curse.maven:base-246996:3440963"))
   compileOnly(rfg.deobf("curse.maven:rloader-226447:2477566"))
   // server build, put client build in run/mods
