@@ -33,7 +33,7 @@ public class VoxelBlobMixin {
     private static void initLayerFilters() {
         vfix$layerFilters = new EnumMap<>(BlockRenderLayer.class);
         for(BlockRenderLayer layer : BlockRenderLayer.values()) {
-            vfix$layerFilters.put(layer, new Int2BooleanOpenHashMap(4096));
+            vfix$layerFilters.put(layer, new Int2BooleanOpenHashMap());
         }
     }
 
