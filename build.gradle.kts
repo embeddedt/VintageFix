@@ -145,6 +145,7 @@ dependencies {
   compileOnly(rfg.deobf("curse.maven:refinedstorage-243076:2940914"))
   compileOnly(rfg.deobf("curse.maven:opencomputers-223008:4566834"))
   implementation(rfg.deobf("curse.maven:extrautils-225561:2678374"))
+  implementation(rfg.deobf("curse.maven:chiselsandbits-231095:2720655"))
   embed("com.esotericsoftware:kryo:5.1.1")
 }
 
