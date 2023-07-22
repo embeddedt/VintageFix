@@ -96,6 +96,10 @@ public class VintageFixClient {
 
     private static final ImmutableListMultimap<String, ResourceLocation> EXTRA_TEXTURES_BY_MOD = ImmutableListMultimap.<String, ResourceLocation>builder()
         .put("mekanism", new ResourceLocation("mekanism", "entities/robit"))
+        .put("gbook", new ResourceLocation("gbook", "cover"))
+        .put("gbook", new ResourceLocation("gbook", "cover_gray"))
+        .put("gbook", new ResourceLocation("gbook", "paper"))
+        .put("gbook", new ResourceLocation("gbook", "transparent"))
         .build();
 
     static List<IResourcePack> resourcePackList = ImmutableList.of();

@@ -20,6 +20,7 @@ import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.common.ForgeModContainer;
 import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.ProgressManager;
 import net.minecraftforge.fml.common.eventhandler.IEventListener;
@@ -54,6 +55,8 @@ public class MixinModelManager {
     @Final
     private TextureMap texMap;
 
+    private Set<ResourceLocation> earlyDetectedTextures;
+
     private void doEarlyModelLoading(IResourceManager manager) {
         // load some models early (e.g. TConstruct)
         Predicate<String> shouldLoadEarly = p -> {
@@ -77,6 +80,11 @@ public class MixinModelManager {
                 try {
                     //VintageFix.LOGGER.info("Loading {}", rl);
                     IModel theModel = DynamicModelProvider.instance.getObject(rl);
+                    if(theModel != null) {
+                        try {
+                            earlyDetectedTextures.addAll(theModel.getTextures());
+                        } catch(RuntimeException ignored) {}
+                    }
                     if(theModel != null && shouldPersistEarly.test(path)) {
                         DynamicModelProvider.instance.putObject(rl, theModel);
                         permLoaded++;
@@ -95,7 +103,7 @@ public class MixinModelManager {
         return mrl.getNamespace().equals("thebetweenlands");
     }
 
-    private boolean shouldPersistBlacklisted(ModelResourceLocation mrl) {
+    private boolean shouldPersistBlacklisted(ResourceLocation mrl) {
         return false; // for now
     }
 
@@ -103,7 +111,7 @@ public class MixinModelManager {
 
     private void doBlacklistedModelLoading(IResourceManager manager) {
         blackListedModels = new Object2ObjectOpenHashMap<>();
-        List<ModelResourceLocation> modelList = new ArrayList<>();
+        List<ResourceLocation> modelList = new ArrayList<>();
         for(ModelResourceLocation mrl : ModelLocationInformation.inventoryVariantLocations.keySet()) {
             if(shouldLoadBlacklisted(mrl))
                 modelList.add(mrl);
@@ -114,17 +122,25 @@ public class MixinModelManager {
                     modelList.add(mrl);
             }
         }
+        if(Loader.isModLoaded("gbook"))
+            modelList.add(new ResourceLocation("gbook", "block/custom/book")); // ensure book textures are baked
         if(modelList.size() == 0)
             return;
         ProgressManager.ProgressBar bar = ProgressManager.push("Incompatible model loading", modelList.size());
         int errors = 0;
-        for(ModelResourceLocation mrl : modelList) {
+        for(ResourceLocation mrl : modelList) {
             bar.step(mrl.toString());
             try {
                 IModel model = DynamicModelProvider.instance.getObject(mrl);
-                if(shouldPersistBlacklisted(mrl))
-                    DynamicModelProvider.instance.putObject(mrl, model);
-                blackListedModels.put(mrl, model);
+                if(model != null) {
+                    try {
+                        earlyDetectedTextures.addAll(model.getTextures());
+                    } catch(RuntimeException ignored) {}
+                    if(shouldPersistBlacklisted(mrl))
+                        DynamicModelProvider.instance.putObject(mrl, model);
+                    if(mrl instanceof ModelResourceLocation)
+                        blackListedModels.put((ModelResourceLocation)mrl, model);
+                }
             } catch(RuntimeException e) {
                 VintageFix.LOGGER.error("Error loading blacklisted model {}: {}", mrl, e);
                 errors++;
@@ -192,6 +208,8 @@ public class MixinModelManager {
         DynamicBakedModelProvider.instance = dynamicBakedModelProvider;
         modelRegistry = dynamicBakedModelProvider;
 
+        earlyDetectedTextures = new HashSet<>();
+
         overallBar.step("Early model loading");
         doEarlyModelLoading(resourceManager);
         overallBar.step("Blacklisted model loading");
@@ -199,18 +217,18 @@ public class MixinModelManager {
         doBlacklistedModelLoading(resourceManager);
 
         Method getTexturesMethod = ObfuscationReflectionHelper.findMethod(ModelLoaderRegistry.class, "getTextures", Iterable.class);
-        final Set<ResourceLocation> textures;
         try {
             getTexturesMethod.setAccessible(true);
-            textures = Sets.newHashSet((Iterable<ResourceLocation>)getTexturesMethod.invoke(null));
+            Iterable<ResourceLocation> registryTextures = (Iterable<ResourceLocation>)getTexturesMethod.invoke(null);
+            registryTextures.forEach(earlyDetectedTextures::add);
         } catch(ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
-        textures.remove(TextureMap.LOCATION_MISSING_TEXTURE);
-        textures.addAll(ObfuscationReflectionHelper.getPrivateValue(ModelBakery.class, null, "field_177602_b"));
+        earlyDetectedTextures.remove(TextureMap.LOCATION_MISSING_TEXTURE);
+        earlyDetectedTextures.addAll(ObfuscationReflectionHelper.getPrivateValue(ModelBakery.class, null, "field_177602_b"));
 
         overallBar.step("Load textures");
-        texMap.loadSprites(resourceManager, map -> textures.forEach(map::registerSprite));
+        texMap.loadSprites(resourceManager, map -> earlyDetectedTextures.forEach(map::registerSprite));
 
         // Get the default model, returned by getModel when the model provider returns null
         defaultModel = modelRegistry.getObject(DynamicBakedModelProvider.MISSING_MODEL_LOCATION);
@@ -242,5 +260,6 @@ public class MixinModelManager {
         ProgressManager.pop(overallBar);
         // Make the model provider load blockstate to model information. See MixinBlockModelShapes
         modelProvider.reloadModels();
+        earlyDetectedTextures = new HashSet<>();
     }
 }
