@@ -90,6 +90,7 @@ public class MixinConfigPlugin implements IMixinConfigPlugin {
 
     private static final ImmutableMap<String, Boolean> extraBaseNames = ImmutableMap.<String, Boolean>builder()
         .put("mixin.dynamic_resources.background_item_bake", true)
+        .put("mixin.bugfix.extrautils", false)
         .put("mixin.dynamic_resources.hide_model_exceptions", false)
         .build();
 
@@ -133,8 +134,9 @@ public class MixinConfigPlugin implements IMixinConfigPlugin {
                 for(PotentialMixin m : allMixins) {
                     String baseName = mixinClassNameToBaseName(m.className);
                     if(!config.containsKey(baseName)) {
-                        LOGGER.warn("Added missing entry '{}' to config file", baseName);
-                        config.put(baseName, "true");
+                        String value = extraBaseNames.getOrDefault(baseName, true).toString();
+                        LOGGER.warn("Added missing entry '{}' to config file with default value '{}'", baseName, value);
+                        config.put(baseName, value);
                     }
                 }
                 for(Map.Entry<String, Boolean> entry : extraBaseNames.entrySet()) {
