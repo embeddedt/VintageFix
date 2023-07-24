@@ -37,6 +37,7 @@ public abstract class MixinTextureMap implements IWeakTextureMap {
         String locKey = location.toString();
         if(this.weakRegisteredSprites.contains(locKey)) {
             this.mapRegisteredSprites.remove(locKey);
+            this.weakRegisteredSprites.remove(locKey);
         }
     }
 
@@ -45,6 +46,7 @@ public abstract class MixinTextureMap implements IWeakTextureMap {
         String key = sprite.getIconName();
         if(this.weakRegisteredSprites.contains(key)) {
             this.mapRegisteredSprites.remove(key);
+            this.weakRegisteredSprites.remove(key);
         }
     }
 
@@ -55,8 +57,11 @@ public abstract class MixinTextureMap implements IWeakTextureMap {
 
     @Override
     public void registerSpriteWeak(ResourceLocation location) {
+        String key = location.toString();
+        if(this.weakRegisteredSprites.contains(key) || this.mapRegisteredSprites.containsKey(key))
+            return;
         this.registerSprite(location);
-        this.weakRegisteredSprites.add(location.toString());
+        this.weakRegisteredSprites.add(key);
     }
 
     @Inject(method = "loadTextureAtlas", at = @At("HEAD"))
