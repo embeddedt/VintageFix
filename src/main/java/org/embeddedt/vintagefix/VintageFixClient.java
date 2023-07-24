@@ -267,7 +267,7 @@ public class VintageFixClient {
             if(textureLoc.size() > 0)
                 return textureLoc;
         } catch(FileNotFoundException ignored) {
-        } catch(IOException | RuntimeException e) {
+        } catch(Throwable e) {
             VintageFix.LOGGER.error("Exception reading JSON for {}", jsonLocation, e);
         }
         return ImmutableList.of();
