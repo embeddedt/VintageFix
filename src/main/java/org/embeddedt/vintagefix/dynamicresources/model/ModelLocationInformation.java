@@ -30,6 +30,7 @@ public class ModelLocationInformation {
     public static final Map<ModelResourceLocation, ResourceLocation> inventoryVariantLocations = new Object2ObjectOpenHashMap<>();
     private static final Map<ResourceLocation, Block> blockstateLocationToBlock = new Object2ObjectOpenHashMap<>();
     public static final Set<ModelResourceLocation> allItemVariants = new ObjectOpenHashSet<>();
+    public static final Set<ModelResourceLocation> allKnownModelLocations = new ObjectOpenHashSet<>();
     public static final Map<ResourceLocation, Collection<ModelResourceLocation>> validVariantsForBlock = new Object2ObjectOpenHashMap<>();
     private static final Object2IntOpenHashMap<String> errorsByNamespace = new Object2IntOpenHashMap<>();
     static {
@@ -60,6 +61,7 @@ public class ModelLocationInformation {
                     ResourceLocation itemLocation = getItemLocation(s);
                     ModelResourceLocation inventoryVariant = getInventoryVariant(s);
                     allItemVariants.add(inventoryVariant);
+                    allKnownModelLocations.add(inventoryVariant);
                     inventoryVariantLocations.put(inventoryVariant, itemLocation);
                 }
             }
@@ -70,6 +72,7 @@ public class ModelLocationInformation {
                     blockstateLocationToBlock.put(location, block);
                 }
                 for(ModelResourceLocation location : blockStateMapper.getVariants(block).values()) {
+                    allKnownModelLocations.add(location);
                     ResourceLocation baseLocation = new ResourceLocation(location.getNamespace(), location.getPath());
                     ObjectOpenHashSet<ModelResourceLocation> mrls = (ObjectOpenHashSet<ModelResourceLocation>)validVariantsForBlock.computeIfAbsent(baseLocation, k -> new ObjectOpenHashSet<>());
                     mrls.add(location);

@@ -26,10 +26,7 @@ import net.minecraftforge.fml.common.ProgressManager;
 import net.minecraftforge.fml.common.eventhandler.IEventListener;
 import org.embeddedt.vintagefix.VintageFix;
 import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
-import org.embeddedt.vintagefix.dynamicresources.DeferredListeners;
-import org.embeddedt.vintagefix.dynamicresources.EventUtil;
-import org.embeddedt.vintagefix.dynamicresources.ItemBakeThread;
-import org.embeddedt.vintagefix.dynamicresources.ResourcePackHelper;
+import org.embeddedt.vintagefix.dynamicresources.*;
 import org.embeddedt.vintagefix.dynamicresources.model.DynamicBakedModelProvider;
 import org.embeddedt.vintagefix.dynamicresources.model.DynamicModelProvider;
 import org.embeddedt.vintagefix.dynamicresources.model.ModelLocationInformation;
@@ -244,7 +241,7 @@ public class MixinModelManager {
         }
 
         // Post the event, but just log an error if a listener throws an exception.
-        ModelBakeEvent event = new ModelBakeEvent((ModelManager) (Object) this, modelRegistry, loader);
+        ModelBakeEvent event = new ModelBakeEvent((ModelManager) (Object) this, new WrappingModelRegistry(modelRegistry), loader);
         IEventListener[] listeners = EventUtil.getListenersForEvent(event);
         overallBar.step("Baking");
         ProgressManager.ProgressBar bakeEventBar = ProgressManager.push("Posting bake events", listeners.length);
