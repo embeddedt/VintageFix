@@ -107,6 +107,11 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
         }
 
         if(model == null) {
+            ModelLoaderRegistry.LoaderException theException = new ModelLoaderRegistry.LoaderException("Model loading failure for " + location);
+            if(blockStateException != null)
+                theException.addSuppressed(blockStateException);
+            if(normalException != null)
+                theException.addSuppressed(normalException);
             if(HIDE_MODEL_ERRORS) {
                 blockStateException = null;
                 normalException = null;
@@ -116,7 +121,7 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
                 if(normalException != null)
                     LOGGER.error("Failed to load model {} as item {}", location, inventoryVariantLocation, normalException);
             }
-            throw new ModelLoaderRegistry.LoaderException("Model loading failure");
+            throw theException;
         }
         return model;
     }
