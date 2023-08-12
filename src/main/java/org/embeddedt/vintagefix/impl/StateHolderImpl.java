@@ -1,5 +1,6 @@
 package org.embeddedt.vintagefix.impl;
 
+import com.google.common.collect.ImmutableTable;
 import org.embeddedt.vintagefix.classloading.FastImmutableMapDefiner;
 import org.embeddedt.vintagefix.ducks.FastMapStateHolder;
 import org.embeddedt.vintagefix.fastmap.FastMap;
@@ -18,6 +19,14 @@ public class StateHolderImpl {
      */
     public static <S>
     void populateNeighbors(Map<Map<IProperty<?>, Comparable<?>>, S> states, FastMapStateHolder<S> holder) {
+        if(states.size() == 1) {
+            // Only one state => (try)setValue will never be successful, so we do not need to populate the FastMap as it
+            // can never be queried. Additionally, the state map is already initialized to an empty "official"
+            // ImmutableMap, which is a singleton and as such does not need to be replaced. Instead, we just initialize
+            // the neighbor table as a singleton empty table as there are no neighbor blockstates.
+            holder.setNeighborTable(ImmutableTable.of());
+            return;
+        }
         if (holder.getNeighborTable() != null) {
             throw new IllegalStateException();
         } else if (states == LAST_STATE_MAP.get()) {
