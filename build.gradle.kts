@@ -125,13 +125,13 @@ dependencies {
   annotationProcessor("com.google.code.gson:gson:2.8.6")
   annotationProcessor("org.spongepowered:mixin:0.8.3") {isTransitive = false}
 
-  implementation(rfg.deobf("slimeknights.mantle:Mantle:1.12-1.3.3.56"))
-  implementation(rfg.deobf("slimeknights:TConstruct:1.12.2-2.13.0.180"))
+  compileOnly(rfg.deobf("slimeknights.mantle:Mantle:1.12-1.3.3.56"))
+  compileOnly(rfg.deobf("slimeknights:TConstruct:1.12.2-2.13.0.180"))
   compileOnly(rfg.deobf("curse.maven:applied-energistics-2-223794:2747063"))
   compileOnly(rfg.deobf("curse.maven:immersive-engineering-231951:2974106"))
   compileOnly(rfg.deobf("curse.maven:mysticallib-277064:3483816"))
   compileOnly(rfg.deobf("curse.maven:blockcraftery-278882:2716712"))
-  implementation(rfg.deobf("team.chisel.ctm:CTM:MC1.12.2-1.0.2.31"))
+  compileOnly(rfg.deobf("team.chisel.ctm:CTM:MC1.12.2-1.0.2.31"))
   compileOnly(rfg.deobf("curse.maven:base-246996:3440963"))
   compileOnly(rfg.deobf("curse.maven:rloader-226447:2477566"))
   // server build, put client build in run/mods
@@ -144,8 +144,8 @@ dependencies {
   compileOnly(rfg.deobf("curse.maven:hammercore-247401:3611193"))
   compileOnly(rfg.deobf("curse.maven:refinedstorage-243076:2940914"))
   compileOnly(rfg.deobf("curse.maven:opencomputers-223008:4566834"))
-  implementation(rfg.deobf("curse.maven:extrautils-225561:2678374"))
-  implementation(rfg.deobf("curse.maven:chiselsandbits-231095:2720655"))
+  compileOnly(rfg.deobf("curse.maven:extrautils-225561:2678374"))
+  compileOnly(rfg.deobf("curse.maven:chiselsandbits-231095:2720655"))
   embed("com.esotericsoftware:kryo:5.1.1")
 }
 
