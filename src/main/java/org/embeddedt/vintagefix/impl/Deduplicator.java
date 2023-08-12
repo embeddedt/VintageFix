@@ -2,6 +2,7 @@ package org.embeddedt.vintagefix.impl;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
+import it.unimi.dsi.fastutil.HashCommon;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenCustomHashMap;
 import org.embeddedt.vintagefix.hash.LambdaBasedHash;
 import org.embeddedt.vintagefix.util.PredicateHelper;
@@ -32,11 +33,24 @@ public class Deduplicator {
     private static final Map<List<Predicate<IBlockState>>, Predicate<IBlockState>> OR_PREDICATE_CACHE = new ConcurrentHashMap<>();
     private static final Map<List<Predicate<IBlockState>>, Predicate<IBlockState>> AND_PREDICATE_CACHE = new ConcurrentHashMap<>();
     private static final Object2ObjectOpenCustomHashMap<int[], int[]> BAKED_QUAD_CACHE = new Object2ObjectOpenCustomHashMap<>(
-            new LambdaBasedHash<>(Arrays::hashCode, Arrays::equals)
+            new LambdaBasedHash<>(Deduplicator::betterIntArrayHash, Arrays::equals)
     );
 
     public static String deduplicateVariant(String variant) {
         return VARIANT_IDENTITIES.computeIfAbsent(variant, Function.identity());
+    }
+
+    /**
+     * An alternative to Arrays::hashCode for int arrays that appears to be more collision resistant for baked quad
+     * vertex data arrays. Arrays::hashCode seems to be prone to collisions when arrays only differ slightly; this
+     * caused the slowdown observed in FerriteCore issue #129.
+     */
+    private static int betterIntArrayHash(int[] in) {
+        int result = 0;
+        for (int i : in) {
+            result = 31 * result + HashCommon.murmurHash3(i);
+        }
+        return result;
     }
 
     public static MultipartBakedModel makeMultipartModel(Map<Predicate<IBlockState>, IBakedModel> selectors) {
