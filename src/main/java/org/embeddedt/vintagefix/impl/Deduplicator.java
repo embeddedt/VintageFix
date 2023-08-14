@@ -96,8 +96,10 @@ public class Deduplicator {
                 KNOWN_MULTIPART_MODELS.clear();
                 OR_PREDICATE_CACHE.clear();
                 AND_PREDICATE_CACHE.clear();
-                BAKED_QUAD_CACHE.clear();
-                BAKED_QUAD_CACHE.trim();
+                synchronized (BAKED_QUAD_CACHE) {
+                    BAKED_QUAD_CACHE.clear();
+                    BAKED_QUAD_CACHE.trim();
+                }
             }
         });
     }
