@@ -5,6 +5,7 @@ import com.google.common.collect.Sets;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.util.registry.IRegistry;
+import net.minecraft.util.registry.RegistrySimple;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ModContainer;
 import org.embeddedt.vintagefix.dynamicresources.model.ModelLocationInformation;
@@ -13,7 +14,7 @@ import javax.annotation.Nullable;
 import java.util.Iterator;
 import java.util.Set;
 
-public class WrappingModelRegistry implements IRegistry<ModelResourceLocation, IBakedModel> {
+public class WrappingModelRegistry extends RegistrySimple<ModelResourceLocation, IBakedModel> {
     private final IRegistry<ModelResourceLocation, IBakedModel> delegate;
 
     public WrappingModelRegistry(IRegistry<ModelResourceLocation, IBakedModel> registry) {
@@ -39,6 +40,11 @@ public class WrappingModelRegistry implements IRegistry<ModelResourceLocation, I
         if(extraSet == null)
             return currentKeys;
         return Sets.union(extraSet, currentKeys);
+    }
+
+    @Override
+    public boolean containsKey(ModelResourceLocation key) {
+        return ModelLocationInformation.allKnownModelLocations.contains(key);
     }
 
     private static final ImmutableSet<String> MODS_WITH_ITERATING_BAKE_EVENT = ImmutableSet.of("rebornmod");
