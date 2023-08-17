@@ -6,4 +6,4 @@ Requires MixinBooter.
 
 Download: https://nightly.link/embeddedt/VintageFix/workflows/gradle/main/Package.zip
 
-Discord: https://discord.gg/vFhf7acgMK (#vintagefix-discussion channel)
+Discord: https://discord.gg/rN9Y7caguP (#vintagefix-discussion channel)
