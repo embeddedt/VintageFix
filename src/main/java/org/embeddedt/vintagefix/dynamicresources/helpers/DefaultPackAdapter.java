@@ -25,22 +25,25 @@ public class DefaultPackAdapter implements ResourcePackHelper.Adapter<DefaultRes
     }
 
     private static Iterator<String> walkFileSystems(Class<?> clz, FSConsumer consumer) throws IOException {
-        FileSystem mainFs;
-        try {
-            URI uri = clz.getResource("/assets/.mcassetsroot").toURI();
-            if ("jar".equals(uri.getScheme())) {
-                try {
-                    mainFs = FileSystems.getFileSystem(uri);
-                } catch (FileSystemNotFoundException var11) {
-                    mainFs = FileSystems.newFileSystem(uri, Collections.emptyMap());
-                }
-            } else
-                throw new IOException("Wrong URI scheme: " + uri.getScheme());
-        } catch (URISyntaxException e) {
-            throw new IOException("Couldn't list vanilla resources", e);
+        Set<String> set;
+        synchronized (DefaultPackAdapter.class) {
+            FileSystem mainFs;
+            try {
+                URI uri = clz.getResource("/assets/.mcassetsroot").toURI();
+                if ("jar".equals(uri.getScheme())) {
+                    try {
+                        mainFs = FileSystems.getFileSystem(uri);
+                    } catch (FileSystemNotFoundException var11) {
+                        mainFs = FileSystems.newFileSystem(uri, Collections.emptyMap());
+                    }
+                } else
+                    throw new IOException("Wrong URI scheme: " + uri.getScheme());
+            } catch (URISyntaxException e) {
+                throw new IOException("Couldn't list vanilla resources", e);
+            }
+            set = new HashSet<>(consumer.accept(mainFs));
+            mainFs.close();
         }
-        Set<String> set = new HashSet<>(consumer.accept(mainFs));
-        mainFs.close();
         if(clz.getClassLoader() instanceof URLClassLoader) {
             URLClassLoader cl = (URLClassLoader)clz.getClassLoader();
             for(URL url : cl.getURLs()) {

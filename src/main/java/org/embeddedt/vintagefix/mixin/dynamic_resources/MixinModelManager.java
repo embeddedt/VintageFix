@@ -171,6 +171,7 @@ public class MixinModelManager {
      */
     @Overwrite
     public void onResourceManagerReload(IResourceManager resourceManager) {
+        TextureCollector.startDiscovery();
         ItemBakeThread.stopAndJoin();
         // Run the "end of model loading" listeners first
         for(IResourceManagerReloadListener listener : DeferredListeners.deferredListeners) {

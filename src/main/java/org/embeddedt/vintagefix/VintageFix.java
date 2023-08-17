@@ -27,7 +27,7 @@ public class VintageFix {
     public static final File OUT_DIR = new File(MY_DIR, "out");
     public static final File CACHE_DIR = new File(MY_DIR, "transformerCache");
 
-    public static final ExecutorService WORKER_POOL = new ForkJoinPool();
+    public static final ForkJoinPool WORKER_POOL = new ForkJoinPool();
 
     @Mod.EventHandler
     @SuppressWarnings("unused")
