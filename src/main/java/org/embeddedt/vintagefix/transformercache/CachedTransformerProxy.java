@@ -12,7 +12,7 @@ public class CachedTransformerProxy implements IClassTransformer {
 
     public CachedTransformerProxy(IClassTransformer original) {
         this.original = original;
-        this.transformerName = original.getClass().getCanonicalName();
+        this.transformerName = TransformerCache.getUniqueTransformerName(original);
     }
 
     @Override

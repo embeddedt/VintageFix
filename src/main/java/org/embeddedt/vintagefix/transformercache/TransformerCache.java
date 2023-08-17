@@ -27,6 +27,7 @@ import net.minecraft.launchwrapper.LaunchClassLoader;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.asm.ASMTransformerWrapper;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import org.apache.commons.io.FileUtils;
 import org.embeddedt.vintagefix.VintageFix;
 import org.embeddedt.vintagefix.util.Util;
 
@@ -62,10 +63,11 @@ public class TransformerCache {
         "net.minecraftforge.fml.common.asm.transformers.DeobfuscationTransformer",
         "net.minecraftforge.fml.common.asm.transformers.FieldRedirectTransformer",
         "net.minecraftforge.fml.common.asm.transformers.SideTransformer",
-        "net.minecraftforge.fml.common.asm.transformers.TerminalTransformer"
+        "net.minecraftforge.fml.common.asm.transformers.TerminalTransformer",
+        "git.jbredwards.fluidlogged_api.mod.asm.transformers.TransformerLevelProperty"
     };
 
-    private static final int MAX_SIZE_MB = 128;
+    private static final int MAX_SIZE_MB = 256;
 
     public void init() {
         if(inited) return;
@@ -95,6 +97,21 @@ public class TransformerCache {
                 }
             }
         });
+
+        inited = true;
+    }
+
+    public void printStats() {
+        if(!this.inited)
+            return;
+        long usedSpace = 0;
+        for(TransformerData transData : transformerMap.values()) {
+            for(TransformerData.CachedTransformation transformation : transData.transformationMap.values()) {
+                usedSpace += transformation.getEstimatedSize();
+            }
+        }
+
+        LOGGER.info("Transformation cache usage: {}/{}", FileUtils.byteCountToDisplaySize(usedSpace), FileUtils.byteCountToDisplaySize(MAX_SIZE_MB * 1024L * 1024L));
     }
 
     private static final Field TRANSFORMER_WRAPPER_PARENT_FIELD = ObfuscationReflectionHelper.findField(ASMTransformerWrapper.TransformerWrapper.class, "parent");
@@ -108,7 +125,7 @@ public class TransformerCache {
         }
     }
 
-    private static String getUniqueTransformerName(IClassTransformer transformer) {
+    public static String getUniqueTransformerName(IClassTransformer transformer) {
         if(transformer instanceof ASMTransformerWrapper.TransformerWrapper) {
             IClassTransformer wrapped = getWrappedParent(transformer);
             if(wrapped != null)
@@ -169,6 +186,8 @@ public class TransformerCache {
                 }
 
                 for(TransformerData data : transformerMap.values()) {
+                    if(data.transformerClassName.startsWith("$wrapper."))
+                        data.transformerClassName = data.transformerClassName.substring(9);
                     boolean keep = false;
                     try {
                         Class<?> clz = Class.forName(data.transformerClassName, false, TransformerCache.class.getClassLoader());
@@ -183,7 +202,8 @@ public class TransformerCache {
                     }
                     if(!keep) {
                         LOGGER.info("Dropping " + data.transformerClassName + " from cache because we don't care about it anymore.");
-                    }
+                    } else
+                        LOGGER.info("Loaded cached data for {}", data.transformerClassName);
                 }
             } catch (IOException e) {
                 e.printStackTrace();

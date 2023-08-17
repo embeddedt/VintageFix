@@ -22,6 +22,7 @@ import org.embeddedt.vintagefix.core.VintageFixCore;
 import org.embeddedt.vintagefix.dynamicresources.CTMHelper;
 import org.embeddedt.vintagefix.dynamicresources.IWeakTextureMap;
 import org.embeddedt.vintagefix.impl.Deduplicator;
+import org.embeddedt.vintagefix.transformercache.TransformerCache;
 
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
@@ -145,6 +146,7 @@ public class VintageFixClient {
         if(!event.isCanceled() && event.getGui() instanceof GuiMainMenu && gameStartTime == -1) {
             gameStartTime = ManagementFactory.getRuntimeMXBean().getUptime() / 1000f;
             VintageFix.LOGGER.info("Game launch took " + gameStartTime + " seconds");
+            TransformerCache.instance.printStats();
         }
     }
 
