@@ -2,6 +2,7 @@ package org.embeddedt.vintagefix.core;
 
 import com.google.common.collect.ImmutableList;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
+import org.embeddedt.vintagefix.jarcache.JarDiscovererCache;
 import org.embeddedt.vintagefix.transformercache.TransformerCache;
 import org.embeddedt.vintagefix.util.DummyList;
 import org.spongepowered.asm.mixin.MixinEnvironment;
@@ -40,7 +41,7 @@ public class VintageFixCore implements IFMLLoadingPlugin, IEarlyMixinLoader {
 
     @Override
     public String[] getASMTransformerClass() {
-        return new String[0];
+        return new String[] { "org.embeddedt.vintagefix.transformer.ASMModParserTransformer" };
     }
 
     @Override
@@ -51,6 +52,9 @@ public class VintageFixCore implements IFMLLoadingPlugin, IEarlyMixinLoader {
     @Nullable
     @Override
     public String getSetupClass() {
+        if(JarDiscovererCache.isActive()) {
+            JarDiscovererCache.load();
+        }
         return null;
     }
 
