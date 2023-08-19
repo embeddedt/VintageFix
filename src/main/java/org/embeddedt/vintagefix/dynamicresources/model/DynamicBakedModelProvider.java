@@ -40,7 +40,7 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
     public static IBakedModel missingModel;
     public static final ModelResourceLocation MISSING_MODEL_LOCATION = new ModelResourceLocation("builtin/missing", "missing");
 
-    private final IRegistry<ResourceLocation, IModel> modelProvider;
+    private final DynamicModelProvider modelProvider;
     private final Map<ModelResourceLocation, IBakedModel> permanentlyLoadedBakedModels = Collections.synchronizedMap(new Object2ObjectOpenHashMap<>());
     private final Cache<ModelResourceLocation, Optional<IBakedModel>> loadedBakedModels =
             CacheBuilder.newBuilder()
@@ -71,11 +71,21 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
     @Override
     @Nullable
     public IBakedModel getObject(ModelResourceLocation location) {
-        try {
-            return loadedBakedModels.get(location, () -> Optional.ofNullable(loadBakedModel(location))).orElse(getMissingIfRegistered(location));
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e.getCause());
+        Optional<IBakedModel> opt = loadedBakedModels.getIfPresent(location);
+        if(opt == null) {
+            synchronized (this) {
+                opt = loadedBakedModels.getIfPresent(location);
+                if(opt == null) {
+                    opt = Optional.ofNullable(loadBakedModel(location));
+                    loadedBakedModels.put(location, opt);
+                }
+            }
         }
+        // avoid lambda allocation
+        if(opt.isPresent())
+            return opt.get();
+        else
+            return getMissingIfRegistered(location);
     }
 
     @Nullable
@@ -148,16 +158,13 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
     };
 
     private static IBakedModel bakeAndCheckTextures(ResourceLocation location, IModel model, VertexFormat format) {
-        // TODO log when textures missing
-        synchronized (DynamicBakedModelProvider.class) {
-            IBakedModel bakedModel = model.bake(model.getDefaultState(), format, loggingTextureGetter);
-            if(!MISSING_MODEL_LOCATION.equals(location)) {
-                DynamicModelBakeEvent event = new DynamicModelBakeEvent(location, model, bakedModel);
-                MinecraftForge.EVENT_BUS.post(event);
-                return event.bakedModel;
-            } else
-                return bakedModel;
-        }
+        IBakedModel bakedModel = model.bake(model.getDefaultState(), format, loggingTextureGetter);
+        if(!MISSING_MODEL_LOCATION.equals(location)) {
+            DynamicModelBakeEvent event = new DynamicModelBakeEvent(location, model, bakedModel);
+            MinecraftForge.EVENT_BUS.post(event);
+            return event.bakedModel;
+        } else
+            return bakedModel;
     }
 
     @Override

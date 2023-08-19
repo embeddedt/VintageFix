@@ -8,7 +8,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.IRegistry;
 import net.minecraftforge.client.model.ICustomModelLoader;
 import net.minecraftforge.client.model.IModel;
-import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import org.apache.logging.log4j.LogManager;
@@ -18,7 +17,6 @@ import org.embeddedt.vintagefix.core.MixinConfigPlugin;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel> {
@@ -57,11 +55,21 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
     @Nullable
     @Override
     public IModel getObject(ResourceLocation location) {
-        try {
-            return loadedModels.get(location, () -> Optional.ofNullable(loadModelFromBlockstateOrInventory(location))).orElse(null);
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e.getCause());
+        Optional<IModel> opt = loadedModels.getIfPresent(location);
+        if(opt == null) {
+            synchronized (this) {
+                opt = loadedModels.getIfPresent(location);
+                if(opt == null) {
+                    try {
+                        opt = Optional.ofNullable(loadModelFromBlockstateOrInventory(location));
+                    } catch(Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                    loadedModels.put(location, opt);
+                }
+            }
         }
+        return opt.orElse(null);
     }
 
     private static final Map<ResourceLocation, IModel> MODEL_LOADER_REGISTRY_CACHE = ObfuscationReflectionHelper.getPrivateValue(ModelLoaderRegistry.class, null, "cache");
@@ -177,12 +185,10 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
             throw new ModelLoaderRegistry.LoaderException("No suitable loader found for the model " + location);
         }
 
-        synchronized (DynamicModelProvider.class) {
-            try {
-                model = accepted.loadModel(actualLocation);
-            } catch (Exception e) {
-                throw new ModelLoaderRegistry.LoaderException("Exception loading model " + location + " with loader " + accepted, e);
-            }
+        try {
+            model = accepted.loadModel(actualLocation);
+        } catch (Exception e) {
+            throw new ModelLoaderRegistry.LoaderException("Exception loading model " + location + " with loader " + accepted, e);
         }
 
         if(model == null)
