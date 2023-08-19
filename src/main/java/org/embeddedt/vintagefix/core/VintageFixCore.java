@@ -18,7 +18,6 @@ import java.util.Map;
 @IFMLLoadingPlugin.MCVersion("1.12.2")
 public class VintageFixCore implements IFMLLoadingPlugin, IEarlyMixinLoader {
     public static boolean OPTIFINE;
-    public static boolean FUSION;
 
     public VintageFixCore() {
         try {
@@ -71,7 +70,6 @@ public class VintageFixCore implements IFMLLoadingPlugin, IEarlyMixinLoader {
 
     private static void applyMixinFix() {
         OPTIFINE = classExists("ofdev.launchwrapper.OptifineDevTweakerWrapper") || classExists("optifine.OptiFineForgeTweaker");
-        FUSION = classExists("com.supermartijn642.fusion.core.CoreMod");
         /* https://github.com/FabricMC/Mixin/pull/99 */
         try {
             Field groupMembersField = InjectorGroupInfo.class.getDeclaredField("members");
