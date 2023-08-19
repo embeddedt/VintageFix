@@ -6,9 +6,12 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLConstructionEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.embeddedt.vintagefix.core.MixinConfigPlugin;
+import org.embeddedt.vintagefix.dynamicresources.SafeModelBakeWrapper;
 import org.embeddedt.vintagefix.jarcache.JarDiscovererCache;
 
 import java.io.File;
@@ -32,8 +35,16 @@ public class VintageFix {
     @Mod.EventHandler
     @SuppressWarnings("unused")
     public void init(FMLConstructionEvent ev) {
-        if(FMLCommonHandler.instance().getSide() == Side.CLIENT)
+        if(FMLCommonHandler.instance().getSide() == Side.CLIENT) {
             MinecraftForge.EVENT_BUS.register(new VintageFixClient());
+        }
+    }
+
+    @Mod.EventHandler
+    public void preinit(FMLPreInitializationEvent ev) {
+        if(FMLCommonHandler.instance().getSide() == Side.CLIENT && MixinConfigPlugin.isMixinClassApplied("mixin.dynamic_resources.SafeModelBakeWrapperMixin")) {
+            SafeModelBakeWrapper.setup();
+        }
     }
 
     @Mod.EventHandler
