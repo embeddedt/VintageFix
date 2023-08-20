@@ -134,6 +134,8 @@ public class TextureCollector {
     }
 
     private List<ResourceLocation> collectModelTextures() {
+        // wait for model locations to be available
+        ModelLocationInformation.initFuture.join();
         ObjectOpenHashSet<ResourceLocation> allBlockstates = new ObjectOpenHashSet<>();
         Consumer<ModelResourceLocation> adder = mrl -> allBlockstates.add(new ResourceLocation(mrl.getNamespace(), mrl.getPath()));
         ModelLocationInformation.allItemVariants.forEach(adder);

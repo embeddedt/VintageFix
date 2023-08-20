@@ -23,6 +23,7 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 public class ModelLocationInformation {
     public static final boolean DEBUG_MODEL_LOAD = Boolean.getBoolean("vintagefix.debugDynamicModelLoading");
@@ -37,6 +38,8 @@ public class ModelLocationInformation {
         errorsByNamespace.defaultReturnValue(0);
     }
     private static boolean firstInit = true;
+
+    public static final CompletableFuture<Void> initFuture = new CompletableFuture<>();
 
     public static void init(ModelLoader loader, BlockStateMapper blockStateMapper) {
         Method method = ObfuscationReflectionHelper.findMethod(ModelBakery.class, "func_177592_e", Void.TYPE);
@@ -82,6 +85,7 @@ public class ModelLocationInformation {
                 ((ObjectOpenHashSet<ModelResourceLocation>)c).trim();
             }
 
+            initFuture.complete(null);
             firstInit = false;
         }
     }
