@@ -3,7 +3,9 @@ package org.embeddedt.vintagefix;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.event.FMLConstructionEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
@@ -38,6 +40,8 @@ public class VintageFix {
         if(FMLCommonHandler.instance().getSide() == Side.CLIENT) {
             MinecraftForge.EVENT_BUS.register(new VintageFixClient());
         }
+        if(MixinConfigPlugin.isMixinClassApplied("mixin.version_protest.LoaderChange"))
+            ObfuscationReflectionHelper.setPrivateValue(Loader.class, null, "12.2 LTS", "mccversion");
     }
 
     @Mod.EventHandler

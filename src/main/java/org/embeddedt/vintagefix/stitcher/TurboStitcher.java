@@ -36,6 +36,8 @@ public class TurboStitcher extends SpriteSlot {
     }
 
     public void addSprite(Stitcher.Holder holder) {
+        if(holder.getAtlasSprite().getIconName().startsWith("minecraft"))
+            System.out.println(holder.getAtlasSprite().getIconName());
         addSprite(new HolderSlot(holder));
     }
 
@@ -131,6 +133,12 @@ public class TurboStitcher extends SpriteSlot {
         for (SpriteSlot slot : finalizedSlots) {
             mineSlots.addAll(slot.getSlots(offset));
         }
+        /*
+        for(Stitcher.Slot slot : mineSlots) {
+            System.out.println(slot.getStitchHolder().getAtlasSprite().getIconName());
+        }
+
+         */
         return mineSlots;
     }
 

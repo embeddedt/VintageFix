@@ -23,6 +23,7 @@ import org.embeddedt.vintagefix.dynamicresources.CTMHelper;
 import org.embeddedt.vintagefix.dynamicresources.IWeakTextureMap;
 import org.embeddedt.vintagefix.impl.Deduplicator;
 import org.embeddedt.vintagefix.transformercache.TransformerCache;
+import org.embeddedt.vintagefix.util.VersionProtester;
 
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
@@ -124,6 +125,8 @@ public class VintageFixClient {
             tracker.tick();
     }
 
+    private static boolean protestVersion = MixinConfigPlugin.isMixinClassApplied("mixin.version_protest.F3Change");
+
     // highest to minimize number of entries that need shuffling
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onRenderF3(RenderGameOverlayEvent.Text event) {
@@ -137,6 +140,9 @@ public class VintageFixClient {
         // only show when OptiFine isn't present, as it adds its own
         if(!VintageFixCore.OPTIFINE)
             event.getRight().add(2, String.format("Allocation rate: %03dMB /s", tracker.getAllocationRate()));
+        if(protestVersion) {
+            event.getLeft().set(0, VersionProtester.protest(event.getLeft().get(0)));
+        }
     }
 
     private static float gameStartTime = -1;
