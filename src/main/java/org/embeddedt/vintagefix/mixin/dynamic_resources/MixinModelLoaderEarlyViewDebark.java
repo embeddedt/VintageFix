@@ -24,7 +24,7 @@ public class MixinModelLoaderEarlyViewDebark {
 
     @Inject(method = "<init>", at = @At("RETURN") , remap = false)
     private void changeBackingMap(CallbackInfo ci) {
-        this.secretSauce = Maps.asMap(ModelLocationInformation.allKnownModelLocations, location -> DynamicModelProvider.instance.getObject(location));
+        this.secretSauce = Maps.asMap(ModelLocationInformation.allKnownModelLocations, location -> DynamicModelProvider.instance.getModelOrMissing(location));
     }
 
 }

@@ -72,6 +72,14 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
         return opt.orElse(null);
     }
 
+    public IModel getModelOrMissing(ResourceLocation location) {
+        try {
+            return getObject(location);
+        } catch(RuntimeException e) {
+            return getObject(new ModelResourceLocation("builtin/missing", "missing"));
+        }
+    }
+
     private static final Map<ResourceLocation, IModel> MODEL_LOADER_REGISTRY_CACHE = ObfuscationReflectionHelper.getPrivateValue(ModelLoaderRegistry.class, null, "cache");
 
     private static final Class<?> VANILLA_MODEL_WRAPPER;
