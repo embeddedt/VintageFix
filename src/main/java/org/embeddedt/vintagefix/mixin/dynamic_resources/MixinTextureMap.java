@@ -92,6 +92,8 @@ public abstract class MixinTextureMap implements IWeakTextureMap {
             while(true) {
                 stitchSuccess = false;
                 try {
+                    if(!haveTriedFallbackPass && Boolean.getBoolean("vintagefix.testFallbackPass"))
+                        throw new StitcherException(null, "forced fallback");
                     stitcher.doStitch();
                     stitchSuccess = true;
                 } catch(StitcherException ignored) {}
