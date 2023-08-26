@@ -92,6 +92,8 @@ public abstract class MixinTextureMap implements IWeakTextureMap {
             while(true) {
                 stitchSuccess = false;
                 try {
+                    if(!haveTriedFallbackPass)
+                        throw new StitcherException(null, "force fallback pass");
                     stitcher.doStitch();
                     stitchSuccess = true;
                 } catch(StitcherException ignored) {}
@@ -101,8 +103,11 @@ public abstract class MixinTextureMap implements IWeakTextureMap {
                     if(!haveTriedFallbackPass) {
                         VintageFix.LOGGER.warn("Failed to fit all textures using greedy approach! Will try slow, scan-all-models fallback now...");
                         Set<ResourceLocation> allTextures = new HashSet<>();
+                        // capture textures into this set
+                        DynamicModelProvider.textureCapturer = allTextures;
+                        DynamicModelProvider.instance.clearCache();
                         ProgressManager.ProgressBar bar = ProgressManager.push("Fallback texture gathering", 1);
-                        /* try to load all models, gather expected list of textures, and drop all not matching */
+                        /* try to load all models */
                         Set<ResourceLocation> loaded = new HashSet<>();
                         ConcurrentLinkedQueue<ResourceLocation> toLoad = new ConcurrentLinkedQueue<>(ModelLocationInformation.allKnownModelLocations);
                         ResourceLocation nextLoad;
@@ -113,7 +118,6 @@ public abstract class MixinTextureMap implements IWeakTextureMap {
                             try {
                                 IModel theModel = DynamicModelProvider.instance.getObject(nextLoad);
                                 if(theModel != null) {
-                                    allTextures.addAll(theModel.getTextures());
                                     for(ResourceLocation dep : theModel.getDependencies()) {
                                         if(!loaded.contains(dep))
                                             toLoad.add(dep);
@@ -124,7 +128,10 @@ public abstract class MixinTextureMap implements IWeakTextureMap {
                         }
                         bar.step("");
                         ProgressManager.pop(bar);
+                        // stop capturing
+                        DynamicModelProvider.textureCapturer = null;
                         haveTriedFallbackPass = true;
+                        // drop all other textures
                         ((IDroppingStitcher)stitcher).retainAllSprites(allTextures);
                     } else {
                         /* drop largest sprite */

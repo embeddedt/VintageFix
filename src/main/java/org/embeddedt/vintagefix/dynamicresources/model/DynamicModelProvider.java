@@ -33,6 +33,8 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
                         .softValues()
                         .build();
 
+    public static Set<ResourceLocation> textureCapturer = null;
+
     private final Map<ResourceLocation, ResourceLocation> sideChannelAliases = new Object2ObjectOpenHashMap<>();
     public static final boolean HIDE_MODEL_ERRORS = MixinConfigPlugin.isMixinClassApplied("mixin.dynamic_resources.hide_model_exceptions.ModelErrorMixin");
 
@@ -65,11 +67,18 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
                     } catch(Exception e) {
                         throw new RuntimeException(e);
                     }
+                    if(textureCapturer != null && opt.isPresent()) {
+                        textureCapturer.addAll(opt.get().getTextures());
+                    }
                     loadedModels.put(location, opt);
                 }
             }
         }
         return opt.orElse(null);
+    }
+
+    public void clearCache() {
+        loadedModels.invalidateAll();
     }
 
     public IModel getModelOrMissing(ResourceLocation location) {
