@@ -1,7 +1,10 @@
 package org.embeddedt.vintagefix.stitcher;
 
+import com.google.common.collect.ImmutableSet;
 import net.minecraft.client.renderer.texture.Stitcher;
+import net.minecraft.util.ResourceLocation;
 import org.embeddedt.vintagefix.VintageFix;
+import org.embeddedt.vintagefix.dynamicresources.TextureCollector;
 import org.embeddedt.vintagefix.stitcher.packing2d.Algorithm;
 import org.embeddedt.vintagefix.stitcher.packing2d.Packer;
 
@@ -36,8 +39,6 @@ public class TurboStitcher extends SpriteSlot {
     }
 
     public void addSprite(Stitcher.Holder holder) {
-        if(holder.getAtlasSprite().getIconName().startsWith("minecraft"))
-            System.out.println(holder.getAtlasSprite().getIconName());
         addSprite(new HolderSlot(holder));
     }
 
@@ -66,6 +67,27 @@ public class TurboStitcher extends SpriteSlot {
             trackedArea -= slot.width * slot.height;
         } else
             throw new IllegalStateException();
+    }
+
+    public void retainAllSprites(Set<ResourceLocation> theLocations) {
+        verifyState(StitcherState.SETUP);
+        Set<String> locationStrings = new HashSet<>();
+        for(ResourceLocation rl : theLocations)
+            locationStrings.add(rl.toString());
+        slots.removeIf(slot -> {
+            if(slot instanceof HolderSlot) {
+                String spriteName = ((HolderSlot) slot).getHolder().getAtlasSprite().getIconName();
+                // drop textures that are:
+                // - weakly collected by us
+                // - not in the desired list of locations
+                if(TextureCollector.weaklyCollectedTextures.contains(spriteName) && !locationStrings.contains(spriteName)) {
+                    VintageFix.LOGGER.warn("Dropping unreferenced sprite " + ((HolderSlot) slot).getHolder().getAtlasSprite().getIconName());
+                    trackedArea -= slot.width * slot.height;
+                    return true;
+                }
+            }
+            return false;
+        });
     }
 
     public void stitch() throws TooBigException {
@@ -120,6 +142,7 @@ public class TurboStitcher extends SpriteSlot {
         } while (height > maxHeight || height > width);
         finalizedSlots = packedSlots;
         state = StitcherState.STITCHED;
+        TextureCollector.weaklyCollectedTextures = ImmutableSet.of();
     }
 
     public List<Stitcher.Slot> getSlots() {

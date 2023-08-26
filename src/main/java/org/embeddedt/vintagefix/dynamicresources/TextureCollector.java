@@ -3,6 +3,7 @@ package org.embeddedt.vintagefix.dynamicresources;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -54,6 +55,8 @@ public class TextureCollector {
         .build();
 
     List<IResourcePack> resourcePackList;
+
+    public static Set<String> weaklyCollectedTextures = ImmutableSet.of();
 
     TextureCollector() {
         resourcePackList = VintageFixClient.getResourcePackList();

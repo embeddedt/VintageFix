@@ -1,5 +1,6 @@
 package org.embeddedt.vintagefix.mixin.textures;
 
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.ProgressManager;
 import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.embeddedt.vintagefix.ducks.IDroppingStitcher;
@@ -78,5 +79,10 @@ public abstract class MixinStitcher implements IDroppingStitcher {
     @Override
     public void dropLargestSprite() {
         masterStitcher.dropFirst();
+    }
+
+    @Override
+    public void retainAllSprites(Set<ResourceLocation> spriteLocations) {
+        masterStitcher.retainAllSprites(spriteLocations);
     }
 }

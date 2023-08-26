@@ -2,12 +2,19 @@ package org.embeddedt.vintagefix.mixin.dynamic_resources;
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.client.renderer.StitcherException;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.texture.Stitcher;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.model.IModel;
+import net.minecraftforge.fml.common.ProgressManager;
+import org.embeddedt.vintagefix.VintageFix;
 import org.embeddedt.vintagefix.ducks.IDroppingStitcher;
 import org.embeddedt.vintagefix.dynamicresources.IWeakTextureMap;
+import org.embeddedt.vintagefix.dynamicresources.TextureCollector;
+import org.embeddedt.vintagefix.dynamicresources.model.DynamicModelProvider;
+import org.embeddedt.vintagefix.dynamicresources.model.ModelLocationInformation;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -17,8 +24,11 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 @Mixin(TextureMap.class)
 public abstract class MixinTextureMap implements IWeakTextureMap {
@@ -68,6 +78,7 @@ public abstract class MixinTextureMap implements IWeakTextureMap {
     private void ignoreWeakTextures(CallbackInfo ci) {
         // at this point "weak"-ness no longer exists, it is only used to allow us to emulate vanilla during TextureStitchEvent.Pre
         // we need to treat registrations as strong for buggy mods like Binnie that try registering in Post
+        TextureCollector.weaklyCollectedTextures = new ObjectOpenHashSet<>(this.weakRegisteredSprites);
         this.weakRegisteredSprites.clear();
     }
 
@@ -77,6 +88,7 @@ public abstract class MixinTextureMap implements IWeakTextureMap {
             stitcher.doStitch();
         } else {
             boolean stitchSuccess;
+            boolean haveTriedFallbackPass = false;
             while(true) {
                 stitchSuccess = false;
                 try {
@@ -86,12 +98,43 @@ public abstract class MixinTextureMap implements IWeakTextureMap {
                 if(stitchSuccess)
                     return;
                 else {
-                    /* drop largest sprite */
-                    try {
-                        ((IDroppingStitcher) stitcher).dropLargestSprite();
-                    } catch(IllegalStateException e) {
-                        throw new StitcherException(null, "Could not stitch even with all sprites removed");
+                    if(!haveTriedFallbackPass) {
+                        VintageFix.LOGGER.warn("Failed to fit all textures using greedy approach! Will try slow, scan-all-models fallback now...");
+                        Set<ResourceLocation> allTextures = new HashSet<>();
+                        ProgressManager.ProgressBar bar = ProgressManager.push("Fallback texture gathering", 1);
+                        /* try to load all models, gather expected list of textures, and drop all not matching */
+                        Set<ResourceLocation> loaded = new HashSet<>();
+                        ConcurrentLinkedQueue<ResourceLocation> toLoad = new ConcurrentLinkedQueue<>(ModelLocationInformation.allKnownModelLocations);
+                        ResourceLocation nextLoad;
+                        while((nextLoad = toLoad.poll()) != null) {
+                            if(loaded.contains(nextLoad))
+                                continue;
+                            loaded.add(nextLoad);
+                            try {
+                                IModel theModel = DynamicModelProvider.instance.getObject(nextLoad);
+                                if(theModel != null) {
+                                    allTextures.addAll(theModel.getTextures());
+                                    for(ResourceLocation dep : theModel.getDependencies()) {
+                                        if(!loaded.contains(dep))
+                                            toLoad.add(dep);
+                                    }
+                                }
+                            } catch(Exception ignored) {
+                            }
+                        }
+                        bar.step("");
+                        ProgressManager.pop(bar);
+                        haveTriedFallbackPass = true;
+                        ((IDroppingStitcher)stitcher).retainAllSprites(allTextures);
+                    } else {
+                        /* drop largest sprite */
+                        try {
+                            ((IDroppingStitcher) stitcher).dropLargestSprite();
+                        } catch(IllegalStateException e) {
+                            throw new StitcherException(null, "Could not stitch even with all sprites removed");
+                        }
                     }
+
                 }
             }
         }
