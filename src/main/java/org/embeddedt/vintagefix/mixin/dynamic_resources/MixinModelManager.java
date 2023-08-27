@@ -205,6 +205,7 @@ public class MixinModelManager {
         DynamicBakedModelProvider dynamicBakedModelProvider = new DynamicBakedModelProvider(dynamicModelProvider);
         DynamicBakedModelProvider.instance = dynamicBakedModelProvider;
         modelRegistry = dynamicBakedModelProvider;
+        SafeModelBakeWrapper.theManager = (ModelManager)(Object)this;
 
         earlyDetectedTextures = new HashSet<>();
 

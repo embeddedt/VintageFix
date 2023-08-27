@@ -3,6 +3,7 @@ package org.embeddedt.vintagefix.dynamicresources;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.IBakedModel;
+import net.minecraft.client.renderer.block.model.ModelManager;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.util.registry.RegistrySimple;
 import net.minecraftforge.client.event.ModelBakeEvent;
@@ -20,6 +21,7 @@ import java.lang.reflect.Modifier;
 import java.util.Objects;
 
 public class SafeModelBakeWrapper {
+    public static ModelManager theManager;
     private static final ImmutableList<Pair<String, String>> MOD_BAKE_CLASSES = ImmutableList.<Pair<String, String>>builder()
         .add(Pair.of("tschipp.hardcoreitemstages.ItemStageEventHandler", "onModelBakeEvent"))
         .build();
@@ -59,14 +61,14 @@ public class SafeModelBakeWrapper {
 
         @SubscribeEvent
         public void onDynBake(DynamicModelBakeEvent e) {
-            if(!(e.location instanceof ModelResourceLocation) || recursion > 0)
+            if(!(e.location instanceof ModelResourceLocation) || recursion > 0 || SafeModelBakeWrapper.theManager == null)
                 return;
             recursion++;
             try {
                 RegistrySimple<ModelResourceLocation, IBakedModel> reg = new RegistrySimple<>();
                 reg.putObject((ModelResourceLocation)e.location, e.bakedModel);
                 ModelBakeEvent event = new ModelBakeEvent(
-                    Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getModelManager(),
+                    SafeModelBakeWrapper.theManager,
                     reg,
                     null
                 );
