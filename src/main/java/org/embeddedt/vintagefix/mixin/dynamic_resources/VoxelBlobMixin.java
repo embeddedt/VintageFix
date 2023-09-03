@@ -2,6 +2,7 @@ package org.embeddedt.vintagefix.mixin.dynamic_resources;
 
 import it.unimi.dsi.fastutil.ints.Int2BooleanOpenHashMap;
 import mod.chiselsandbits.chiseledblock.data.VoxelBlob;
+import mod.chiselsandbits.helpers.ModUtil;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.BlockRenderLayer;
@@ -66,7 +67,7 @@ public class VoxelBlobMixin {
                 boolean isInLayer = false;
                 synchronized (layerFilterMap) {
                     if(!layerFilterMap.containsKey(blockId)) {
-                        Block block = Block.getBlockById(blockId);
+                        Block block = ModUtil.getStateById(blockId).getBlock();
                         for(IBlockState state : block.getBlockState().getValidStates()) {
                             if(state.getBlock() != block)
                                 continue;
