@@ -61,6 +61,7 @@ public class VoxelBlobMixin {
     @Overwrite(remap = false)
     public boolean filter(BlockRenderLayer layer) {
         Int2BooleanOpenHashMap layerFilterMap = vfix$layerFilters.get(layer);
+        boolean hasValues = false;
         for(int i = 0; i < array_size; i++) {
             int blockId = this.values[i];
             if(blockId != 0) {
@@ -79,12 +80,12 @@ public class VoxelBlobMixin {
                     } else
                         isInLayer = layerFilterMap.get(blockId);
                 }
-                if(isInLayer)
-                    return true;
-                else
+                if(isInLayer) {
+                    hasValues = true;
+                } else
                     this.values[i] = 0;
             }
         }
-        return false;
+        return hasValues;
     }
 }
