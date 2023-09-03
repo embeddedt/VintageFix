@@ -62,23 +62,27 @@ public class VoxelBlobMixin {
         Int2BooleanOpenHashMap layerFilterMap = vfix$layerFilters.get(layer);
         for(int i = 0; i < array_size; i++) {
             int blockId = this.values[i];
-            boolean isInLayer = false;
-            synchronized (layerFilterMap) {
-                if(!layerFilterMap.containsKey(blockId)) {
-                    Block block = Block.getBlockById(blockId);
-                    for(IBlockState state : block.getBlockState().getValidStates()) {
-                        if(state.getBlock() != block)
-                            continue;
-                        isInLayer = block.canRenderInLayer(state, layer);
-                        if(isInLayer)
-                            break;
-                    }
-                    layerFilterMap.put(blockId, isInLayer);
-                } else
-                    isInLayer = layerFilterMap.get(blockId);
+            if(blockId != 0) {
+                boolean isInLayer = false;
+                synchronized (layerFilterMap) {
+                    if(!layerFilterMap.containsKey(blockId)) {
+                        Block block = Block.getBlockById(blockId);
+                        for(IBlockState state : block.getBlockState().getValidStates()) {
+                            if(state.getBlock() != block)
+                                continue;
+                            isInLayer = block.canRenderInLayer(state, layer);
+                            if(isInLayer)
+                                break;
+                        }
+                        layerFilterMap.put(blockId, isInLayer);
+                    } else
+                        isInLayer = layerFilterMap.get(blockId);
+                }
+                if(isInLayer)
+                    return true;
+                else
+                    this.values[i] = 0;
             }
-            if(isInLayer)
-                return true;
         }
         return false;
     }
