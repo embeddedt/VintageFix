@@ -41,6 +41,12 @@ public class ModelLocationInformation {
 
     public static final CompletableFuture<Void> initFuture = new CompletableFuture<>();
 
+    private static void loadStaticVariants() {
+        ResourceLocation itemFrame = new ResourceLocation("item_frame");
+        allKnownModelLocations.add(new ModelResourceLocation(itemFrame, "normal"));
+        allKnownModelLocations.add(new ModelResourceLocation(itemFrame, "map"));
+    }
+
     public static void init(ModelLoader loader, BlockStateMapper blockStateMapper) {
         Method method = ObfuscationReflectionHelper.findMethod(ModelBakery.class, "func_177592_e", Void.TYPE);
         try {
@@ -81,6 +87,7 @@ public class ModelLocationInformation {
                     mrls.add(location);
                 }
             }
+            loadStaticVariants();
             for(Collection<ModelResourceLocation> c : validVariantsForBlock.values()) {
                 ((ObjectOpenHashSet<ModelResourceLocation>)c).trim();
             }
