@@ -47,7 +47,7 @@ public class WrappingModelRegistry extends RegistrySimple<ModelResourceLocation,
         return ModelLocationInformation.allKnownModelLocations.contains(key);
     }
 
-    private static final ImmutableSet<String> MODS_WITH_ITERATING_BAKE_EVENT = ImmutableSet.of("rebornmod");
+    private static final ImmutableSet<String> MODS_WITH_ITERATING_BAKE_EVENT = ImmutableSet.of("rebornmod", "secretroomsmod");
 
     private Set<ModelResourceLocation> getExtraKeysForCaller(ModContainer container) {
         if(container == null || !MODS_WITH_ITERATING_BAKE_EVENT.contains(container.getModId()))
