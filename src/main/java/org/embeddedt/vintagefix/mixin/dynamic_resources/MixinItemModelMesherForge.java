@@ -2,6 +2,7 @@ package org.embeddedt.vintagefix.mixin.dynamic_resources;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import net.minecraft.client.renderer.ItemModelMesher;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ModelManager;
@@ -10,19 +11,28 @@ import net.minecraft.item.Item;
 import net.minecraftforge.client.ItemModelMesherForge;
 import net.minecraftforge.registries.IRegistryDelegate;
 import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
+import org.embeddedt.vintagefix.dynamicresources.model.DynamicModelCache;
+import org.spongepowered.asm.mixin.*;
 
 import java.util.Map;
 
 @Mixin(ItemModelMesherForge.class)
 @ClientOnlyMixin
 public class MixinItemModelMesherForge extends ItemModelMesher {
-    @Shadow Map<IRegistryDelegate<Item>, Int2ObjectMap<ModelResourceLocation>> locations;
+    @Shadow @Final @Mutable
+    Map<IRegistryDelegate<Item>, Int2ObjectMap<ModelResourceLocation>> locations = new Reference2ReferenceOpenHashMap<>();
+
+    // This is a pretty clever trick to speed up the model lookups - we know that our location objects per-item are unique,
+    // so we can just do reference lookup on them
+    private final DynamicModelCache<ModelResourceLocation> vintage$itemModelCache = new DynamicModelCache<>(this::getItemModelByLocationSlow, true);
 
     public MixinItemModelMesherForge(ModelManager modelManager) {
         super(modelManager);
+    }
+
+
+    private IBakedModel getItemModelByLocationSlow(ModelResourceLocation mrl) {
+        return getModelManager().getModel(mrl);
     }
 
     /**
@@ -38,7 +48,7 @@ public class MixinItemModelMesherForge extends ItemModelMesher {
         ModelResourceLocation location = map.get(meta);
         if(location == null)
             return null;
-        return getModelManager().getModel(location);
+        return this.vintage$itemModelCache.get(location);
     }
 
     /**
@@ -63,5 +73,7 @@ public class MixinItemModelMesherForge extends ItemModelMesher {
      **/
     @Overwrite
     @Override
-    public void rebuildCache() {}
+    public void rebuildCache() {
+        this.vintage$itemModelCache.clear();
+    }
 }

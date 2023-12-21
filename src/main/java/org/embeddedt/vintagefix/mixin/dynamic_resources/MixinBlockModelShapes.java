@@ -8,6 +8,7 @@ import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.block.statemap.BlockStateMapper;
 import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.embeddedt.vintagefix.dynamicresources.IBlockModelShapes;
+import org.embeddedt.vintagefix.dynamicresources.model.DynamicModelCache;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -20,9 +21,9 @@ import java.util.Map;
 public abstract class MixinBlockModelShapes implements IBlockModelShapes {
     @Shadow @Final private ModelManager modelManager;
     @Shadow @Final private BlockStateMapper blockStateMapper;
-    @Shadow public abstract ModelManager getModelManager();
 
     private static Map<IBlockState, ModelResourceLocation> modelLocations;
+    private final DynamicModelCache<IBlockState> vintage$modelCache = new DynamicModelCache<>(this::getModelForStateSlow, false);
 
     /**
      * @reason Don't get all models during init (with dynamic loading, that would
@@ -32,6 +33,15 @@ public abstract class MixinBlockModelShapes implements IBlockModelShapes {
     public void reloadModels() {
         if(modelLocations == null)
             modelLocations = blockStateMapper.putAllStateModelLocations();
+        this.vintage$modelCache.clear();
+    }
+
+    private IBakedModel getModelForStateSlow(IBlockState state) {
+        IBakedModel model = modelManager.getModel(getLocationForState(state));
+        if (model == null) {
+            model = modelManager.getMissingModel();
+        }
+        return model;
     }
 
     /**
@@ -40,11 +50,7 @@ public abstract class MixinBlockModelShapes implements IBlockModelShapes {
      **/
     @Overwrite
     public IBakedModel getModelForState(IBlockState state) {
-        IBakedModel model = modelManager.getModel(getLocationForState(state));
-        if (model == null) {
-            model = modelManager.getMissingModel();
-        }
-        return model;
+        return this.vintage$modelCache.get(state);
     }
 
     @Override
