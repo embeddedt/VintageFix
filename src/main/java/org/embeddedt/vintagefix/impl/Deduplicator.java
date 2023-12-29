@@ -4,6 +4,8 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.HashCommon;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenCustomHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectOpenCustomHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import org.embeddedt.vintagefix.hash.LambdaBasedHash;
 import org.embeddedt.vintagefix.util.PredicateHelper;
 import net.minecraft.block.state.IBlockState;
@@ -32,7 +34,7 @@ public class Deduplicator {
     private static final Map<Map<Predicate<IBlockState>, IBakedModel>, MultipartBakedModel> KNOWN_MULTIPART_MODELS = new ConcurrentHashMap<>();
     private static final Map<List<Predicate<IBlockState>>, Predicate<IBlockState>> OR_PREDICATE_CACHE = new ConcurrentHashMap<>();
     private static final Map<List<Predicate<IBlockState>>, Predicate<IBlockState>> AND_PREDICATE_CACHE = new ConcurrentHashMap<>();
-    private static final Object2ObjectOpenCustomHashMap<int[], int[]> BAKED_QUAD_CACHE = new Object2ObjectOpenCustomHashMap<>(
+    private static final ObjectOpenCustomHashSet<int[]> BAKED_QUAD_CACHE = new ObjectOpenCustomHashSet<>(
             new LambdaBasedHash<>(Deduplicator::betterIntArrayHash, Arrays::equals)
     );
 
@@ -78,7 +80,7 @@ public class Deduplicator {
 
     public static void deduplicate(BakedQuad bq) {
         synchronized (BAKED_QUAD_CACHE) {
-            int[] deduped = BAKED_QUAD_CACHE.computeIfAbsent(bq.getVertexData(), Function.identity());
+            int[] deduped = BAKED_QUAD_CACHE.addOrGet(bq.getVertexData());
             try {
                 BAKED_QUAD_VERTEX_FIELD.invokeExact(bq, deduped);
             } catch(Throwable e) {
