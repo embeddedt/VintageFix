@@ -12,17 +12,12 @@ import org.spongepowered.asm.mixin.Overwrite;
 @ClientOnlyMixin
 public abstract class MixinModelLoaderRegistry {
 
-    /** @reason Model loading and caching code has been moved to DynamicModelProvider. **/
-    @Overwrite
+    /**
+     * @author embeddedt, Runemoro
+     * @reason Model loading and caching code has been moved to DynamicModelProvider.
+     */
+    @Overwrite(remap = false)
     public static IModel getModel(ResourceLocation location) {
         return DynamicModelProvider.instance.getObject(location);
     }
-
-    /** @reason Get the missing model from BuiltinLoader. **/
-    /*
-    @Overwrite
-    public static IModel getMissingModel() {
-        return BuiltinLoader.WRAPPED_MODEL_MISSING;
-    }
-     */
 }

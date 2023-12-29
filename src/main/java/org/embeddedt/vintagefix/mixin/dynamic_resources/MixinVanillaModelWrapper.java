@@ -25,10 +25,10 @@ import java.util.function.Function;
 @Mixin(targets = "net/minecraftforge/client/model/ModelLoader$VanillaModelWrapper")
 @ClientOnlyMixin
 public abstract class MixinVanillaModelWrapper {
-    @Shadow
+    @Shadow(remap = false)
     @Final
     private ModelBlock model;
-    @Shadow
+    @Shadow(remap = false)
     public abstract IBakedModel bakeImpl(IModelState state, final VertexFormat format, Function<ResourceLocation, TextureAtlasSprite> bakedTextureGetter);
 
     @Redirect(method = "getDependencies", at = @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"), remap = false)

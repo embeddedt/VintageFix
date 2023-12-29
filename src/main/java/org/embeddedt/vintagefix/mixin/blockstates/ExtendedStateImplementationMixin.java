@@ -18,7 +18,7 @@ public abstract class ExtendedStateImplementationMixin extends BlockStateContain
         super(blockIn, propertiesIn);
     }
 
-    @Shadow
+    @Shadow(remap = false)
     private IBlockState cleanState;
 
     @Inject(method = "<init>", at = @At("RETURN"))

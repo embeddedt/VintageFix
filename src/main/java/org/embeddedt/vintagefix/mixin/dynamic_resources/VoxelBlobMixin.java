@@ -23,10 +23,10 @@ import java.util.Map;
 @ClientOnlyMixin
 @Mixin(VoxelBlob.class)
 public class VoxelBlobMixin {
-    @Shadow
+    @Shadow(remap = false)
     @Final
     private static int array_size;
-    @Shadow
+    @Shadow(remap = false)
     @Final
     private int[] values;
     private static Map<BlockRenderLayer, Int2BooleanOpenHashMap> vfix$layerFilters;

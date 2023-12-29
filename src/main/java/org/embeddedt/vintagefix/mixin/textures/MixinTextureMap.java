@@ -98,13 +98,13 @@ public abstract class MixinTextureMap {
         return EMPTY_META_RESOURCE;
     }
 
-    @Redirect(method = "generateMipmaps", at = @At(value = "INVOKE", target = "Lorg/apache/logging/log4j/Logger;error(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)V", ordinal = 0))
+    @Redirect(method = "generateMipmaps", at = @At(value = "INVOKE", target = "Lorg/apache/logging/log4j/Logger;error(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)V", ordinal = 0, remap = false))
     private void skipErrorForWrongDimension(Logger logger, String msg, Object o1, Object o2, IResourceManager resourceManager, final TextureAtlasSprite texture) {
         ResourceLocation resourcelocation = this.getResourceLocation(texture);
         net.minecraftforge.fml.client.FMLClientHandler.instance().trackBrokenTexture(resourcelocation, ((RuntimeException)o2).getMessage());
     }
 
-    @Redirect(method = "generateMipmaps", at = @At(value = "INVOKE", target = "Lorg/apache/logging/log4j/Logger;error(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)V", ordinal = 1))
+    @Redirect(method = "generateMipmaps", at = @At(value = "INVOKE", target = "Lorg/apache/logging/log4j/Logger;error(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)V", ordinal = 1, remap = false))
     private void skipErrorForMissing(Logger logger, String msg, Object o1, Object o2, IResourceManager resourceManager, final TextureAtlasSprite texture) {
         ResourceLocation resourcelocation = this.getResourceLocation(texture);
         net.minecraftforge.fml.client.FMLClientHandler.instance().trackMissingTexture(resourcelocation);

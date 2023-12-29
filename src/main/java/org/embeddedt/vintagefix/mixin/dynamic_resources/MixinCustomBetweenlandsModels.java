@@ -19,7 +19,7 @@ import java.util.List;
 @LateMixin
 @ClientOnlyMixin
 public abstract class MixinCustomBetweenlandsModels {
-    @Shadow
+    @Shadow(remap = false)
     protected abstract void throwLoaderException(LoaderExtension extension, Throwable cause);
 
     @Shadow(remap = false)

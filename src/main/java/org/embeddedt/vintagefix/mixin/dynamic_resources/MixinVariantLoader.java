@@ -68,6 +68,10 @@ public class MixinVariantLoader {
             return null;
     }
 
+    /**
+     * @author embeddedt, Runemoro
+     * @reason use our model system
+     */
     @Overwrite(remap = false)
     public IModel loadModel(ResourceLocation modelLocation) throws Exception {
         ModelResourceLocation variant = (ModelResourceLocation) modelLocation;

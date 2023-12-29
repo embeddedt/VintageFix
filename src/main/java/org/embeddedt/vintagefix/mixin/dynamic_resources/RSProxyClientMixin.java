@@ -17,7 +17,7 @@ import java.util.function.Function;
 @ClientOnlyMixin
 @LateMixin
 public class RSProxyClientMixin {
-    @Shadow
+    @Shadow(remap = false)
     private Map<ResourceLocation, Function<IBakedModel, IBakedModel>> bakedModelOverrides;
 
     @SubscribeEvent

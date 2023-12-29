@@ -166,6 +166,7 @@ public class MixinModelManager {
     }
 
     /**
+     * @author embeddedt, Runemoro
      * @reason Don't set up the ModelLoader. Instead, set up the caching DynamicModelProvider
      * and DynamicBakedModelProviders, which will act as the model registry.
      */

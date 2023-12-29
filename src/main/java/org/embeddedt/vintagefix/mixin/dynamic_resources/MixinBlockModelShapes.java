@@ -26,6 +26,7 @@ public abstract class MixinBlockModelShapes implements IBlockModelShapes {
     private final DynamicModelCache<IBlockState> vintage$modelCache = new DynamicModelCache<>(this::getModelForStateSlow, false);
 
     /**
+     * @author embeddedt, Runemoro
      * @reason Don't get all models during init (with dynamic loading, that would
      * generate them all). Just store location instead.
      **/
@@ -45,6 +46,7 @@ public abstract class MixinBlockModelShapes implements IBlockModelShapes {
     }
 
     /**
+     * @author embeddedt, Runemoro
      * @reason Get the stored location for that state, and get the model from
      * that location from the model manager.
      **/

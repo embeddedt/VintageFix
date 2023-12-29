@@ -19,7 +19,7 @@ import java.util.Map;
 @Mixin(ItemModelMesherForge.class)
 @ClientOnlyMixin
 public class MixinItemModelMesherForge extends ItemModelMesher {
-    @Shadow @Final @Mutable
+    @Shadow(remap = false) @Final @Mutable
     Map<IRegistryDelegate<Item>, Int2ObjectMap<ModelResourceLocation>> locations = new Reference2ReferenceOpenHashMap<>();
 
     // This is a pretty clever trick to speed up the model lookups - we know that our location objects per-item are unique,
@@ -36,6 +36,7 @@ public class MixinItemModelMesherForge extends ItemModelMesher {
     }
 
     /**
+     * @author embeddedt, Runemoro
      * @reason Get the stored location for that item and meta, and get the model
      * from that location from the model manager.
      **/
@@ -52,6 +53,7 @@ public class MixinItemModelMesherForge extends ItemModelMesher {
     }
 
     /**
+     * @author embeddedt, Runemoro
      * @reason Don't get all models during init (with dynamic loading, that would
      * generate them all). Just store location instead.
      **/
@@ -68,6 +70,7 @@ public class MixinItemModelMesherForge extends ItemModelMesher {
     }
 
     /**
+     * @author embeddedt
      * @reason Disable cache rebuilding (with dynamic loading, that would generate
      * all models).
      **/

@@ -9,6 +9,10 @@ import org.spongepowered.asm.mixin.Overwrite;
 @Mixin(AbstractResourcePack.class)
 @ClientOnlyMixin
 public class MixinAbstractResourcePack {
+    /**
+     * @author embeddedt
+     * @reason reduce method size & possibly allocation rate
+     */
     @Overwrite
     private static String locationToName(ResourceLocation location) {
         String namespace = location.getNamespace();

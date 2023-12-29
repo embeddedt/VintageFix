@@ -26,7 +26,7 @@ import java.util.HashMap;
 @ClientOnlyMixin
 @LateMixin
 public class MixinHammerRenderProxy {
-    @Shadow
+    @Shadow(remap = false)
     @Final
     public static IdentityHashMapWC<IBlockState, IBakedModel> bakedModelStore;
 

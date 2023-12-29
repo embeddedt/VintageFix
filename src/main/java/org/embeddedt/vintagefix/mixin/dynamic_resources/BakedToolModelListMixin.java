@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 @ClientOnlyMixin
 @LateMixin
 public class BakedToolModelListMixin {
-    @Shadow
+    @Shadow(remap = false)
     private Cache<?, IBakedModel> bakedModelCache;
 
     private LoadingCache<IBakedModel, Cache<Object, IBakedModel>> parentToRealCache = CacheBuilder.newBuilder()

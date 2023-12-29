@@ -7,6 +7,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(PerspectiveMapWrapper.class)
 public interface AccessorPerspectiveModelWrapper {
-    @Accessor("parent")
+    @Accessor(value = "parent", remap = false)
     IBakedModel getParent();
 }

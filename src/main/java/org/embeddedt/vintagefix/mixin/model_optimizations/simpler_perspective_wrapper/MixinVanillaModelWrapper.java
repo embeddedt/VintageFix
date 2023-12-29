@@ -23,7 +23,7 @@ import java.util.function.Function;
 @Mixin(targets = "net/minecraftforge/client/model/ModelLoader$VanillaModelWrapper")
 @ClientOnlyMixin
 public class MixinVanillaModelWrapper {
-    @Shadow
+    @Shadow(remap = false)
     @Final
     private ModelBlockAnimation animation;
 
