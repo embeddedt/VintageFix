@@ -1,6 +1,9 @@
 package org.embeddedt.vintagefix.core;
 
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableList;
+import net.minecraft.launchwrapper.LaunchClassLoader;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 import org.embeddedt.vintagefix.jarcache.JarDiscovererCache;
 import org.embeddedt.vintagefix.transformercache.TransformerCache;
@@ -13,11 +16,14 @@ import javax.annotation.Nullable;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 @IFMLLoadingPlugin.Name("VintageFix")
 @IFMLLoadingPlugin.MCVersion("1.12.2")
 public class VintageFixCore implements IFMLLoadingPlugin, IEarlyMixinLoader {
     public static boolean OPTIFINE;
+    private static final int MAXIMUM_RESOURCE_CACHE_SIZE = 20 * 1024 * 1024;
 
     public VintageFixCore() {
         try {
@@ -54,7 +60,42 @@ public class VintageFixCore implements IFMLLoadingPlugin, IEarlyMixinLoader {
         if(JarDiscovererCache.isActive()) {
             JarDiscovererCache.load();
         }
+        replaceLaunchCLCaches();
         return null;
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private void replaceLaunchCLCaches() {
+        LaunchClassLoader cl;
+        if(VintageFixCore.class.getClassLoader() instanceof LaunchClassLoader) {
+            cl = (LaunchClassLoader)VintageFixCore.class.getClassLoader();
+        } else {
+            return;
+        }
+        try {
+            // Disable packageManifests cache
+            ObfuscationReflectionHelper.findField(LaunchClassLoader.class, "packageManifests").set(cl, new ConcurrentHashMap() {
+                @Override
+                public Object put(Object key, Object value) {
+                    return null;
+                }
+            });
+            Field resourceCacheField = ObfuscationReflectionHelper.findField(LaunchClassLoader.class, "resourceCache");
+            Map resourceCacheMap = (Map)resourceCacheField.get(cl);
+            if(resourceCacheMap instanceof ConcurrentHashMap) {
+                // Not replaced by any other optimization mod, let's take it over ourselves
+                resourceCacheField.set(cl, CacheBuilder.newBuilder()
+                    .maximumWeight(MAXIMUM_RESOURCE_CACHE_SIZE) // roughly cap maximum class loader cache size
+                    .<String, byte[]>weigher((k, v) -> {
+                        return k.length() + v.length;
+                    })
+                    .expireAfterAccess(1, TimeUnit.MINUTES)
+                    .build()
+                    .asMap());
+            }
+        } catch(Throwable e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
