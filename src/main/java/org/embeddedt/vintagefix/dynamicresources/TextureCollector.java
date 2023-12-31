@@ -52,6 +52,7 @@ public class TextureCollector {
         .put("gbook", new ResourceLocation("gbook", "cover_gray"))
         .put("gbook", new ResourceLocation("gbook", "paper"))
         .put("gbook", new ResourceLocation("gbook", "transparent"))
+        .put("industrialwires", new ResourceLocation("minecraft", "font/ascii"))
         .build();
 
     List<IResourcePack> resourcePackList;
