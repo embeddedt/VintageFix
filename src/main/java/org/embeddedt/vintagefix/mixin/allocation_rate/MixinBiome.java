@@ -3,6 +3,7 @@ package org.embeddedt.vintagefix.mixin.allocation_rate;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.event.terraingen.BiomeEvent;
 import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
+import org.embeddedt.vintagefix.util.EventUtils;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -18,6 +19,7 @@ public class MixinBiome {
     @Unique
     private void prepareEvent(BiomeEvent.BiomeColor event, int defaultColor) {
         event.setNewColor(defaultColor);
+        EventUtils.clearPhase(event);
         ((AccessorBiomeColorEvent)event).setOriginalColor(defaultColor);
     }
 
