@@ -1,5 +1,10 @@
 package org.embeddedt.vintagefix.mixin.dynamic_resources;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableMap;
+import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.BlockModelShapes;
 import net.minecraft.client.renderer.block.model.IBakedModel;
@@ -8,6 +13,7 @@ import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.block.statemap.BlockStateMapper;
 import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.embeddedt.vintagefix.dynamicresources.IBlockModelShapes;
+import org.embeddedt.vintagefix.dynamicresources.StateMapperHandler;
 import org.embeddedt.vintagefix.dynamicresources.model.DynamicModelCache;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -15,6 +21,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 @Mixin(BlockModelShapes.class)
 @ClientOnlyMixin
@@ -22,8 +29,9 @@ public abstract class MixinBlockModelShapes implements IBlockModelShapes {
     @Shadow @Final private ModelManager modelManager;
     @Shadow @Final private BlockStateMapper blockStateMapper;
 
-    private static Map<IBlockState, ModelResourceLocation> modelLocations;
     private final DynamicModelCache<IBlockState> vintage$modelCache = new DynamicModelCache<>(this::getModelForStateSlow, false);
+
+    private static StateMapperHandler stateMapperHandler;
 
     /**
      * @author embeddedt, Runemoro
@@ -32,8 +40,9 @@ public abstract class MixinBlockModelShapes implements IBlockModelShapes {
      **/
     @Overwrite
     public void reloadModels() {
-        if(modelLocations == null)
-            modelLocations = blockStateMapper.putAllStateModelLocations();
+        if(stateMapperHandler == null) {
+            stateMapperHandler = new StateMapperHandler(this.blockStateMapper);
+        }
         this.vintage$modelCache.clear();
     }
 
@@ -57,6 +66,6 @@ public abstract class MixinBlockModelShapes implements IBlockModelShapes {
 
     @Override
     public ModelResourceLocation getLocationForState(IBlockState state) {
-        return modelLocations.get(state);
+        return stateMapperHandler.getModelLocationForState(state);
     }
 }
