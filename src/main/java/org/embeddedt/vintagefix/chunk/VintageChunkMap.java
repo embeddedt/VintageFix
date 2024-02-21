@@ -9,6 +9,8 @@ import net.minecraft.world.chunk.Chunk;
  * faster chunk lookups if the same chunk is retrieved many times.
  */
 public class VintageChunkMap extends Long2ObjectOpenHashMap<Chunk> {
+    private static final boolean CACHE_ENABLED = false;
+
     private static final int CACHE_SIZE = 4;
     private final long[] cachedChunkPositions = new long[CACHE_SIZE];
     private final Chunk[] cachedChunks = new Chunk[CACHE_SIZE];
@@ -19,6 +21,10 @@ public class VintageChunkMap extends Long2ObjectOpenHashMap<Chunk> {
 
     @Override
     public Chunk get(long key) {
+        if (!CACHE_ENABLED) {
+            return super.get(key);
+        }
+
         for (int i = 0; i < 4; ++i) {
             // Consolidate the scan into one comparison, allowing the JVM to better optimize the function
             // This is considerably faster than scanning two arrays side-by-side
@@ -45,11 +51,14 @@ public class VintageChunkMap extends Long2ObjectOpenHashMap<Chunk> {
 
     @Override
     public Chunk remove(long k) {
-        for (int i = 0; i < 4; ++i) {
-            if (k == cachedChunkPositions[i]) {
-                cachedChunks[i] = null;
+        if (CACHE_ENABLED) {
+            for (int i = 0; i < 4; ++i) {
+                if (k == cachedChunkPositions[i]) {
+                    cachedChunks[i] = null;
+                }
             }
         }
+
         return super.remove(k);
     }
 
