@@ -48,4 +48,9 @@ public class StateHolderImpl {
         /* TODO: figure out how to fake an ImmutableTable on 1.12 */
         holder.setNeighborTable(null);
     }
+
+    public static void clearCachedStateMaps() {
+        LAST_STATE_MAP.remove();
+        LAST_FAST_STATE_MAP.remove();
+    }
 }
