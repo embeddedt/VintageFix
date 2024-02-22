@@ -26,13 +26,15 @@ public class VintageFixCore implements IFMLLoadingPlugin, IEarlyMixinLoader {
     private static final int MAXIMUM_RESOURCE_CACHE_SIZE = 20 * 1024 * 1024;
 
     public VintageFixCore() {
-        try {
-            Class<?> transformerClass = Class.forName("zone.rong.loliasm.core.LoliTransformer");
-            Field field = transformerClass.getDeclaredField("squashBakedQuads");
-            field.setAccessible(true);
-            field.setBoolean(null, false);
-            System.out.println("Disabled squashBakedQuads due to compatibility issues, please ask Rongmario to fix this someday");
-        } catch(ReflectiveOperationException ignored) {}
+        // Force-disable squashBakedQuads in any known *ASM mods
+        for (String clz : new String[] { "zone.rong.loliasm.core.LoliTransformer", "mirror.normalasm.core.NormalTransformer" }) {
+            try {
+                Class<?> transformerClass = Class.forName(clz);
+                Field field = transformerClass.getDeclaredField("squashBakedQuads");
+                field.setAccessible(true);
+                field.setBoolean(null, false);
+            } catch(ReflectiveOperationException ignored) {}
+        }
     }
 
     private static boolean classExists(String name) {
