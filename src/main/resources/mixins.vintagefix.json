@@ -9,6 +9,9 @@
   ],
   "client": [
   ],
+  "overwrites": {
+    "conformVisibility": true
+  },
   "injectors": {
     "defaultRequire": 1
   }
