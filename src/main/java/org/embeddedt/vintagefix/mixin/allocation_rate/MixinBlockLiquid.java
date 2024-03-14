@@ -23,7 +23,7 @@ public abstract class MixinBlockLiquid extends Block {
      * @author embeddedt
      * @reason avoid BlockPos allocation
      */
-    @Redirect(method = "shouldSideBeRendered", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;offset(Lnet/minecraft/util/EnumFacing;)Lnet/minecraft/util/math/BlockPos;"))
+    @Redirect(method = "shouldSideBeRendered", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;offset(Lnet/minecraft/util/EnumFacing;)Lnet/minecraft/util/math/BlockPos;"), require = 0)
     public BlockPos shouldSideBeRendered(BlockPos pos, EnumFacing side)
     {
         BlockPos.MutableBlockPos cursor = VFIX$CURSOR.get();
@@ -35,7 +35,7 @@ public abstract class MixinBlockLiquid extends Block {
      * @author embeddedt
      * @reason avoid BlockPos allocation
      */
-    @Redirect(method = "getPackedLightmapCoords", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;up()Lnet/minecraft/util/math/BlockPos;"))
+    @Redirect(method = "getPackedLightmapCoords", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;up()Lnet/minecraft/util/math/BlockPos;"), require = 0)
     private BlockPos useCursorForUp(BlockPos instance) {
         BlockPos.MutableBlockPos cursor = VFIX$CURSOR.get();
         cursor.setPos(instance.getX(), instance.getY() + 1, instance.getZ());

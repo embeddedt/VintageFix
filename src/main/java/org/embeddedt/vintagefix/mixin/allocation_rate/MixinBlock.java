@@ -17,7 +17,7 @@ public class MixinBlock {
      * @author embeddedt
      * @reason avoid BlockPos allocation
      */
-    @Redirect(method = "shouldSideBeRendered", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;offset(Lnet/minecraft/util/EnumFacing;)Lnet/minecraft/util/math/BlockPos;"))
+    @Redirect(method = "shouldSideBeRendered", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;offset(Lnet/minecraft/util/EnumFacing;)Lnet/minecraft/util/math/BlockPos;"), require = 0)
     public BlockPos shouldSideBeRendered(BlockPos pos, EnumFacing side)
     {
         BlockPos.MutableBlockPos cursor = VFIX$CURSOR.get();
