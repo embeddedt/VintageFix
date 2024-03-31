@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.objects.Object2BooleanMaps;
 import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 import net.minecraft.client.resources.IResourceManager;
 import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
+import org.embeddedt.vintagefix.annotation.LateMixin;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -14,6 +15,7 @@ import slimeknights.tconstruct.library.client.CustomTextureCreator;
 
 @Mixin(value = CustomTextureCreator.class, remap = false)
 @ClientOnlyMixin
+@LateMixin
 public class MixinCustomTextureCreator {
     private static final Object2BooleanMap<String> textureExistenceCache = Object2BooleanMaps.synchronize(new Object2BooleanOpenHashMap<>());
 
