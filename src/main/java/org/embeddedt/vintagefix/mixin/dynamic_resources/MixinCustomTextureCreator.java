@@ -13,13 +13,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import slimeknights.tconstruct.library.client.CustomTextureCreator;
 
-@Mixin(value = CustomTextureCreator.class, remap = false)
+@Mixin(value = CustomTextureCreator.class)
 @ClientOnlyMixin
 @LateMixin
 public class MixinCustomTextureCreator {
     private static final Object2BooleanMap<String> textureExistenceCache = Object2BooleanMaps.synchronize(new Object2BooleanOpenHashMap<>());
 
-    @Inject(method = "exists", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "exists", at = @At("HEAD"), cancellable = true, remap = false)
     private static void checkCache(String key, CallbackInfoReturnable<Boolean> cir) {
         Boolean result = textureExistenceCache.get(key);
         if(result != null) {
@@ -27,7 +27,7 @@ public class MixinCustomTextureCreator {
         }
     }
 
-    @Inject(method = "exists", at = @At("RETURN"))
+    @Inject(method = "exists", at = @At("RETURN"), remap = false)
     private static void storeCache(String key, CallbackInfoReturnable<Boolean> cir) {
         textureExistenceCache.put(key, cir.getReturnValue());
     }
