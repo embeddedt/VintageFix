@@ -17,6 +17,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Map;
@@ -53,6 +54,9 @@ public abstract class MixinFileResourcePack implements ICachedResourcePack {
                 containedPaths.trim();
                 return containedPaths;
             });
+        } catch(FileNotFoundException e) {
+            // Don't bother printing error
+            return ImmutableSet.of();
         } catch(IOException | ExecutionException e) {
             VintageFix.LOGGER.error("Exception creating cache", e);
             return ImmutableSet.of();
