@@ -2,7 +2,7 @@ package org.embeddedt.vintagefix.mixin.dynamic_resources;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.client.renderer.ItemModelMesher;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ModelManager;
@@ -20,7 +20,7 @@ import java.util.Map;
 @ClientOnlyMixin
 public class MixinItemModelMesherForge extends ItemModelMesher {
     @Shadow(remap = false) @Final @Mutable
-    Map<IRegistryDelegate<Item>, Int2ObjectMap<ModelResourceLocation>> locations = new Reference2ReferenceOpenHashMap<>();
+    Map<IRegistryDelegate<Item>, Int2ObjectMap<ModelResourceLocation>> locations = new Object2ObjectOpenHashMap<>();
 
     // This is a pretty clever trick to speed up the model lookups - we know that our location objects per-item are unique,
     // so we can just do reference lookup on them
