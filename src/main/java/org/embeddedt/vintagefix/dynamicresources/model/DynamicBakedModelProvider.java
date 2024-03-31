@@ -4,6 +4,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ModelBlock;
@@ -23,6 +24,7 @@ import net.minecraftforge.common.MinecraftForge;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.embeddedt.vintagefix.VintageFix;
+import org.embeddedt.vintagefix.dynamicresources.IBlockModelShapes;
 import org.embeddedt.vintagefix.event.DynamicModelBakeEvent;
 import org.embeddedt.vintagefix.util.ExceptionHelper;
 
@@ -50,8 +52,14 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
                         .softValues()
                         .build();
 
+    private final BakedModelStore bakedModelStore = new BakedModelStore();
+
     public DynamicBakedModelProvider(DynamicModelProvider modelProvider) {
         this.modelProvider = modelProvider;
+    }
+
+    public Map<IBlockState, IBakedModel> getBakedModelStore() {
+        return this.bakedModelStore;
     }
 
     @Override
@@ -186,5 +194,74 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
     public void invalidateThrough(ModelResourceLocation key) {
         loadedBakedModels.invalidate(key);
         ((DynamicModelProvider)modelProvider).invalidate(key);
+    }
+
+    class BakedModelStore implements Map<IBlockState, IBakedModel> {
+
+        @Override
+        public int size() {
+            return DynamicBakedModelProvider.this.permanentlyLoadedBakedModels.size();
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return false;
+        }
+
+        @Override
+        public boolean containsKey(Object key) {
+            return true;
+        }
+
+        @Override
+        public boolean containsValue(Object value) {
+            return true;
+        }
+
+        @Override
+        public IBakedModel get(Object key) {
+            if(key instanceof IBlockState) {
+                return Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getModelForState((IBlockState)key);
+            } else {
+                return null;
+            }
+        }
+
+        @Override
+        public IBakedModel put(IBlockState key, IBakedModel value) {
+            ModelResourceLocation mrl = ((IBlockModelShapes) Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes()).getLocationForState(key);
+            DynamicBakedModelProvider.this.putObject(mrl, value);
+            return null;
+        }
+
+        @Override
+        public IBakedModel remove(Object key) {
+            return null;
+        }
+
+        @Override
+        public void putAll(Map<? extends IBlockState, ? extends IBakedModel> m) {
+            m.forEach(this::put);
+        }
+
+        @Override
+        public void clear() {
+
+        }
+
+        @Override
+        public Set<IBlockState> keySet() {
+            return Collections.emptySet();
+        }
+
+        @Override
+        public Collection<IBakedModel> values() {
+            return DynamicBakedModelProvider.this.permanentlyLoadedBakedModels.values();
+        }
+
+        @Override
+        public Set<Entry<IBlockState, IBakedModel>> entrySet() {
+            return Collections.emptySet();
+        }
     }
 }

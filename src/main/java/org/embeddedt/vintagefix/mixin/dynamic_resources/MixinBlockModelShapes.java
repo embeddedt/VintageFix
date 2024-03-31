@@ -14,9 +14,11 @@ import net.minecraft.client.renderer.block.statemap.BlockStateMapper;
 import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.embeddedt.vintagefix.dynamicresources.IBlockModelShapes;
 import org.embeddedt.vintagefix.dynamicresources.StateMapperHandler;
+import org.embeddedt.vintagefix.dynamicresources.model.DynamicBakedModelProvider;
 import org.embeddedt.vintagefix.dynamicresources.model.DynamicModelCache;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
@@ -29,6 +31,10 @@ public abstract class MixinBlockModelShapes implements IBlockModelShapes {
     @Shadow @Final private ModelManager modelManager;
     @Shadow @Final private BlockStateMapper blockStateMapper;
 
+    @Shadow
+    @Final
+    @Mutable
+    private Map<IBlockState, IBakedModel> bakedModelStore;
     private final DynamicModelCache<IBlockState> vintage$modelCache = new DynamicModelCache<>(this::getModelForStateSlow, false);
 
     private static StateMapperHandler stateMapperHandler;
@@ -44,6 +50,7 @@ public abstract class MixinBlockModelShapes implements IBlockModelShapes {
             stateMapperHandler = new StateMapperHandler(this.blockStateMapper);
         }
         this.vintage$modelCache.clear();
+        this.bakedModelStore = DynamicBakedModelProvider.instance.getBakedModelStore();
     }
 
     private IBakedModel getModelForStateSlow(IBlockState state) {
