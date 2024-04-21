@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 @IFMLLoadingPlugin.MCVersion("1.12.2")
 public class VintageFixCore implements IFMLLoadingPlugin, IEarlyMixinLoader {
     public static boolean OPTIFINE;
+    public static boolean SPONGE;
     private static final int MAXIMUM_RESOURCE_CACHE_SIZE = 20 * 1024 * 1024;
 
     public VintageFixCore() {
@@ -113,6 +114,7 @@ public class VintageFixCore implements IFMLLoadingPlugin, IEarlyMixinLoader {
 
     private static void applyMixinFix() {
         OPTIFINE = classExists("ofdev.launchwrapper.OptifineDevTweakerWrapper") || classExists("optifine.OptiFineForgeTweaker");
+        SPONGE = classExists("org.spongepowered.mod.SpongeCoremod");
         /* https://github.com/FabricMC/Mixin/pull/99 */
         try {
             Field groupMembersField = InjectorGroupInfo.class.getDeclaredField("members");
