@@ -57,7 +57,7 @@ public class FaceDataMixin {
     @Overwrite
     public void set(EnumFacing facing, int u, int v) {
         int idx = v * vMax + u;
-        this.faceDataStore[getOrdinal(facing) * faceDataSize + idx >> 5] |= 1 << (idx & 31);
+        this.faceDataStore[getOrdinal(facing) * faceDataSize + (idx >> 5)] |= 1 << (idx & 31);
     }
 
     /**
@@ -67,6 +67,6 @@ public class FaceDataMixin {
     @Overwrite
     public boolean get(EnumFacing facing, int u, int v) {
         int idx = v * vMax + u;
-        return (this.faceDataStore[getOrdinal(facing) * faceDataSize + idx >> 5] & (1 << (idx & 31))) != 0;
+        return (this.faceDataStore[getOrdinal(facing) * faceDataSize + (idx >> 5)] & (1 << (idx & 31))) != 0;
     }
 }
