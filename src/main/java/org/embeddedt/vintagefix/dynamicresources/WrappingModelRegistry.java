@@ -8,6 +8,7 @@ import net.minecraft.util.registry.IRegistry;
 import net.minecraft.util.registry.RegistrySimple;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ModContainer;
+import org.embeddedt.vintagefix.VintageFix;
 import org.embeddedt.vintagefix.dynamicresources.model.ModelLocationInformation;
 
 import javax.annotation.Nullable;
@@ -47,11 +48,16 @@ public class WrappingModelRegistry extends RegistrySimple<ModelResourceLocation,
         return ModelLocationInformation.allKnownModelLocations.contains(key);
     }
 
-    private static final ImmutableSet<String> MODS_WITH_ITERATING_BAKE_EVENT = ImmutableSet.of("rebornmod", "secretroomsmod");
+    private static final ImmutableSet<String> MODS_WITH_ITERATING_BAKE_EVENT = ImmutableSet.of("rebornmod", "secretroomsmod", "extratrees");
 
     private Set<ModelResourceLocation> getExtraKeysForCaller(ModContainer container) {
-        if(container == null || !MODS_WITH_ITERATING_BAKE_EVENT.contains(container.getModId()))
+        if(container == null) {
             return null;
+        }
+        if(!MODS_WITH_ITERATING_BAKE_EVENT.contains(container.getModId())) {
+            VintageFix.LOGGER.warn("Mod '{}' is attempting to iterate the model registry, but is not whitelisted in VintageFix. This may cause glitches if it wraps its own models.", container.getModId());
+            return null;
+        }
         // add keys from this mod
         return Sets.filter(ModelLocationInformation.allKnownModelLocations, loc -> container.getModId().equals(loc.getNamespace()));
     }
