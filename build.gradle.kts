@@ -1,3 +1,4 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.gtnewhorizons.retrofuturagradle.mcp.ReobfuscatedJar
 import org.jetbrains.gradle.ext.Application
 import org.jetbrains.gradle.ext.Gradle
@@ -7,7 +8,8 @@ plugins {
   id("java-library")
   id("maven-publish")
   id("org.jetbrains.gradle.plugin.idea-ext") version "1.1.7"
-  id("com.gtnewhorizons.retrofuturagradle") version "1.3.26"
+  id("com.gtnewhorizons.retrofuturagradle") version "1.3.35"
+  id("com.github.johnrengelman.shadow") version "8.1.0"
   id("eclipse")
   id("com.palantir.git-version") version "3.0.0"
   id("com.matthewprenger.cursegradle") version "1.4.0"
@@ -86,9 +88,12 @@ val embed: Configuration by configurations.creating {
   description = "Included in output JAR"
 }
 
+val shadow = configurations.getByName("shadow")
+
 listOf(configurations.implementation).forEach {
   it.configure {
     extendsFrom(embed)
+    extendsFrom(shadow)
   }
 }
 
@@ -147,6 +152,9 @@ dependencies {
   compileOnly(rfg.deobf("curse.maven:extrautils-225561:2678374"))
   compileOnly(rfg.deobf("curse.maven:chiselsandbits-231095:2720655"))
   embed("com.esotericsoftware:kryo:5.1.1")
+  val mixinExtras = "io.github.llamalad7:mixinextras-common:0.3.6"
+  shadow(mixinExtras)
+  annotationProcessor(mixinExtras)
 }
 
 val main by sourceSets.getting // created by ForgeGradle
@@ -167,8 +175,15 @@ val mixinTmpDir = buildDir.path + File.separator + "tmp" + File.separator + "mix
 val refMap = mixinTmpDir + File.separator + mixinConfigRefMap
 val mixinSrg = mixinTmpDir + File.separator + "mixins.srg"
 
+tasks.withType<ShadowJar> {
+  configurations.add(shadow)
+  relocate("com.llamalad7.mixinextras", "org.embeddedt.vintagefix.mixinextras")
+  mergeServiceFiles() // Very important!
+}
+
 tasks.named<ReobfuscatedJar>("reobfJar").configure {
   extraSrgFiles.from(mixinSrg)
+  inputJar.set(tasks.named<ShadowJar>("shadowJar").map { it.archiveFile }.get())
 }
 
 tasks.named<JavaCompile>("compileJava").configure {
