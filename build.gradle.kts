@@ -84,15 +84,10 @@ listOf(configurations.runtimeClasspath, configurations.testRuntimeClasspath).for
   }
 }
 
-val embed: Configuration by configurations.creating {
-  description = "Included in output JAR"
-}
-
 val shadow = configurations.getByName("shadow")
 
 listOf(configurations.implementation).forEach {
   it.configure {
-    extendsFrom(embed)
     extendsFrom(shadow)
   }
 }
@@ -151,7 +146,7 @@ dependencies {
   compileOnly(rfg.deobf("curse.maven:opencomputers-223008:4566834"))
   compileOnly(rfg.deobf("curse.maven:extrautils-225561:2678374"))
   compileOnly(rfg.deobf("curse.maven:chiselsandbits-231095:2720655"))
-  embed("com.esotericsoftware:kryo:5.1.1")
+  shadow("com.esotericsoftware:kryo:5.1.1")
   val mixinExtras = "io.github.llamalad7:mixinextras-common:0.3.6"
   shadow(mixinExtras)
   annotationProcessor(mixinExtras)
@@ -176,7 +171,7 @@ val refMap = mixinTmpDir + File.separator + mixinConfigRefMap
 val mixinSrg = mixinTmpDir + File.separator + "mixins.srg"
 
 tasks.withType<ShadowJar> {
-  configurations.add(shadow)
+  configurations = listOf(shadow)
   relocate("com.llamalad7.mixinextras", "org.embeddedt.vintagefix.mixinextras")
   mergeServiceFiles() // Very important!
 }
@@ -224,7 +219,6 @@ tasks.named<Jar>("jar") {
       }
   }
   from(googleimpl.output)
-  from(provider { configurations["embed"].map { if (it.isDirectory) it else zipTree(it) } })
 }
 
 val copyJarToBin = tasks.register<Copy>("copyJarToBin") {
