@@ -210,7 +210,7 @@ tasks.named<Jar>("jar") {
   }
 }
 
-tasks.named<Jar>("jar") {
+tasks.withType<ShadowJar> {
   into("googleaccess") {
     from(googleaccess.output)
       rename { filename ->
