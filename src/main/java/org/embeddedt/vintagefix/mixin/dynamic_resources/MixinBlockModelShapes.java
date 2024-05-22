@@ -1,14 +1,17 @@
 package org.embeddedt.vintagefix.mixin.dynamic_resources;
 
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceLinkedOpenHashMap;
+import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.BlockModelShapes;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ModelManager;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.block.statemap.BlockStateMapper;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.embeddedt.vintagefix.dynamicresources.IBlockModelShapes;
+import org.embeddedt.vintagefix.dynamicresources.IModelHoldingBlockState;
 import org.embeddedt.vintagefix.dynamicresources.StateMapperHandler;
 import org.embeddedt.vintagefix.dynamicresources.model.DynamicBakedModelProvider;
 import org.spongepowered.asm.mixin.Final;
@@ -29,7 +32,6 @@ public abstract class MixinBlockModelShapes implements IBlockModelShapes {
     @Final
     @Mutable
     private Map<IBlockState, IBakedModel> bakedModelStore;
-    private ThreadLocal<Reference2ReferenceLinkedOpenHashMap<IBlockState, IBakedModel>> vintage$modelCache = ThreadLocal.withInitial(Reference2ReferenceLinkedOpenHashMap::new);
 
     private static StateMapperHandler stateMapperHandler;
 
@@ -43,7 +45,11 @@ public abstract class MixinBlockModelShapes implements IBlockModelShapes {
         if(stateMapperHandler == null) {
             stateMapperHandler = new StateMapperHandler(this.blockStateMapper);
         }
-        this.vintage$modelCache = ThreadLocal.withInitial(Reference2ReferenceLinkedOpenHashMap::new);
+        for(Block block : ForgeRegistries.BLOCKS) {
+            for(IBlockState state : block.getBlockState().getValidStates()) {
+                ((IModelHoldingBlockState)state).vfix$setModel(null);
+            }
+        }
         this.bakedModelStore = DynamicBakedModelProvider.instance.getBakedModelStore();
     }
 
@@ -62,18 +68,15 @@ public abstract class MixinBlockModelShapes implements IBlockModelShapes {
      **/
     @Overwrite
     public IBakedModel getModelForState(IBlockState state) {
-        Reference2ReferenceLinkedOpenHashMap<IBlockState, IBakedModel> map = this.vintage$modelCache.get();
-        IBakedModel model = map.get(state);
+        IModelHoldingBlockState holder = (IModelHoldingBlockState)state;
+        IBakedModel model = holder.vfix$getModel();
 
         if(model != null) {
             return model;
         }
 
         model = this.getModelForStateSlow(state);
-        map.putAndMoveToFirst(state, model);
-        if(map.size() > 500) {
-            map.removeLast();
-        }
+        holder.vfix$setModel(model);
         return model;
     }
 
