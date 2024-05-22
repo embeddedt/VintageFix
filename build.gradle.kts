@@ -210,15 +210,17 @@ tasks.named<Jar>("jar") {
   }
 }
 
-tasks.withType<ShadowJar> {
-  into("googleaccess") {
-    from(googleaccess.output)
+listOf("jar", "shadowJar").forEach {
+  tasks.named<Jar>(it) {
+    into("googleaccess") {
+      from(googleaccess.output)
       rename { filename ->
         // Add suffix to stop parts of the toolchain from moving these classes to the "correct" package
         filename + "_manual"
       }
+    }
+    from(googleimpl.output)
   }
-  from(googleimpl.output)
 }
 
 val copyJarToBin = tasks.register<Copy>("copyJarToBin") {
