@@ -1,6 +1,5 @@
 package org.embeddedt.vintagefix.mixin.dynamic_resources;
 
-import it.unimi.dsi.fastutil.objects.Reference2ReferenceLinkedOpenHashMap;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.BlockModelShapes;
