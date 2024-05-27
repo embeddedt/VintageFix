@@ -3,7 +3,6 @@ package org.embeddedt.vintagefix.core;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
-import com.llamalad7.mixinextras.MixinExtrasBootstrap;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Loader;
@@ -99,7 +98,6 @@ public class MixinConfigPlugin implements IMixinConfigPlugin {
     @Override
     public void onLoad(String s) {
         if(allMixins.size() == 0) {
-            MixinExtrasBootstrap.init();
             try {
                 URI uri = Objects.requireNonNull(MixinConfigPlugin.class.getResource("/mixins.vintagefix.json")).toURI();
                 FileSystem fs;

@@ -133,6 +133,6 @@ public class VintageFixCore implements IFMLLoadingPlugin, IEarlyMixinLoader {
             applyMixinFix();
             mixinFixApplied = true;
         }
-        return ImmutableList.of("mixins.vintagefix.json");
+        return ImmutableList.of("mixins.vintagefix.init.json", "mixins.vintagefix.json");
     }
 }
