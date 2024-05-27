@@ -170,11 +170,13 @@ public class MixinConfigPlugin implements IMixinConfigPlugin {
     public void acceptTargets(Set<String> set, Set<String> set1) {
     }
 
+    private static final List<String> OPTIFINE_DISABLED_PACKAGES = ImmutableList.of("mixin.textures", "mixin.bugfix.entity_disappearing", "mixin.invisible_subchunks");
+
     public static boolean isMixinClassApplied(String name) {
         String unprefixedName = name.replace(PACKAGE_PREFIX, "");
         String baseName = mixinClassNameToBaseName(name);
         // texture optimization causes issues when OF is installed
-        if(baseName.startsWith("mixin.textures") && VintageFixCore.OPTIFINE) {
+        if(VintageFixCore.OPTIFINE && OPTIFINE_DISABLED_PACKAGES.stream().anyMatch(baseName::startsWith)) {
             return false;
         }
         // property optimizations are redundant with Sponge installed
