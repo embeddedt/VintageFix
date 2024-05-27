@@ -2,6 +2,7 @@ package org.embeddedt.vintagefix.dynamicresources.helpers;
 
 import com.google.common.collect.ImmutableList;
 import net.minecraft.client.resources.DefaultResourcePack;
+import org.embeddedt.vintagefix.VintageFix;
 import org.embeddedt.vintagefix.dynamicresources.ResourcePackHelper;
 import org.embeddedt.vintagefix.util.Util;
 
@@ -10,6 +11,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.net.URLDecoder;
 import java.nio.file.*;
 import java.util.*;
 import java.util.function.Consumer;
@@ -24,32 +26,41 @@ public class DefaultPackAdapter implements ResourcePackHelper.Adapter<DefaultRes
         List<String> accept(FileSystem fs) throws IOException;
     }
 
-    private static Iterator<String> walkFileSystems(Class<?> clz, FSConsumer consumer) throws IOException {
+    /**
+     * Walk all file systems that the DefaultResourcePack would normally access. This includes the main mcassetsroot jar,
+     * and any other jars on the classpath.
+     * <p>
+     * This method is synchronized to avoid multiple threads concurrently opening and closing filesystems, which can
+     * cause weird filesystem not found errors.
+     */
+    private static synchronized Iterator<String> walkFileSystems(Class<?> clz, FSConsumer consumer) throws IOException {
         Set<String> set;
-        synchronized (DefaultPackAdapter.class) {
-            FileSystem mainFs;
-            try {
-                URI uri = clz.getResource("/assets/.mcassetsroot").toURI();
-                if ("jar".equals(uri.getScheme())) {
-                    try {
-                        mainFs = FileSystems.getFileSystem(uri);
-                    } catch (FileSystemNotFoundException var11) {
-                        mainFs = FileSystems.newFileSystem(uri, Collections.emptyMap());
-                    }
-                } else
-                    throw new IOException("Wrong URI scheme: " + uri.getScheme());
-            } catch (URISyntaxException e) {
-                throw new IOException("Couldn't list vanilla resources", e);
-            }
-            set = new HashSet<>(consumer.accept(mainFs));
-            mainFs.close();
+        FileSystem mainFs;
+        try {
+            URI uri = clz.getResource("/assets/.mcassetsroot").toURI();
+            if ("jar".equals(uri.getScheme())) {
+                try {
+                    mainFs = FileSystems.getFileSystem(uri);
+                } catch (FileSystemNotFoundException var11) {
+                    mainFs = FileSystems.newFileSystem(uri, Collections.emptyMap());
+                }
+            } else
+                throw new IOException("Wrong URI scheme: " + uri.getScheme());
+        } catch (URISyntaxException e) {
+            throw new IOException("Couldn't list vanilla resources", e);
         }
+        set = new HashSet<>(consumer.accept(mainFs));
+        mainFs.close();
         if(clz.getClassLoader() instanceof URLClassLoader) {
             URLClassLoader cl = (URLClassLoader)clz.getClassLoader();
             for(URL url : cl.getURLs()) {
+                if(Objects.equals(url.getProtocol(), "asmgen")) continue; // Filter out protocols we don't understand
                 List<String> newList = ImmutableList.of();
+                URI uri = null;
                 try {
-                    URI uri = new URI("jar", url.toURI().toString(), null);
+                    // Decode the URL before passing it to the URI constructor so it isn't doubly encoded (which breaks
+                    // reading files from folders with spaces)
+                    uri = new URI("jar", URLDecoder.decode(url.toURI().toString(), "UTF-8"), null);
                     boolean needClose = false;
                     FileSystem fs;
                     try {
@@ -65,7 +76,8 @@ public class DefaultPackAdapter implements ResourcePackHelper.Adapter<DefaultRes
                         set.addAll(newList);
                     if(needClose)
                         fs.close();
-                } catch(IOException | URISyntaxException | RuntimeException | ZipError ignored) {
+                } catch(IOException | URISyntaxException | RuntimeException | ZipError e) {
+                    VintageFix.LOGGER.error("Error accessing resource pack on classpath{}", (uri != null ? " (with URI " + uri + ")" : null), e);
                 }
             }
         }
