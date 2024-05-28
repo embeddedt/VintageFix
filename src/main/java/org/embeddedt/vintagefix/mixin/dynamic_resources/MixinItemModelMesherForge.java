@@ -20,7 +20,7 @@ import java.util.Map;
 @ClientOnlyMixin
 public class MixinItemModelMesherForge extends ItemModelMesher {
     @Shadow(remap = false) @Final @Mutable
-    Map<IRegistryDelegate<Item>, Int2ObjectMap<ModelResourceLocation>> locations = new Object2ObjectOpenHashMap<>();
+    Map<IRegistryDelegate<Item>, Int2ObjectMap<ModelResourceLocation>> locations = new Object2ObjectOpenHashMap<>(512, 0.5F);
 
     // This is a pretty clever trick to speed up the model lookups - we know that our location objects per-item are unique,
     // so we can just do reference lookup on them
