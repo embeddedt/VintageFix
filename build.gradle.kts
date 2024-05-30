@@ -174,6 +174,7 @@ tasks.withType<ShadowJar> {
   configurations = listOf(shadow)
   relocate("com.llamalad7.mixinextras", "org.embeddedt.vintagefix.mixinextras")
   mergeServiceFiles() // Very important!
+  archiveClassifier = "deobf"
 }
 
 tasks.named<ReobfuscatedJar>("reobfJar").configure {
