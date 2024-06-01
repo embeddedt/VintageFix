@@ -6,18 +6,25 @@ import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.embeddedt.vintagefix.dynamicresources.IModelHoldingBlockState;
 import org.spongepowered.asm.mixin.Mixin;
 
+import java.lang.ref.SoftReference;
+
 @Mixin(BlockStateBase.class)
 @ClientOnlyMixin
 public class MixinBlockStateBase implements IModelHoldingBlockState {
-    private volatile IBakedModel vfix$model;
+    private volatile SoftReference<IBakedModel> vfix$model;
 
     @Override
     public IBakedModel vfix$getModel() {
-        return vfix$model;
+        SoftReference<IBakedModel> ref = vfix$model;
+        if (ref != null) {
+            return ref.get();
+        } else {
+            return null;
+        }
     }
 
     @Override
     public void vfix$setModel(IBakedModel model) {
-        vfix$model = model;
+        vfix$model = model != null ? new SoftReference<>(model) : null;
     }
 }
