@@ -67,16 +67,20 @@ public abstract class MixinBlockModelShapes implements IBlockModelShapes {
      **/
     @Overwrite
     public IBakedModel getModelForState(IBlockState state) {
-        IModelHoldingBlockState holder = (IModelHoldingBlockState)state;
-        IBakedModel model = holder.vfix$getModel();
+        if(state instanceof IModelHoldingBlockState) {
+            IModelHoldingBlockState holder = (IModelHoldingBlockState)state;
+            IBakedModel model = holder.vfix$getModel();
 
-        if(model != null) {
+            if(model != null) {
+                return model;
+            }
+
+            model = this.getModelForStateSlow(state);
+            holder.vfix$setModel(model);
             return model;
+        } else {
+            return this.getModelForStateSlow(state);
         }
-
-        model = this.getModelForStateSlow(state);
-        holder.vfix$setModel(model);
-        return model;
     }
 
     @Override
