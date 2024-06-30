@@ -131,7 +131,7 @@ public class VintageFixClient {
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onRenderF3(RenderGameOverlayEvent.Text event) {
         Minecraft minecraft = Minecraft.getMinecraft();
-        if(!minecraft.gameSettings.showDebugInfo)
+        if(!minecraft.gameSettings.showDebugInfo || event.getLeft().size() < 2 || event.getRight().size() < 2)
             return;
         IntegratedServer srv = minecraft.getIntegratedServer();
         if (srv != null) {
