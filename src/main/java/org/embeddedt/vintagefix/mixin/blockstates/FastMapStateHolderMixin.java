@@ -2,6 +2,7 @@ package org.embeddedt.vintagefix.mixin.blockstates;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableTable;
+import net.minecraft.block.Block;
 import org.embeddedt.vintagefix.ducks.FastMapStateHolder;
 import org.embeddedt.vintagefix.fastmap.FastMap;
 import org.embeddedt.vintagefix.impl.StateHolderImpl;
@@ -23,6 +24,9 @@ public abstract class FastMapStateHolderMixin implements FastMapStateHolder<IBlo
     @Shadow
     private ImmutableTable<IProperty<?>, Comparable<?>, IBlockState> propertyValueTable;
 
+    @Shadow
+    @Final
+    private Block block;
     private int ferritecore_globalTableIndex;
     private FastMap<IBlockState> ferritecore_globalTable;
 
@@ -35,11 +39,16 @@ public abstract class FastMapStateHolderMixin implements FastMapStateHolder<IBlo
             )
     )
     public Object getNeighborFromFastMap(ImmutableTable<?, ?, ?> ignore, Object rowKey, Object columnKey) {
-        return this.ferritecore_globalTable.withUnsafe(
+        try {
+            return this.ferritecore_globalTable.withUnsafe(
                 this.ferritecore_globalTableIndex,
                 (IProperty<?>) rowKey,
                 columnKey
-        );
+            );
+        } catch(RuntimeException e) {
+            // To match vanilla behavior, wrap this in an IllegalArgumentException, not any other type of exception
+            throw new IllegalArgumentException("Cannot set property " + rowKey + " to " + columnKey + " on block " + Block.REGISTRY.getNameForObject(this.block), e);
+        }
     }
 
     /**
