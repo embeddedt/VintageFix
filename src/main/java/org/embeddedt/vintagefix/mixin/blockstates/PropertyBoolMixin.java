@@ -20,7 +20,7 @@ public class PropertyBoolMixin {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void staticValues(CallbackInfo ci) {
-        this.allowedValues = null;
+        this.allowedValues = ALLOWED_PROP_VALUES;
     }
 
     /**
