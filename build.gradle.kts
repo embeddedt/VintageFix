@@ -146,6 +146,7 @@ dependencies {
   compileOnly(rfg.deobf("curse.maven:opencomputers-223008:4566834"))
   compileOnly(rfg.deobf("curse.maven:extrautils-225561:2678374"))
   compileOnly(rfg.deobf("curse.maven:chiselsandbits-231095:2720655"))
+  compileOnly(rfg.deobf("curse.maven:projectredexpansion-229048:2745550"))
   shadow("com.esotericsoftware:kryo:5.1.1")
   val mixinExtras = "io.github.llamalad7:mixinextras-common:0.3.6"
   shadow(mixinExtras)
