@@ -1,9 +1,11 @@
 package org.embeddedt.vintagefix.mixin.texture_animation;
 
+import com.google.common.collect.ImmutableList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.vertex.VertexFormat;
 import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.embeddedt.vintagefix.render.ExtendedBufferBuilderState;
 import org.embeddedt.vintagefix.render.ExtendedTextureAtlasSprite;
@@ -23,6 +25,8 @@ import java.util.Collection;
 public class MixinBufferBuilder implements ExtendedBufferBuilderState {
     @Shadow
     private int vertexCount, drawMode;
+    @Shadow
+    private VertexFormat vertexFormat;
 
     private final float[] vfix$texCoords = new float[8];
     private final ObjectOpenHashSet<TextureAtlasSprite> vfix$seenAnimatedSprites = new ObjectOpenHashSet<>();
@@ -33,11 +37,15 @@ public class MixinBufferBuilder implements ExtendedBufferBuilderState {
         if(drawMode != GL11.GL_QUADS) {
             return;
         }
-        float[] list = vfix$texCoords;
         int vertex = this.vertexCount & 3;
+        storeTexCoords((float)u, (float)v, vertex);
+    }
+
+    private void storeTexCoords(float u, float v, int vertex) {
+        float[] list = vfix$texCoords;
         int i = vertex << 1;
-        list[i] = (float)u;
-        list[i + 1] = (float)v;
+        list[i] = u;
+        list[i + 1] = v;
     }
 
     @Inject(method = "endVertex", at = @At("RETURN"))
@@ -45,6 +53,11 @@ public class MixinBufferBuilder implements ExtendedBufferBuilderState {
         if(drawMode == GL11.GL_QUADS && (this.vertexCount & 3) == 0) {
             captureAnimatedTexture();
         }
+    }
+
+    @Inject(method = "getVertexState", at = @At("RETURN"))
+    private void copyAnimatedTextures(CallbackInfoReturnable<BufferBuilder.State> cir) {
+        ((ExtendedBufferBuilderState)cir.getReturnValue()).vfix$setAnimatedSprites(this.vfix$seenAnimatedSprites.isEmpty() ? ImmutableList.of() : ImmutableList.copyOf(this.vfix$seenAnimatedSprites));
     }
 
     @Inject(method = "setVertexState", at = @At("RETURN"))
@@ -59,6 +72,23 @@ public class MixinBufferBuilder implements ExtendedBufferBuilderState {
     @Inject(method = "reset", at = @At("RETURN"))
     private void clearAnimatedTextures(CallbackInfo ci) {
         this.vfix$seenAnimatedSprites.clear();
+    }
+
+    @Inject(method = "addVertexData", at = @At("RETURN"))
+    private void injectQuadSprites(int[] vertexData, CallbackInfo ci) {
+        int vertexIntSize = this.vertexFormat.getIntegerSize();
+        int numVertices = vertexData.length / vertexIntSize;
+        int uvOffsetIdx = this.vertexFormat.getUvOffsetById(0) / 4;
+        for(int i = 0; i < numVertices; i++) {
+            float u = Float.intBitsToFloat(vertexData[uvOffsetIdx]);
+            float v = Float.intBitsToFloat(vertexData[uvOffsetIdx + 1]);
+            storeTexCoords(u, v, i);
+            // After storing the fourth UV, capture a texture
+            if((i & 3) == 3) {
+                captureAnimatedTexture();
+            }
+            uvOffsetIdx += vertexIntSize;
+        }
     }
 
     private void captureAnimatedTexture() {
