@@ -26,7 +26,7 @@ public class MixinBufferBuilder implements ExtendedBufferBuilderState {
 
     private final float[] vfix$texCoords = new float[8];
     private final ObjectOpenHashSet<TextureAtlasSprite> vfix$seenAnimatedSprites = new ObjectOpenHashSet<>();
-    private final SpriteFinderImpl vfix$spriteFinder = SpriteFinderImpl.get(Minecraft.getMinecraft().getTextureMapBlocks());
+    private SpriteFinderImpl vfix$spriteFinder;
 
     @Inject(method = "tex", at = @At("HEAD"))
     private void captureTex(double u, double v, CallbackInfoReturnable<BufferBuilder> cir) {
@@ -62,9 +62,12 @@ public class MixinBufferBuilder implements ExtendedBufferBuilderState {
     }
 
     private void captureAnimatedTexture() {
-        SpriteFinderImpl finder = this.vfix$spriteFinder;
+        SpriteFinderImpl finder = vfix$spriteFinder;
         if(finder == null) {
-            return;
+            vfix$spriteFinder = finder = SpriteFinderImpl.get(Minecraft.getMinecraft().getTextureMapBlocks());
+            if(finder == null) {
+                return;
+            }
         }
         float[] uvs = this.vfix$texCoords;
         float centerU = 0, centerV = 0;
