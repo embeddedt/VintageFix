@@ -108,7 +108,9 @@ public class VintageFixClient {
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public void createSpriteFinder(TextureStitchEvent.Post event) {
-        ((SpriteFinderImpl.SpriteFinderAccess)event.getMap()).fabric_setSpriteFinder(new SpriteFinderImpl(((AccessorTextureMap)event.getMap()).vfix$getUploadedSprites(), event.getMap()));
+        if(event.getMap() instanceof SpriteFinderImpl.SpriteFinderAccess) {
+            ((SpriteFinderImpl.SpriteFinderAccess)event.getMap()).fabric_setSpriteFinder(new SpriteFinderImpl(((AccessorTextureMap)event.getMap()).vfix$getUploadedSprites(), event.getMap()));
+        }
     }
 
     float lastIntegratedTickTime;
