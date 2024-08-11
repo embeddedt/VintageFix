@@ -3,12 +3,10 @@ package org.embeddedt.vintagefix.core;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.launchwrapper.LaunchClassLoader;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 import org.embeddedt.vintagefix.jarcache.JarDiscovererCache;
-import org.embeddedt.vintagefix.transformercache.TransformerCache;
 import org.embeddedt.vintagefix.util.DummyList;
-import org.spongepowered.asm.mixin.MixinEnvironment;
+import org.embeddedt.vintagefix.util.Reflector;
 import org.spongepowered.asm.mixin.injection.struct.InjectorGroupInfo;
 import zone.rong.mixinbooter.IEarlyMixinLoader;
 
@@ -78,13 +76,13 @@ public class VintageFixCore implements IFMLLoadingPlugin, IEarlyMixinLoader {
         }
         try {
             // Disable packageManifests cache
-            ObfuscationReflectionHelper.findField(LaunchClassLoader.class, "packageManifests").set(cl, new ConcurrentHashMap() {
+            Reflector.findField(LaunchClassLoader.class, "packageManifests").set(cl, new ConcurrentHashMap() {
                 @Override
                 public Object put(Object key, Object value) {
                     return null;
                 }
             });
-            Field resourceCacheField = ObfuscationReflectionHelper.findField(LaunchClassLoader.class, "resourceCache");
+            Field resourceCacheField = Reflector.findField(LaunchClassLoader.class, "resourceCache");
             Map resourceCacheMap = (Map)resourceCacheField.get(cl);
             if(resourceCacheMap instanceof ConcurrentHashMap) {
                 // Not replaced by any other optimization mod, let's take it over ourselves

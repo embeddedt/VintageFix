@@ -24,11 +24,11 @@ import net.minecraft.launchwrapper.IClassNameTransformer;
 import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraft.launchwrapper.LaunchClassLoader;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.asm.ASMTransformerWrapper;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import org.apache.commons.io.FileUtils;
 import org.embeddedt.vintagefix.VintageFix;
+import org.embeddedt.vintagefix.util.Reflector;
 import org.embeddedt.vintagefix.util.Util;
 
 /* Format:
@@ -114,7 +114,7 @@ public class TransformerCache {
         LOGGER.info("Transformation cache usage: {}/{}", FileUtils.byteCountToDisplaySize(usedSpace), FileUtils.byteCountToDisplaySize(MAX_SIZE_MB * 1024L * 1024L));
     }
 
-    private static final Field TRANSFORMER_WRAPPER_PARENT_FIELD = ObfuscationReflectionHelper.findField(ASMTransformerWrapper.TransformerWrapper.class, "parent");
+    private static final Field TRANSFORMER_WRAPPER_PARENT_FIELD = Reflector.findField(ASMTransformerWrapper.TransformerWrapper.class, "parent");
 
     private static IClassTransformer getWrappedParent(IClassTransformer transformer) {
         try {
