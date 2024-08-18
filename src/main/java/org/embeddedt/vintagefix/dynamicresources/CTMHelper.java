@@ -1,7 +1,6 @@
 package org.embeddedt.vintagefix.dynamicresources;
 
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import net.minecraft.client.renderer.block.model.IBakedModel;
@@ -14,9 +13,7 @@ import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.embeddedt.vintagefix.VintageFix;
 import org.embeddedt.vintagefix.event.DynamicModelBakeEvent;
-import team.chisel.ctm.api.model.IModelCTM;
 import team.chisel.ctm.client.model.AbstractCTMBakedModel;
-import team.chisel.ctm.client.model.parsing.ModelLoaderCTM;
 import team.chisel.ctm.client.texture.IMetadataSectionCTM;
 import team.chisel.ctm.client.util.ResourceUtil;
 import team.chisel.ctm.client.util.TextureMetadataHandler;
@@ -50,6 +47,14 @@ public class CTMHelper {
         }
     }
 
+    /**
+     * Marker interface used to detect when an object is an instance of {@link AbstractCTMBakedModel} without needing
+     * to load that class.
+     */
+    public static interface AbstractCTMModelInterface {
+
+    }
+
     @SubscribeEvent
     public static void onDynModelBake(DynamicModelBakeEvent event) {
         if(!(event.location instanceof ModelResourceLocation))
@@ -57,7 +62,7 @@ public class CTMHelper {
         ModelResourceLocation mrl = (ModelResourceLocation)event.location;
         IModel rootModel = event.unbakedModel;
         if (rootModel != null) {
-            if(event.bakedModel instanceof AbstractCTMBakedModel || event.bakedModel.isBuiltInRenderer())
+            if(event.bakedModel instanceof AbstractCTMModelInterface || event.bakedModel.isBuiltInRenderer())
                 return;
             Deque<ResourceLocation> dependencies = new ArrayDeque<>();
             Set<ResourceLocation> seenModels = new HashSet<>();
