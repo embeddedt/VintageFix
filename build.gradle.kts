@@ -11,14 +11,19 @@ plugins {
   id("com.gtnewhorizons.retrofuturagradle") version "1.4.1"
   id("com.github.johnrengelman.shadow") version "8.1.0"
   id("eclipse")
-  id("com.palantir.git-version") version "3.0.0"
   id("me.modmuss50.mod-publish-plugin") version "0.7.3"
 }
 
 // Project properties
 group = "org.embeddedt.vintagefix"
-val gitVersion: groovy.lang.Closure<String> by extra
-version = gitVersion()
+
+if (project.hasProperty("build.release")) {
+  version = project.properties["mod_version"].toString()
+} else if(project.hasProperty("build.ci")) {
+  version = project.properties["mod_version"].toString() + "-ci." + project.properties["build.ci"].toString()
+} else {
+  version = project.properties["mod_version"].toString() + "-local"
+}
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -62,10 +67,10 @@ tasks.injectTags.configure {
 
 // Put the version from gradle into mcmod.info
 tasks.processResources.configure {
-  inputs.property("version", project.version)
+  inputs.property("version", version)
 
   filesMatching("mcmod.info") {
-    expand(mapOf("modVersion" to project.version))
+    expand(mapOf("modVersion" to inputs.properties["version"]))
   }
 }
 
@@ -183,11 +188,13 @@ tasks.named<ReobfuscatedJar>("reobfJar").configure {
 }
 
 tasks.named<JavaCompile>("compileJava").configure {
+  inputs.property("reobfSrgFile", tasks.reobfJar.get().srg.get().asFile)
+  inputs.property("mixinTmpDir", mixinTmpDir)
   doFirst {
-    File(mixinTmpDir).mkdirs()
+    File(inputs.properties["mixinTmpDir"].toString()).mkdirs()
   }
   options.compilerArgs.addAll(listOf(
-    "-AreobfSrgFile=${tasks.reobfJar.get().srg.get().asFile}",
+    "-AreobfSrgFile=${inputs.properties["reobfSrgFile"]}",
     "-AoutSrgFile=${mixinSrg}",
     "-AoutRefMapFile=${refMap}",
   ))
