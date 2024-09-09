@@ -8,12 +8,11 @@ plugins {
   id("java-library")
   id("maven-publish")
   id("org.jetbrains.gradle.plugin.idea-ext") version "1.1.7"
-  id("com.gtnewhorizons.retrofuturagradle") version "1.3.35"
+  id("com.gtnewhorizons.retrofuturagradle") version "1.4.1"
   id("com.github.johnrengelman.shadow") version "8.1.0"
   id("eclipse")
   id("com.palantir.git-version") version "3.0.0"
-  id("com.matthewprenger.cursegradle") version "1.4.0"
-  id("com.modrinth.minotaur") version "2.+"
+  id("me.modmuss50.mod-publish-plugin") version "0.7.3"
 }
 
 // Project properties
@@ -297,35 +296,22 @@ tasks.processIdeaSettings.configure {
   dependsOn(tasks.injectTags)
 }
 
-curseforge {
-  if (System.getenv("CURSEFORGE_TOKEN") != null) {
-    apiKey = System.getenv("CURSEFORGE_TOKEN")
-    project(closureOf<com.matthewprenger.cursegradle.CurseProject> {
-      id = "871198"
-      releaseType = "release"
-      gameVersionStrings.add("Forge")
-      gameVersionStrings.add("1.12.2")
-      gameVersionStrings.add("Java 8")
-      mainArtifact(tasks.reobfJar.get().archivePath, closureOf<com.matthewprenger.cursegradle.CurseArtifact> {
-        displayName = "VintageFix ${project.version}"
-        relations(closureOf<com.matthewprenger.cursegradle.CurseRelation> {
-          requiredDependency("mixin-booter")
-        })
-      })
-    })
+publishMods {
+  file = tasks.reobfJar.get().archiveFile
+  displayName = "VintageFix ${project.version}"
+  type = STABLE
+  modLoaders.add("forge")
+
+  curseforge {
+    projectId = "871198"
+    projectSlug = "vintagefix" // Required for discord webhook
+    accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
+    minecraftVersions.add("1.12.2")
+    requires("mixin-booter")
   }
-}
-
-modrinth {
-  token.set(System.getenv("MODRINTH_TOKEN"))
-  projectId.set("vintagefix") // This can be the project ID or the slug. Either will work!
-  versionType.set("release") // This is the default -- can also be `beta` or `alpha`
-  uploadFile.set(tasks.reobfJar)
-  gameVersions.add("1.12.2")
-  loaders.add("forge")
-}
-
-tasks.register("publishToModSites") {
-  dependsOn(tasks.modrinth)
-  dependsOn(tasks.curseforge)
+  modrinth {
+    projectId = "vintagefix"
+    accessToken = providers.environmentVariable("MODRINTH_TOKEN")
+    minecraftVersions.add("1.12.2")
+  }
 }
