@@ -60,7 +60,7 @@ public class DefaultPackAdapter implements ResourcePackHelper.Adapter<DefaultRes
                 try {
                     // Decode the URL before passing it to the URI constructor so it isn't doubly encoded (which breaks
                     // reading files from folders with spaces)
-                    uri = new URI("jar", URLDecoder.decode(url.toURI().toString(), "UTF-8"), null);
+                    uri = new URI("jar:" + url.toString());
                     boolean needClose = false;
                     FileSystem fs;
                     try {
