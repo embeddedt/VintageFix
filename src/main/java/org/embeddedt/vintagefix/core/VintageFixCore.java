@@ -27,7 +27,7 @@ public class VintageFixCore implements IFMLLoadingPlugin, IEarlyMixinLoader {
 
     public VintageFixCore() {
         // Force-disable squashBakedQuads in any known *ASM mods
-        for (String clz : new String[] { "zone.rong.loliasm.core.LoliTransformer", "mirror.normalasm.core.NormalTransformer" }) {
+        for (String clz : new String[] { "zone.rong.loliasm.core.LoliTransformer", "mirror.normalasm.core.NormalTransformer", "mirror.blahajasm.core.BlahajTransformer" }) {
             try {
                 Class<?> transformerClass = Class.forName(clz);
                 Field field = transformerClass.getDeclaredField("squashBakedQuads");
