@@ -308,6 +308,7 @@ publishMods {
   displayName = "VintageFix ${project.version}"
   type = STABLE
   modLoaders.add("forge")
+  changelog = ""
 
   curseforge {
     projectId = "871198"
@@ -317,7 +318,7 @@ publishMods {
     requires("mixin-booter")
   }
   modrinth {
-    projectId = "vintagefix"
+    projectId = "e6vNsbAm"
     accessToken = providers.environmentVariable("MODRINTH_TOKEN")
     minecraftVersions.add("1.12.2")
   }
