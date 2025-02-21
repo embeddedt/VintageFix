@@ -172,7 +172,7 @@ public class MixinConfigPlugin implements IMixinConfigPlugin {
     }
 
     private static final List<String> VINTAGIUM_DISABLED_PACKAGES = ImmutableList.of("mixin.chunk_rendering", "mixin.bugfix.entity_disappearing", "mixin.invisible_subchunks");
-    private static final List<String> OPTIFINE_DISABLED_PACKAGES = ImmutableList.<String>builder().addAll(VINTAGIUM_DISABLED_PACKAGES).add("mixin.textures").build();
+    private static final List<String> OPTIFINE_DISABLED_PACKAGES = ImmutableList.<String>builder().addAll(VINTAGIUM_DISABLED_PACKAGES).add("mixin.textures").add("mixin.bugfix.ao_artifacts").build();
 
     public static boolean isMixinClassApplied(String name) {
         String unprefixedName = name.replace(PACKAGE_PREFIX, "");
