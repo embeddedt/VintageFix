@@ -93,7 +93,6 @@ public class MixinConfigPlugin implements IMixinConfigPlugin {
         .put("mixin.dynamic_resources.background_item_bake", true)
         .put("mixin.bugfix.extrautils", false)
         .put("mixin.version_protest", false)
-        .put("mixin.texture_animation", false)
         .put("mixin.dynamic_resources.hide_model_exceptions", false)
         .build();
 
