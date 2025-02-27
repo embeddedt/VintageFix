@@ -123,11 +123,11 @@ dependencies {
   // api(rfg.deobf("curse.maven:ic2-242638:2353971"))
   // Example: grab the ic2 jar from libs/ in the workspace and deobfuscate
   // api(rfg.deobf(project.files("libs/ic2.jar")))
-  implementation("zone.rong:mixinbooter:7.1")
+  implementation("zone.rong:mixinbooter:10.5")
   annotationProcessor("org.ow2.asm:asm-debug-all:5.2")
   annotationProcessor("com.google.guava:guava:24.1.1-jre")
   annotationProcessor("com.google.code.gson:gson:2.8.6")
-  annotationProcessor("org.spongepowered:mixin:0.8.3") {isTransitive = false}
+  annotationProcessor("zone.rong:mixinbooter:10.5") {isTransitive = false}
 
   compileOnly(rfg.deobf("slimeknights.mantle:Mantle:1.12-1.3.3.56"))
   compileOnly(rfg.deobf("slimeknights:TConstruct:1.12.2-2.13.0.180"))
