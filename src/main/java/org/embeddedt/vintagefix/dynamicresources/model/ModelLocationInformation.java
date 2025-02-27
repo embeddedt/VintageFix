@@ -150,7 +150,16 @@ public class ModelLocationInformation {
             throw new RuntimeException("Encountered an exception when loading model definition of model " + blockstateLocation, e);
         }
 
-        return new ModelBlockDefinition(list);
+        ModelBlockDefinition definition = new ModelBlockDefinition(list);
+
+        if (definition.hasMultipartData()) {
+            Block block = getBlockFromBlockstateLocation(location);
+            if (block != null) {
+                definition.getMultipartData().setStateContainer(block.getBlockState());
+            }
+        }
+
+        return definition;
     }
 
     private static ModelBlockDefinition loadModelBlockDefinition(ResourceLocation location, IResource resource) {

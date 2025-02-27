@@ -2,7 +2,6 @@ package org.embeddedt.vintagefix.mixin.dynamic_resources;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import net.minecraft.block.Block;
 import net.minecraft.client.renderer.block.model.ModelBlockDefinition;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.block.model.VariantList;
@@ -87,11 +86,8 @@ public class MixinVariantLoader {
         } else {
             if (definition.hasMultipartData()) {
                 ResourceLocation baseLocation = new ResourceLocation(variant.getNamespace(), variant.getPath());
-                Block block = ModelLocationInformation.getBlockFromBlockstateLocation(baseLocation);
-                if(!ModelLocationInformation.isAppropriateMultipart(baseLocation, variant))
-                    throw new Exception("Not valid multipart for " + block + ": " + variant);
-                if (block != null) {
-                    definition.getMultipartData().setStateContainer(block.getBlockState());
+                if(!ModelLocationInformation.isAppropriateMultipart(baseLocation, variant)) {
+                    throw new Exception("Not valid multipart for " + definition.getMultipartData().getStateContainer() + ": " + variant);
                 }
             }
             try {
