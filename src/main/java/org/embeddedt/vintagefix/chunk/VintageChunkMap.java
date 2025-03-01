@@ -62,6 +62,14 @@ public class VintageChunkMap extends Long2ObjectOpenHashMap<Chunk> {
         return super.remove(k);
     }
 
+    @Override
+    protected void rehash(int newN) {
+        // do not allow the backing table to ever shrink
+        if (newN > this.key.length) {
+            super.rehash(newN);
+        }
+    }
+
     private void addToCache(long key, Chunk chunk) {
         for (int i = CACHE_SIZE - 1; i > 0; --i) {
             this.cachedChunkPositions[i] = this.cachedChunkPositions[i - 1];
