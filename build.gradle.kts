@@ -308,7 +308,7 @@ publishMods {
   displayName = "VintageFix ${project.version}"
   type = STABLE
   modLoaders.add("forge")
-  changelog = ""
+  changelog = file("CHANGELOG.md").readText()
 
   curseforge {
     projectId = "871198"
