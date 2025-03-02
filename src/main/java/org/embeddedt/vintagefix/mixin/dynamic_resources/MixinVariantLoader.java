@@ -1,38 +1,27 @@
 package org.embeddedt.vintagefix.mixin.dynamic_resources;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import net.minecraft.client.renderer.block.model.ModelBlockDefinition;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.block.model.VariantList;
 import net.minecraft.client.renderer.block.model.multipart.Multipart;
-import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.IModel;
+import net.minecraftforge.client.model.ModelLoader;
 import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.embeddedt.vintagefix.dynamicresources.model.ModelLocationInformation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.Shadow;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 @Mixin(targets = "net/minecraftforge/client/model/ModelLoader$VariantLoader")
 @ClientOnlyMixin
 public class MixinVariantLoader {
-    private Cache<ResourceLocation, ModelBlockDefinition> modelBlockDefinitionCache =
-        CacheBuilder.newBuilder()
-            .expireAfterAccess(2, TimeUnit.MINUTES)
-            .maximumSize(100)
-            .concurrencyLevel(8)
-            .softValues()
-            .build();
+    @Shadow
+    private ModelLoader loader;
 
     private static final MethodHandle WEIGHTED_CONSTRUCTOR, MULTIPART_CONSTRUCTOR;
 
@@ -53,11 +42,6 @@ public class MixinVariantLoader {
         MULTIPART_CONSTRUCTOR = multipart;
     }
 
-    @Inject(method = "onResourceManagerReload", at = @At("HEAD"))
-    private void onReload(IResourceManager manager, CallbackInfo ci) {
-        modelBlockDefinitionCache.invalidateAll();
-    }
-
     private VariantList normalizeAndGetVariant(ModelBlockDefinition definition, String variant) {
         if(definition.hasVariant(variant))
             return definition.getVariant(variant);
@@ -74,7 +58,7 @@ public class MixinVariantLoader {
     @Overwrite(remap = false)
     public IModel loadModel(ResourceLocation modelLocation) throws Exception {
         ModelResourceLocation variant = (ModelResourceLocation) modelLocation;
-        ModelBlockDefinition definition = vfix$getModelBlockDefinition(variant);
+        ModelBlockDefinition definition = ((AccessorModelLoader)(Object)this.loader).invokeGetModelBlockDefinition(variant);
         VariantList vList = normalizeAndGetVariant(definition, variant.getVariant());
 
         if (vList != null) {
@@ -95,15 +79,6 @@ public class MixinVariantLoader {
             } catch(Throwable e) {
                 throw (Exception)e;
             }
-        }
-    }
-
-    private ModelBlockDefinition vfix$getModelBlockDefinition(ResourceLocation location) {
-        ResourceLocation simpleLocation = new ResourceLocation(location.getNamespace(), location.getPath());
-        try {
-            return modelBlockDefinitionCache.get(simpleLocation, () -> ModelLocationInformation.loadModelBlockDefinition(simpleLocation));
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e.getCause());
         }
     }
 }
