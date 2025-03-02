@@ -8,6 +8,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoader;
 import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
+import org.embeddedt.vintagefix.dynamicresources.IExtendedModelLoader;
 import org.embeddedt.vintagefix.dynamicresources.model.ModelLocationInformation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -58,7 +59,7 @@ public class MixinVariantLoader {
     @Overwrite(remap = false)
     public IModel loadModel(ResourceLocation modelLocation) throws Exception {
         ModelResourceLocation variant = (ModelResourceLocation) modelLocation;
-        ModelBlockDefinition definition = ((AccessorModelLoader)(Object)this.loader).invokeGetModelBlockDefinition(variant);
+        ModelBlockDefinition definition = ((IExtendedModelLoader)(Object)this.loader).vfix$getModelBlockDef(variant);
         VariantList vList = normalizeAndGetVariant(definition, variant.getVariant());
 
         if (vList != null) {
