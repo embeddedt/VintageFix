@@ -38,7 +38,7 @@ public class MixinModelLoader {
                 try {
                     return ModelLocationInformation.loadModelBlockDefinition(simpleLocation);
                 } catch(Exception e) {
-                    VintageFix.LOGGER.error("Error loading model block definition", e.getCause());
+                    VintageFix.LOGGER.debug("Error loading model block definition", e.getCause());
                     return new ModelBlockDefinition(new ArrayList<>());
                 }
             });
