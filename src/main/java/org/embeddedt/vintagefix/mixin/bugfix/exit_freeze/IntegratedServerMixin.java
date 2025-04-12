@@ -26,7 +26,7 @@ public abstract class IntegratedServerMixin extends MinecraftServer {
     /**
      * Sometimes the server thread is already gone at this point, try to prevent a freeze.
      */
-    @Redirect(method = "initiateShutdown", at = @At(value = "INVOKE", target = "Lcom/google/common/util/concurrent/Futures;getUnchecked(Ljava/util/concurrent/Future;)Ljava/lang/Object;"), require = 0, remap = false)
+    @Redirect(method = "initiateShutdown", at = @At(value = "INVOKE", target = "Lcom/google/common/util/concurrent/Futures;getUnchecked(Ljava/util/concurrent/Future;)Ljava/lang/Object;", remap = false), require = 0)
     private <V> V checkThreadStatus(Future<V> future) {
         while(this.isServerRunning() && ((Thread)ObfuscationReflectionHelper.getPrivateValue(MinecraftServer.class, this, "field_175590_aa")).isAlive()) {
             try {
