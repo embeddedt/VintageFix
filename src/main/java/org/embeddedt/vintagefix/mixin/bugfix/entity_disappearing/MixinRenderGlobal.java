@@ -14,6 +14,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.chunk.Chunk;
+import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 @Mixin(RenderGlobal.class)
+@ClientOnlyMixin
 public abstract class MixinRenderGlobal {
     @Shadow @Final
     private RenderManager renderManager;

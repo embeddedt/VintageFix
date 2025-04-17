@@ -10,6 +10,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.fml.common.ProgressManager;
 import org.embeddedt.vintagefix.VintageFix;
+import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
 import org.embeddedt.vintagefix.ducks.IDroppingStitcher;
 import org.embeddedt.vintagefix.dynamicresources.IWeakTextureMap;
 import org.embeddedt.vintagefix.dynamicresources.TextureCollector;
@@ -31,6 +32,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 @Mixin(TextureMap.class)
+@ClientOnlyMixin
 public abstract class MixinTextureMap implements IWeakTextureMap {
 
     @Shadow
