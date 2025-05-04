@@ -114,7 +114,7 @@ public class VintageFixCore implements IFMLLoadingPlugin, IEarlyMixinLoader {
     private static void applyMixinFix() {
         OPTIFINE = classExists("ofdev.launchwrapper.OptifineDevTweakerWrapper") || classExists("optifine.OptiFineForgeTweaker");
         SPONGE = classExists("org.spongepowered.mod.SpongeCoremod");
-        VINTAGIUM = classExists("me.jellysquid.mods.sodium.client.SodiumMixinTweaker");
+        VINTAGIUM = classExists("me.jellysquid.mods.sodium.client.SodiumMixinTweaker") || classExists("org.taumc.celeritas.core.CeleritasLoadingPlugin");
         /* https://github.com/FabricMC/Mixin/pull/99 */
         try {
             Field groupMembersField = InjectorGroupInfo.class.getDeclaredField("members");
