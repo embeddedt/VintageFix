@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(TextureUtil.class)
 @ClientOnlyMixin
 public class MixinTextureUtil {
-    @Redirect(method = "blendColors", at = @At(value = "FIELD", opcode = Opcodes.GETSTATIC, target = "Lnet/minecraft/client/renderer/texture/TextureUtil;MIPMAP_BUFFER:[I"))
+    @Redirect(method = "blendColors", at = @At(value = "FIELD", opcode = Opcodes.GETSTATIC, target = "Lnet/minecraft/client/renderer/texture/TextureUtil;MIPMAP_BUFFER:[I"), require = 0)
     private static int[] useLocalMipmapBuffer(@Share("mipmapBuffer") LocalRef<int[]> buffer) {
         int[] buf = buffer.get();
         if (buf == null) {
