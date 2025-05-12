@@ -53,6 +53,10 @@ public abstract class MixinBlockModelShapes implements IBlockModelShapes {
     }
 
     private IBakedModel getModelForStateSlow(IBlockState state) {
+        // Mods call this with null states
+        if (state == null) {
+            return modelManager.getMissingModel();
+        }
         IBakedModel model = modelManager.getModel(getLocationForState(state));
         if (model == null) {
             model = modelManager.getMissingModel();
