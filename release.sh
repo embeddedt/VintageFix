@@ -3,8 +3,12 @@
 set -e
 
 VERSION=$(cat gradle.properties | grep mod_version | sed 's/mod_version=//')
+NEXTVERSION=$1
+
+if [ -z "$NEXTVERSION" ]; then
 # from https://stackoverflow.com/a/61921674
 NEXTVERSION=$(echo ${VERSION} | awk -F. -v OFS=. '{$NF += 1 ; print}')
+fi
 
 read -p "Will release $NEXTVERSION, agree? " -n 1 -r
 echo
