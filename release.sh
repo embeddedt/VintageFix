@@ -18,6 +18,7 @@ git commit -m "$NEXTVERSION" gradle.properties
 git tag -a $NEXTVERSION -m "$NEXTVERSION"
 git push
 git push origin tag $NEXTVERSION
+./gradlew publishMods
 else
 echo "Abort."
 fi
