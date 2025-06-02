@@ -173,6 +173,7 @@ public class MixinConfigPlugin implements IMixinConfigPlugin {
 
     private static final List<String> VINTAGIUM_DISABLED_PACKAGES = ImmutableList.of("mixin.chunk_rendering", "mixin.bugfix.entity_disappearing", "mixin.invisible_subchunks");
     private static final List<String> OPTIFINE_DISABLED_PACKAGES = ImmutableList.<String>builder().addAll(VINTAGIUM_DISABLED_PACKAGES).add("mixin.textures").add("mixin.bugfix.ao_artifacts").build();
+    private static final List<String> SLEDGEHAMMER_DISABLED_PACKAGES = ImmutableList.<String>builder().add("mixin.bugfix.dark_entities").add("mixin.bugfix.render_state_leaks").build();
 
     public static boolean isMixinClassApplied(String name) {
         String unprefixedName = name.replace(PACKAGE_PREFIX, "");
@@ -182,6 +183,9 @@ public class MixinConfigPlugin implements IMixinConfigPlugin {
             return false;
         }
         if(VintageFixCore.VINTAGIUM && VINTAGIUM_DISABLED_PACKAGES.stream().anyMatch(baseName::startsWith)) {
+            return false;
+        }
+        if(VintageFixCore.SLEDGEHAMMER && SLEDGEHAMMER_DISABLED_PACKAGES.stream().anyMatch(baseName::startsWith)) {
             return false;
         }
         // property optimizations are redundant with Sponge installed

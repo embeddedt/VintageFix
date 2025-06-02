@@ -23,6 +23,7 @@ public class VintageFixCore implements IFMLLoadingPlugin, IEarlyMixinLoader {
     public static boolean OPTIFINE;
     public static boolean VINTAGIUM;
     public static boolean SPONGE;
+    public static boolean SLEDGEHAMMER;
     private static final int MAXIMUM_RESOURCE_CACHE_SIZE = 20 * 1024 * 1024;
 
     public VintageFixCore() {
@@ -115,6 +116,7 @@ public class VintageFixCore implements IFMLLoadingPlugin, IEarlyMixinLoader {
         OPTIFINE = classExists("ofdev.launchwrapper.OptifineDevTweakerWrapper") || classExists("optifine.OptiFineForgeTweaker");
         SPONGE = classExists("org.spongepowered.mod.SpongeCoremod");
         VINTAGIUM = classExists("me.jellysquid.mods.sodium.client.SodiumMixinTweaker") || classExists("org.taumc.celeritas.core.CeleritasLoadingPlugin");
+        SLEDGEHAMMER = classExists("io.github.lxgaming.sledgehammer.launch.SledgehammerLoadingPlugin");
         /* https://github.com/FabricMC/Mixin/pull/99 */
         try {
             Field groupMembersField = InjectorGroupInfo.class.getDeclaredField("members");
