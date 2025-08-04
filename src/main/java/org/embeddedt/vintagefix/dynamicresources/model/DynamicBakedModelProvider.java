@@ -134,7 +134,7 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
                 if(!ModelLocationInformation.DEBUG_MODEL_LOAD)
                     LOGGER.error("Error occured while loading model {}", location);
                 else {
-                    LOGGER.error("Failed to load model {}", location, mException);
+                    LOGGER.error("Failed to load model {}: {}", location, mException);
                 }
             }
         } else {
@@ -143,7 +143,7 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
             } catch (Throwable t) {
                 if(ModelLocationInformation.canLogError(location.getNamespace())) {
                     if(ModelLocationInformation.DEBUG_MODEL_LOAD)
-                        LOGGER.error("Error occured while baking model {}", location, t);
+                        LOGGER.error("Error occured while baking model {}: {}", location, t);
                     else
                         LOGGER.error("Error occured while baking model {}", location);
                 }

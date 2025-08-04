@@ -209,7 +209,7 @@ public class TextureCollector {
                 return textureLoc;
         } catch(FileNotFoundException ignored) {
         } catch(Throwable e) {
-            VintageFix.LOGGER.error("Exception reading JSON for {}", jsonLocation, e);
+            VintageFix.LOGGER.error("Exception reading JSON for {}: {}", jsonLocation, e);
         }
         return ImmutableList.of();
     }

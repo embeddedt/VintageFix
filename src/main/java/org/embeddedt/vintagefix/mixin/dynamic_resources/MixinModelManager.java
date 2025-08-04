@@ -87,7 +87,7 @@ public class MixinModelManager {
                         permLoaded++;
                     }
                 } catch(Exception e) {
-                    VintageFix.LOGGER.error("Early load error for {}", rl, e);
+                    VintageFix.LOGGER.error("Early load error for {}: {}", rl, e);
                 }
             } else
                 VintageFix.LOGGER.warn("Path {} is not a valid model location", path);
