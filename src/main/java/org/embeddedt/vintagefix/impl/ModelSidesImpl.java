@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.util.EnumFacing;
 import org.embeddedt.vintagefix.core.VintageFixCore;
+import org.embeddedt.vintagefix.impl.model.PileOfQuads;
 
 import java.util.EnumMap;
 import java.util.List;
@@ -25,31 +26,22 @@ public class ModelSidesImpl {
         EMPTY = map;
     }
 
-    private static <T> List<T> safeImmutableList(List<T> quadList) {
-        // OptiFine requires list to be mutable
-        return VintageFixCore.OPTIFINE ? quadList : ImmutableList.copyOf(quadList);
-    }
-
     public static List<BakedQuad> minimizeUnculled(List<BakedQuad> quads) {
-        return safeImmutableList(quads);
+        return VintageFixCore.OPTIFINE ? quads : ImmutableList.copyOf(quads);
     }
 
     public static Map<EnumFacing, List<BakedQuad>> minimizeCulled(Map<EnumFacing, List<BakedQuad>> quadsBySide) {
-        if (quadsBySide.isEmpty()) {
-            // Workaround: Forge's EmptyModel does this, I'm quite sure that it would crash if it was actually used
-            // anywhere
+        if (VintageFixCore.OPTIFINE || quadsBySide.isEmpty()) {
             return quadsBySide;
         }
         boolean allEmpty = true;
         for (final EnumFacing face : SIDES) {
             final List<BakedQuad> sideQuads = quadsBySide.get(face);
-            try {
-                quadsBySide.put(face, safeImmutableList(sideQuads));
-            } catch(RuntimeException e) {
-                /* some models don't allow putting entries in this map */
+            allEmpty = sideQuads.isEmpty();
+            if (!allEmpty) {
+                break;
             }
-            allEmpty &= sideQuads.isEmpty();
         }
-        return allEmpty ? EMPTY : quadsBySide;
+        return allEmpty ? EMPTY : new PileOfQuads(quadsBySide);
     }
 }
