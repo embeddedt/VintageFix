@@ -3,6 +3,7 @@ package org.embeddedt.vintagefix.dynamicresources.model;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.minecraft.client.renderer.block.model.ModelBlockDefinition;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.IRegistry;
@@ -151,6 +152,17 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
         return model;
     }
 
+    private static class DynamicModelLoadFailException extends ModelLoaderRegistry.LoaderException {
+        public DynamicModelLoadFailException(String message) {
+            super(message);
+        }
+
+        @Override
+        public synchronized Throwable fillInStackTrace() {
+            return this;
+        }
+    }
+
     private IModel loadModel(ResourceLocation location, Set<ResourceLocation> loadStack) throws ModelLoaderRegistry.LoaderException {
         if(loadStack.add(location)) {
             ResourceLocation alias;
@@ -205,7 +217,11 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
         try {
             model = accepted.loadModel(actualLocation);
         } catch (Exception e) {
-            throw new ModelLoaderRegistry.LoaderException("Exception loading model " + location + " with loader " + accepted, e);
+            if (e instanceof ModelBlockDefinition.MissingVariantException && accepted == VARIANT_LOADER) {
+                throw new DynamicModelLoadFailException("Variant " + location + " does not exist");
+            } else {
+                throw new ModelLoaderRegistry.LoaderException("Exception loading model " + location + " with loader " + accepted, e);
+            }
         }
 
         if(model == null)
