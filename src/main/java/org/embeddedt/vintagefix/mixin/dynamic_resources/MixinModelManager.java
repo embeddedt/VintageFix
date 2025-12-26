@@ -1,6 +1,7 @@
 package org.embeddedt.vintagefix.mixin.dynamic_resources;
 
-import com.google.common.collect.Sets;
+import it.unimi.dsi.fastutil.objects.Object2LongMap;
+import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.client.renderer.BlockModelShapes;
 import net.minecraft.client.renderer.block.model.IBakedModel;
@@ -21,15 +22,19 @@ import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.common.ForgeModContainer;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.ModContainer;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.ProgressManager;
+import net.minecraftforge.fml.common.eventhandler.IContextSetter;
 import net.minecraftforge.fml.common.eventhandler.IEventListener;
 import org.embeddedt.vintagefix.VintageFix;
 import org.embeddedt.vintagefix.annotation.ClientOnlyMixin;
+import org.embeddedt.vintagefix.ducks.IModAwareModelBakeEvent;
 import org.embeddedt.vintagefix.dynamicresources.*;
 import org.embeddedt.vintagefix.dynamicresources.model.DynamicBakedModelProvider;
 import org.embeddedt.vintagefix.dynamicresources.model.DynamicModelProvider;
 import org.embeddedt.vintagefix.dynamicresources.model.ModelLocationInformation;
+import org.embeddedt.vintagefix.util.TimeUtil;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -38,6 +43,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -244,17 +250,38 @@ public class MixinModelManager {
         }
 
         // Post the event, but just log an error if a listener throws an exception.
-        ModelBakeEvent event = new ModelBakeEvent((ModelManager) (Object) this, new WrappingModelRegistry(modelRegistry), loader);
+        WrappingModelRegistry wrappingRegistry = new WrappingModelRegistry(modelRegistry);
+        ModelBakeEvent event = new ModelBakeEvent((ModelManager) (Object) this, wrappingRegistry, loader);
         IEventListener[] listeners = EventUtil.getListenersForEvent(event);
         overallBar.step("Baking");
         ProgressManager.ProgressBar bakeEventBar = ProgressManager.push("Posting bake events", listeners.length);
+        Object2LongOpenHashMap<ModContainer> perModTimes = new Object2LongOpenHashMap<>();
+        long globalStart = System.nanoTime();
         for (IEventListener listener : listeners) {
+            wrappingRegistry.resetTracking();
             bakeEventBar.step(listener.toString());
+            ((IContextSetter)event).setModContainer(null);
+            long nsStart = System.nanoTime();
             try {
                 listener.invoke(event);
             } catch (Throwable t) {
                 VintageFix.LOGGER.error(event + " listener '" + listener + "' threw exception, models may be broken", t);
             }
+            ModContainer mc = ((IModAwareModelBakeEvent)event).vfix$getLastMod();
+            if (mc != null) {
+                wrappingRegistry.reportIssues(mc);
+                perModTimes.addTo(mc, System.nanoTime() - nsStart);
+            }
+        }
+        long globalTotal = (System.nanoTime() - globalStart);
+        if (globalTotal >= TimeUnit.SECONDS.toNanos(1)) {
+            VintageFix.LOGGER.warn("Posting dynamic ModelBakeEvent to mods took {}, breakdown below:", TimeUtil.stringifyTime(globalTotal, TimeUnit.NANOSECONDS));
+            perModTimes.object2LongEntrySet().stream()
+                .sorted(Comparator.<Object2LongMap.Entry<ModContainer>>comparingLong(Object2LongMap.Entry::getLongValue).reversed())
+                .filter(e -> TimeUnit.NANOSECONDS.toMillis(e.getLongValue()) > 50)
+                .forEach(entry -> {
+                    VintageFix.LOGGER.warn("    {}: {}", entry.getKey(), TimeUtil.stringifyTime(entry.getLongValue(), TimeUnit.NANOSECONDS));
+                });
         }
         ProgressManager.pop(bakeEventBar);
         ProgressManager.pop(overallBar);

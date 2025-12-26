@@ -131,7 +131,6 @@ dependencies {
 
   compileOnly(rfg.deobf("slimeknights.mantle:Mantle:1.12-1.3.3.56"))
   compileOnly(rfg.deobf("slimeknights:TConstruct:1.12.2-2.13.0.180"))
-  compileOnly(rfg.deobf("curse.maven:applied-energistics-2-223794:2747063"))
   compileOnly(rfg.deobf("curse.maven:immersive-engineering-231951:2974106"))
   compileOnly(rfg.deobf("curse.maven:mysticallib-277064:3483816"))
   compileOnly(rfg.deobf("curse.maven:blockcraftery-278882:2716712"))
@@ -147,7 +146,6 @@ dependencies {
   compileOnly(rfg.deobf("curse.maven:unlimited-chisel-works-278493:3319307"))
   compileOnly(rfg.deobf("curse.maven:hammercore-247401:3611193"))
   compileOnly(rfg.deobf("curse.maven:refinedstorage-243076:2940914"))
-  compileOnly(rfg.deobf("curse.maven:opencomputers-223008:4566834"))
   compileOnly(rfg.deobf("curse.maven:extrautils-225561:2678374"))
   compileOnly(rfg.deobf("curse.maven:chiselsandbits-231095:2720655"))
   compileOnly(rfg.deobf("curse.maven:projectredexpansion-229048:2745550"))
