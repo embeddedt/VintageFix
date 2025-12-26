@@ -145,7 +145,6 @@ dependencies {
   compileOnly("org.reflections:reflections:0.9.10")
   compileOnly(rfg.deobf("curse.maven:unlimited-chisel-works-278493:3319307"))
   compileOnly(rfg.deobf("curse.maven:hammercore-247401:3611193"))
-  compileOnly(rfg.deobf("curse.maven:refinedstorage-243076:2940914"))
   compileOnly(rfg.deobf("curse.maven:extrautils-225561:2678374"))
   compileOnly(rfg.deobf("curse.maven:chiselsandbits-231095:2720655"))
   compileOnly(rfg.deobf("curse.maven:projectredexpansion-229048:2745550"))
