@@ -74,11 +74,13 @@ public class MixinVariantLoader {
                 if(!ModelLocationInformation.isAppropriateMultipart(baseLocation, variant)) {
                     throw new Exception("Not valid multipart for " + definition.getMultipartData().getStateContainer() + ": " + variant);
                 }
-            }
-            try {
-                return (IModel)MULTIPART_CONSTRUCTOR.invoke(new ResourceLocation(variant.getNamespace(), variant.getPath()), definition.getMultipartData());
-            } catch(Throwable e) {
-                throw (Exception)e;
+                try {
+                    return (IModel)MULTIPART_CONSTRUCTOR.invoke(new ResourceLocation(variant.getNamespace(), variant.getPath()), definition.getMultipartData());
+                } catch(Throwable e) {
+                    throw (Exception)e;
+                }
+            } else {
+                throw definition.new MissingVariantException();
             }
         }
     }
