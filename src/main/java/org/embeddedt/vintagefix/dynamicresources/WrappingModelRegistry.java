@@ -44,6 +44,7 @@ public class WrappingModelRegistry extends RegistrySimple<ModelResourceLocation,
         .put("opencomputers", UniverseVisibility.SELF_AND_DEPS)
         .put("refinedstorage", UniverseVisibility.SELF_AND_DEPS)
         .put("cabletiers", UniverseVisibility.SELF_AND_DEPS)
+        .put("thebetweenlands", UniverseVisibility.NONE)
         .build();
     private static final boolean ENABLE_LOAD_TRACKING = false;
 
@@ -147,7 +148,7 @@ public class WrappingModelRegistry extends RegistrySimple<ModelResourceLocation,
         String modId = container.getModId();
         UniverseVisibility config = MOD_VISIBILITY_CONFIGURATION.getOrDefault(modId, UniverseVisibility.EVERYTHING);
         if (config == UniverseVisibility.NONE) {
-            return ImmutableSet.of();
+            return null;
         }
         final Set<String> modIdsToInclude = computeVisibleModIds(modId);
         Set<ModelResourceLocation> ourModelLocations;
