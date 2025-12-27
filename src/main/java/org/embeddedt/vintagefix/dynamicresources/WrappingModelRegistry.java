@@ -45,6 +45,7 @@ public class WrappingModelRegistry extends RegistrySimple<ModelResourceLocation,
         .put("refinedstorage", UniverseVisibility.SELF_AND_DEPS)
         .put("cabletiers", UniverseVisibility.SELF_AND_DEPS)
         .put("thebetweenlands", UniverseVisibility.NONE)
+        .put("ebwizardry", UniverseVisibility.SELF_AND_DEPS)
         .build();
     private static final boolean ENABLE_LOAD_TRACKING = false;
 
