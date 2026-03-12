@@ -17,7 +17,7 @@ public class TurboStitcher extends SpriteSlot {
     private List<SpriteSlot> slots = new LinkedList<>();
     private List<SpriteSlot> finalizedSlots = null;
     private boolean needsSorting = false;
-    private int trackedArea = 0;
+    private long trackedArea = 0;
     private StitcherState state = StitcherState.SETUP;
     private static final boolean OPTIMAL_PACKING = true;
 
@@ -45,7 +45,7 @@ public class TurboStitcher extends SpriteSlot {
     public void addSprite(SpriteSlot rect) {
         verifyState(StitcherState.SETUP);
         slots.add(rect);
-        trackedArea += rect.width * rect.height;
+        trackedArea += (long) rect.width * (long) rect.height;
         needsSorting = true;
     }
 
@@ -64,7 +64,7 @@ public class TurboStitcher extends SpriteSlot {
                 name = "unknown";
             }
             VintageFix.LOGGER.warn("Dropping {}x{} texture '{}' from atlas as it's too large", slot.width, slot.height, name);
-            trackedArea -= slot.width * slot.height;
+            trackedArea -= (long) slot.width * (long) slot.height;
         } else
             throw new IllegalStateException();
     }
@@ -82,7 +82,7 @@ public class TurboStitcher extends SpriteSlot {
                 // - not in the desired list of locations
                 if(TextureCollector.weaklyCollectedTextures.contains(spriteName) && !locationStrings.contains(spriteName)) {
                     VintageFix.LOGGER.warn("Dropping unreferenced sprite " + ((HolderSlot) slot).getHolder().getAtlasSprite().getIconName());
-                    trackedArea -= slot.width * slot.height;
+                    trackedArea -= (long) slot.width * (long) slot.height;
                     return true;
                 }
             }
@@ -95,6 +95,7 @@ public class TurboStitcher extends SpriteSlot {
         width = 0;
         height = 0;
         if (slots.size() == 0) {
+            finalizedSlots = Collections.emptyList(); // fixing NPE here was for debugging.
             state = StitcherState.STITCHED;
             return;
         }
@@ -103,7 +104,7 @@ public class TurboStitcher extends SpriteSlot {
             Collections.sort(slots);
             needsSorting = false;
         }
-        if(trackedArea > (maxWidth * maxHeight)) {
+        if (trackedArea > (long) maxWidth * (long) maxHeight) {
             throw new TooBigException();
         }
         // start with a really simple check, if the total area is larger than we could handle, we know this will fail
