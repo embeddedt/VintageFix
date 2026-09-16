@@ -8,8 +8,8 @@ plugins {
   id("java-library")
   id("maven-publish")
   id("org.jetbrains.gradle.plugin.idea-ext") version "1.1.7"
-  id("com.gtnewhorizons.retrofuturagradle") version "1.4.1"
-  id("com.github.johnrengelman.shadow") version "8.1.0"
+  id("com.gtnewhorizons.retrofuturagradle") version "2.0.4"
+  id("com.gradleup.shadow") version "9.6.1"
   id("eclipse")
   id("me.modmuss50.mod-publish-plugin") version "0.7.3"
 }
