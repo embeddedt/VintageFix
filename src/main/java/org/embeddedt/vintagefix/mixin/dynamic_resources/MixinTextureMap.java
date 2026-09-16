@@ -28,6 +28,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -42,23 +43,22 @@ public abstract class MixinTextureMap implements IWeakTextureMap {
     @Shadow
     public abstract TextureAtlasSprite registerSprite(ResourceLocation location);
 
-    private final Set<String> weakRegisteredSprites = new ObjectOpenHashSet<>();
+    // may be mutated from multiple threads by mods that register sprites in parallel
+    private final Set<String> weakRegisteredSprites = ConcurrentHashMap.newKeySet();
 
     @Inject(method = "registerSprite", at = @At(value = "INVOKE", target = "Ljava/util/Map;get(Ljava/lang/Object;)Ljava/lang/Object;"))
     private void unregisterWeakSprite(ResourceLocation location, CallbackInfoReturnable<TextureAtlasSprite> cir) {
         String locKey = location.toString();
-        if(this.weakRegisteredSprites.contains(locKey)) {
+        if(this.weakRegisteredSprites.remove(locKey)) {
             this.mapRegisteredSprites.remove(locKey);
-            this.weakRegisteredSprites.remove(locKey);
         }
     }
 
     @Inject(method = "setTextureEntry", at = @At("HEAD"), remap = false)
     private void unregisterWeakSprite2(TextureAtlasSprite sprite, CallbackInfoReturnable<Boolean> ci) {
         String key = sprite.getIconName();
-        if(this.weakRegisteredSprites.contains(key)) {
+        if(this.weakRegisteredSprites.remove(key)) {
             this.mapRegisteredSprites.remove(key);
-            this.weakRegisteredSprites.remove(key);
         }
     }
 
