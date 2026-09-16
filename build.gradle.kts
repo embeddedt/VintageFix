@@ -11,7 +11,7 @@ plugins {
   id("com.gtnewhorizons.retrofuturagradle") version "2.0.4"
   id("com.gradleup.shadow") version "9.6.1"
   id("eclipse")
-  id("me.modmuss50.mod-publish-plugin") version "0.7.3"
+  id("me.modmuss50.mod-publish-plugin") version "2.1.1"
 }
 
 // Project properties
@@ -312,11 +312,14 @@ publishMods {
     projectSlug = "vintagefix" // Required for discord webhook
     accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
     minecraftVersions.add("1.12.2")
+    client = true
+    server = true
     requires("mixin-booter")
   }
   modrinth {
     projectId = "e6vNsbAm"
     accessToken = providers.environmentVariable("MODRINTH_TOKEN")
     minecraftVersions.add("1.12.2")
+    environment = CLIENT_OR_SERVER_PREFERS_BOTH
   }
 }
