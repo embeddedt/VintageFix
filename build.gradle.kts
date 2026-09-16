@@ -18,11 +18,11 @@ plugins {
 group = "org.embeddedt.vintagefix"
 
 if (project.hasProperty("build.release")) {
-  version = project.properties["mod_version"].toString()
+  version = project.property("mod_version").toString()
 } else if(project.hasProperty("build.ci")) {
-  version = project.properties["mod_version"].toString() + "-ci." + project.properties["build.ci"].toString()
+  version = project.property("mod_version").toString() + "-ci." + project.property("build.ci").toString()
 } else {
-  version = project.properties["mod_version"].toString() + "-local"
+  version = project.property("mod_version").toString() + "-local"
 }
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
@@ -75,7 +75,7 @@ tasks.processResources.configure {
 }
 
 // Create a new dependency type for runtime-only dependencies that don't get included in the maven publication
-val runtimeOnlyNonPublishable: Configuration by configurations.creating {
+val runtimeOnlyNonPublishable: Configuration = configurations.create("runtimeOnlyNonPublishable") {
   description = "Runtime only dependencies that are not published alongside the jar"
   isCanBeConsumed = false
   isCanBeResolved = false
@@ -154,21 +154,21 @@ dependencies {
   annotationProcessor(mixinExtras)
 }
 
-val main by sourceSets.getting // created by ForgeGradle
+val main = sourceSets.getByName("main") // created by ForgeGradle
 sourceSets.register("googleaccess") {
   compileClasspath += main.compileClasspath
 }
-val googleaccess by sourceSets.getting // created by ForgeGradle
+val googleaccess = sourceSets.getByName("googleaccess") // created by ForgeGradle
 sourceSets.register("googleimpl") {
   compileClasspath += googleaccess.output
   compileClasspath += main.output
   compileClasspath += main.compileClasspath
 }
-val googleimpl by sourceSets.getting
+val googleimpl = sourceSets.getByName("googleimpl")
 main.runtimeClasspath += googleimpl.output
 
 val mixinConfigRefMap = "mixins.vintagefix.refmap.json"
-val mixinTmpDir = buildDir.path + File.separator + "tmp" + File.separator + "mixins"
+val mixinTmpDir = layout.buildDirectory.get().asFile.path + File.separator + "tmp" + File.separator + "mixins"
 val refMap = mixinTmpDir + File.separator + mixinConfigRefMap
 val mixinSrg = mixinTmpDir + File.separator + "mixins.srg"
 
