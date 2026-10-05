@@ -40,7 +40,7 @@ public class JarDiscovererCache {
     private static int epoch;
 
     private static final byte MAGIC_0 = 0;
-    private static final byte VERSION = 1;
+    private static final byte VERSION = 2;
 
     private static final File DAT_OLD = Util.childFile(VintageFix.CACHE_DIR, "jarDiscovererCache.dat");
     private static final File DAT = Util.childFile(VintageFix.CACHE_DIR, "jarDiscoverer.cache");
