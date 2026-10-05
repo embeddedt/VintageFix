@@ -11,13 +11,11 @@ import net.minecraftforge.fml.common.discovery.asm.ModAnnotation;
 import org.embeddedt.vintagefix.VintageFix;
 import org.embeddedt.vintagefix.util.Util;
 import org.objectweb.asm.Type;
+import sun.misc.Unsafe;
 
 import java.io.*;
 import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.zip.ZipEntry;
 
 import static org.embeddedt.vintagefix.VintageFix.LOGGER;
@@ -52,6 +50,7 @@ public class JarDiscovererCache {
         kryo.register(Type.class, new TypeSerializer());
         kryo.register(ModAnnotation.class, new ModAnnotationSerializer());
         kryo.register(ModAnnotation.EnumHolder.class, new EnumHolderSerializer());
+        kryo.register(ASMModParser.class, new ASMModParserSerializer());
         kryo.setRegistrationRequired(false);
 
         if(DAT_OLD.exists() && !DAT.exists()) {
@@ -288,4 +287,86 @@ public class JarDiscovererCache {
         }
 
     }
+
+    public static class ASMModParserSerializer extends Serializer<ASMModParser> {
+
+        private Field asmTypeField;
+        private Field classVersionField;
+        private Field asmSuperTypeField;
+        private Field annotationsField;
+        private Field interfacesField;
+        private Unsafe unsafe;
+
+        public ASMModParserSerializer() {
+
+            try {
+
+                asmTypeField = ASMModParser.class.getDeclaredField("asmType");
+                asmTypeField.setAccessible(true);
+
+                classVersionField = ASMModParser.class.getDeclaredField("classVersion");
+                classVersionField.setAccessible(true);
+
+                asmSuperTypeField = ASMModParser.class.getDeclaredField("asmSuperType");
+                asmSuperTypeField.setAccessible(true);
+
+                annotationsField = ASMModParser.class.getDeclaredField("annotations");
+                annotationsField.setAccessible(true);
+
+                interfacesField = ASMModParser.class.getDeclaredField("interfaces");
+                interfacesField.setAccessible(true);
+
+                Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+                unsafeField.setAccessible(true);
+                unsafe = (Unsafe) unsafeField.get(null);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        @Override
+        public void write(Kryo kryo, Output output, ASMModParser parser) {
+
+            kryo.writeObjectOrNull(output, parser.getASMType(), Type.class);
+            output.writeInt(parser.getClassVersion());
+
+            kryo.writeObjectOrNull(output, parser.getASMSuperType(), Type.class);
+            kryo.writeObject(output, parser.getAnnotations());
+
+            try {
+                kryo.writeObject(output, interfacesField.get(parser));
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        @Override
+        public ASMModParser read(Kryo kryo, Input input, Class<? extends ASMModParser> type) {
+
+            try {
+
+                ASMModParser parser = (ASMModParser) unsafe.allocateInstance(ASMModParser.class);
+
+                asmTypeField.set(parser, kryo.readObjectOrNull(input, Type.class));
+                classVersionField.setInt(parser, input.readInt());
+                asmSuperTypeField.set(parser, kryo.readObjectOrNull(input, Type.class));
+
+                annotationsField.set(parser, kryo.readObject(input, LinkedList.class));
+                interfacesField.set(parser, kryo.readObject(input, HashSet.class));
+
+                return parser;
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            return null;
+
+        }
+
+    }
+
 }
