@@ -15,6 +15,7 @@ import sun.misc.Unsafe;
 
 import java.io.*;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.zip.ZipEntry;
 
@@ -27,7 +28,9 @@ import static org.embeddedt.vintagefix.VintageFix.LOGGER;
  * int32 epoch
  * Map<String, CachedModInfo> cache
  */
+@SuppressWarnings({"unchecked", "ResultOfMethodCallIgnored"})
 public class JarDiscovererCache {
+
     /**
      * Max age of an element in the cache.
      */
@@ -36,8 +39,8 @@ public class JarDiscovererCache {
     private static Map<String, CachedModInfo> cache = new HashMap<>();
     private static int epoch;
 
-    private static byte MAGIC_0 = 0;
-    private static byte VERSION = 1;
+    private static final byte MAGIC_0 = 0;
+    private static final byte VERSION = 1;
 
     private static final File DAT_OLD = Util.childFile(VintageFix.CACHE_DIR, "jarDiscovererCache.dat");
     private static final File DAT = Util.childFile(VintageFix.CACHE_DIR, "jarDiscoverer.cache");
@@ -46,38 +49,49 @@ public class JarDiscovererCache {
     private static final Kryo kryo = new Kryo();
 
     public static void load() {
+
         LOGGER.info("Loading JarDiscovererCache");
-        kryo.register(Type.class, new TypeSerializer());
-        kryo.register(ModAnnotation.class, new ModAnnotationSerializer());
-        kryo.register(ModAnnotation.EnumHolder.class, new EnumHolderSerializer());
-        kryo.register(ASMModParser.class, new ASMModParserSerializer());
-        kryo.setRegistrationRequired(false);
+
+        try {
+            kryo.register(Type.class, new TypeSerializer());
+            kryo.register(ModAnnotation.class, new ModAnnotationSerializer());
+            kryo.register(ModAnnotation.EnumHolder.class, new EnumHolderSerializer());
+            kryo.register(ASMModParser.class, new ASMModParserSerializer());
+            kryo.setRegistrationRequired(false);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            LOGGER.error("There was an error registering the jar discoverer cache serializers", e);
+            return;
+        }
 
         if(DAT_OLD.exists() && !DAT.exists()) {
-            LOGGER.info("Migrating jar discoverer cache: " + DAT_OLD + " -> " + DAT);
+            LOGGER.info("Migrating jar discoverer cache: {} -> {}", DAT_OLD, DAT);
             DAT_OLD.renameTo(DAT);
         }
 
-        if(DAT.exists()) {
-            try(Input is = new UnsafeInput(new BufferedInputStream(new FileInputStream(DAT)))) {
-                byte magic0 = kryo.readObject(is, byte.class);
-                byte version = kryo.readObject(is, byte.class);
-                epoch = kryo.readObject(is, int.class);
-                epoch++;
-
-                if(magic0 != MAGIC_0 || version != VERSION) {
-                    VintageFix.LOGGER.warn("Jar discoverer cache is either a different version or corrupted, discarding.");
-                } else {
-                    cache = returnVerifiedMap(kryo.readObject(is, HashMap.class));
-                }
-            } catch (Exception e) {
-                VintageFix.LOGGER.error("There was an error reading the jar discoverer cache. A new one will be created. The previous one has been saved as " + DAT_ERRORED.getName() + " for inspection.");
-                DAT.renameTo(DAT_ERRORED);
-                e.printStackTrace();
-                cache.clear();
-                epoch = 0;
-            }
+        if(!DAT.exists()) {
+            return;
         }
+
+        try(Input is = new UnsafeInput(new BufferedInputStream(Files.newInputStream(DAT.toPath())))) {
+
+            byte magic0 = kryo.readObject(is, byte.class);
+            byte version = kryo.readObject(is, byte.class);
+            epoch = kryo.readObject(is, int.class);
+            epoch++;
+
+            if(magic0 != MAGIC_0 || version != VERSION) {
+                LOGGER.warn("Jar discoverer cache is either a different version or corrupted, discarding.");
+            } else {
+                cache = returnVerifiedMap(kryo.readObject(is, HashMap.class));
+            }
+
+        } catch (Exception e) {
+            LOGGER.error("There was an error reading the jar discoverer cache. A new one will be created. The previous one has been saved as {} for inspection.", DAT_ERRORED.getName(), e);
+            DAT.renameTo(DAT_ERRORED);
+            cache.clear();
+            epoch = 0;
+        }
+
     }
 
     private static Map<String, CachedModInfo> returnVerifiedMap(Map<String, CachedModInfo> map) {
@@ -91,42 +105,52 @@ public class JarDiscovererCache {
     }
 
     public static void finish() {
-        if(!cache.isEmpty()) {
-            new Thread(new Runnable() {
 
-                @Override
-                public void run() {
-                    try {
-                        if(!DAT.exists()) {
-                            DAT.getParentFile().mkdirs();
-                            DAT.createNewFile();
-                        }
-                        cache.entrySet().removeIf(e -> (epoch - e.getValue().lastAccessed) > MAX_AGE);
-                        try(Output output = new UnsafeOutput(new BufferedOutputStream(new FileOutputStream(DAT)))) {
-                            kryo.writeObject(output, MAGIC_0);
-                            kryo.writeObject(output, VERSION);
-                            kryo.writeObject(output, epoch);
-                            kryo.writeObject(output, cache);
-                        }
-                    } catch (IOException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                    cache = null;
+        if(cache.isEmpty()) {
+            return;
+        }
+
+        new Thread(() -> {
+
+            try {
+
+                if(!DAT.exists()) {
+                    DAT.getParentFile().mkdirs();
+                    DAT.createNewFile();
                 }
 
-            }, "CoreTweaks JarDiscovererCache save thread").start();
-        }
+                cache.entrySet().removeIf(e -> (epoch - e.getValue().lastAccessed) > MAX_AGE);
+
+                try(Output output = new UnsafeOutput(new BufferedOutputStream(Files.newOutputStream(DAT.toPath())))) {
+                    kryo.writeObject(output, MAGIC_0);
+                    kryo.writeObject(output, VERSION);
+                    kryo.writeObject(output, epoch);
+                    kryo.writeObject(output, cache);
+                }
+
+            } catch (IOException e) {
+                LOGGER.error("There was an error writing the jar discoverer cache", e);
+            }
+
+            cache = null;
+
+        }, "JarDiscovererCache save thread").start();
+
     }
 
     public static CachedModInfo getCachedModInfo(String hash) {
+
         CachedModInfo cmi = cache.get(hash);
+
         if(cmi == null) {
             cmi = new CachedModInfo(true);
             cache.put(hash, cmi);
         }
+
         cmi.lastAccessed = epoch;
+
         return cmi;
+
     }
 
     public static boolean isActive() {
@@ -135,10 +159,10 @@ public class JarDiscovererCache {
 
     public static class CachedModInfo {
 
-        Map<String, ASMModParser> parserMap = new HashMap<>();
-        Set<String> modClasses = new HashSet<>();
-        int lastAccessed;
-        transient boolean dirty;
+        private final Map<String, ASMModParser> parserMap = new HashMap<>();
+        private final Set<String> modClasses = new HashSet<>();
+        private int lastAccessed;
+        private final transient boolean dirty;
 
         public CachedModInfo(boolean dirty) {
             this.dirty = dirty;
@@ -161,6 +185,7 @@ public class JarDiscovererCache {
         }
 
         public void putIsModClass(ZipEntry ze, boolean value) {
+
             if(!dirty) {
                 throw new IllegalStateException();
             }
@@ -168,23 +193,30 @@ public class JarDiscovererCache {
             if(value) {
                 modClasses.add(ze.getName());
             }
+
         }
+
     }
 
     public static class TypeSerializer extends Serializer<Type> {
 
         @Override
         public void write(Kryo kryo, Output output, Type type) {
+
             output.writeByte(type.getSort());
+
             if(type.getSort() >= Type.ARRAY) {
                 output.writeString(type.getInternalName());
             }
+
         }
 
         @Override
         public Type read(Kryo kryo, Input input, Class<? extends Type> type) {
+
             int sort = input.readByte();
             String buf = sort >= Type.ARRAY ? input.readString() : null;
+
             switch(sort) {
                 case Type.VOID:
                     return Type.VOID_TYPE;
@@ -212,73 +244,81 @@ public class JarDiscovererCache {
                 default:
                     return null;
             }
+
         }
 
     }
 
     public static class ModAnnotationSerializer extends Serializer<ModAnnotation> {
 
-        private static ModAnnotation lastMa;
+        private final Field typeField;
+
+        public ModAnnotationSerializer() throws NoSuchFieldException {
+            typeField = ModAnnotation.class.getDeclaredField("type");
+            typeField.setAccessible(true);
+        }
 
         @Override
         public void write(Kryo kryo, Output output, ModAnnotation ma) {
             kryo.writeObject(output, ma.getType());
             kryo.writeObject(output, ma.getASMType());
             output.writeString(ma.getMember());
-            Map<String, Object> serializableValues = new HashMap<>();
-
             kryo.writeObject(output, ma.getValues());
         }
 
         @Override
         public ModAnnotation read(Kryo kryo, Input input, Class<? extends ModAnnotation> ma) {
+
             try {
-                Field type = ma.getDeclaredField("type");
-                Object at = kryo.readObject(input, type.getType());
+
+                Object at = kryo.readObject(input, typeField.getType());
                 ModAnnotation maa = new ModAnnotation(null, kryo.readObject(input, Type.class), input.readString());
-                type.setAccessible(true);
-                type.set(maa, at);
+                typeField.set(maa, at);
 
-                lastMa = maa;
                 try {
-                Map<String, Object> values = kryo.readObject(input, HashMap.class);
-                values.forEach((k, v) -> {
-                    maa.addProperty(k, v);
-
-                });
+                    Map<String, Object> values = kryo.readObject(input, HashMap.class);
+                    values.forEach(maa::addProperty);
                 } catch(Exception e) {
                     return null;
                 }
+
                 return maa;
-            } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+
+            } catch (SecurityException | IllegalArgumentException | IllegalAccessException e) {
+                LOGGER.error("There was an error deserializing the jar discoverer cache ModAnnotation", e);
             }
 
             return null;
+
         }
 
     }
 
     public static class EnumHolderSerializer extends Serializer<ModAnnotation.EnumHolder> {
 
+        private final Field descField;
+        private final Field valueField;
+
+        public EnumHolderSerializer() throws NoSuchFieldException {
+
+            descField = ModAnnotation.EnumHolder.class.getDeclaredField("desc");
+            descField.setAccessible(true);
+
+            valueField = ModAnnotation.EnumHolder.class.getDeclaredField("value");
+            valueField.setAccessible(true);
+
+        }
+
         @Override
         public void write(Kryo kryo, Output output, ModAnnotation.EnumHolder eh) {
+
             try {
-                Field descF = eh.getClass().getDeclaredField("desc");
-                descF.setAccessible(true);
-                Field valueF = eh.getClass().getDeclaredField("value");
-                valueF.setAccessible(true);
-
-                String desc = (String) descF.get(eh);
-                String value = (String) valueF.get(eh);
-
-                output.writeString(desc);
-                output.writeString(value);
-            } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                output.writeString((String) descField.get(eh));
+                output.writeString((String) valueField.get(eh));
+            } catch (SecurityException | IllegalArgumentException | IllegalAccessException e) {
+                LOGGER.error("There was an error serializing the jar discoverer cache ModAnnotation EnumHolder", e);
             }
+
         }
 
         @Override
@@ -290,39 +330,34 @@ public class JarDiscovererCache {
 
     public static class ASMModParserSerializer extends Serializer<ASMModParser> {
 
-        private Field asmTypeField;
-        private Field classVersionField;
-        private Field asmSuperTypeField;
-        private Field annotationsField;
-        private Field interfacesField;
-        private Unsafe unsafe;
+        private final Field asmTypeField;
+        private final Field classVersionField;
+        private final Field asmSuperTypeField;
+        private final Field annotationsField;
+        private final Field interfacesField;
 
-        public ASMModParserSerializer() {
+        private final Unsafe unsafe;
 
-            try {
+        public ASMModParserSerializer() throws NoSuchFieldException, IllegalAccessException {
 
-                asmTypeField = ASMModParser.class.getDeclaredField("asmType");
-                asmTypeField.setAccessible(true);
+            asmTypeField = ASMModParser.class.getDeclaredField("asmType");
+            asmTypeField.setAccessible(true);
 
-                classVersionField = ASMModParser.class.getDeclaredField("classVersion");
-                classVersionField.setAccessible(true);
+            classVersionField = ASMModParser.class.getDeclaredField("classVersion");
+            classVersionField.setAccessible(true);
 
-                asmSuperTypeField = ASMModParser.class.getDeclaredField("asmSuperType");
-                asmSuperTypeField.setAccessible(true);
+            asmSuperTypeField = ASMModParser.class.getDeclaredField("asmSuperType");
+            asmSuperTypeField.setAccessible(true);
 
-                annotationsField = ASMModParser.class.getDeclaredField("annotations");
-                annotationsField.setAccessible(true);
+            annotationsField = ASMModParser.class.getDeclaredField("annotations");
+            annotationsField.setAccessible(true);
 
-                interfacesField = ASMModParser.class.getDeclaredField("interfaces");
-                interfacesField.setAccessible(true);
+            interfacesField = ASMModParser.class.getDeclaredField("interfaces");
+            interfacesField.setAccessible(true);
 
-                Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
-                unsafeField.setAccessible(true);
-                unsafe = (Unsafe) unsafeField.get(null);
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+            unsafeField.setAccessible(true);
+            unsafe = (Unsafe) unsafeField.get(null);
 
         }
 
@@ -338,7 +373,7 @@ public class JarDiscovererCache {
             try {
                 kryo.writeObject(output, interfacesField.get(parser));
             } catch (IllegalAccessException e) {
-                e.printStackTrace();
+                LOGGER.error("There was an error serializing the jar discoverer cache ASMModParser", e);
             }
 
         }
@@ -359,8 +394,8 @@ public class JarDiscovererCache {
 
                 return parser;
 
-            } catch (Exception e) {
-                e.printStackTrace();
+            } catch (InstantiationException | IllegalAccessException e) {
+                LOGGER.error("There was an error deserializing the jar discoverer cache ASMModParser", e);
             }
 
             return null;
