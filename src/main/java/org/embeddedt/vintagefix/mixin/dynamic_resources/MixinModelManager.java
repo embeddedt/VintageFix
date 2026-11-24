@@ -103,7 +103,7 @@ public class MixinModelManager {
     }
 
     private boolean shouldLoadBlacklisted(ModelResourceLocation mrl) {
-        return mrl.getNamespace().equals("thebetweenlands") || mrl.getNamespace().equals("dynamictrees");
+        return mrl.getNamespace().equals("thebetweenlands") || mrl.getNamespace().contains("dynamictrees");
     }
 
     private boolean shouldPersistBlacklisted(ResourceLocation mrl) {

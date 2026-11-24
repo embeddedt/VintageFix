@@ -127,7 +127,7 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
                         }
                     }
                 } catch(Throwable e2) {
-                    normalException = e;
+                    normalException = e2;
                 }
             }
         }
@@ -152,7 +152,7 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
         return model;
     }
 
-    private static class DynamicModelLoadFailException extends ModelLoaderRegistry.LoaderException {
+    public static class DynamicModelLoadFailException extends ModelLoaderRegistry.LoaderException {
         public DynamicModelLoadFailException(String message) {
             super(message);
         }
@@ -160,6 +160,20 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
         @Override
         public synchronized Throwable fillInStackTrace() {
             return this;
+        }
+
+        public static boolean isMissingVariant(Throwable t) {
+            if(t == null)
+                return false;
+            if(t instanceof DynamicModelLoadFailException)
+                return true;
+            Throwable cause = t.getCause();
+            while(cause != null && cause != t) {
+                if(cause instanceof DynamicModelLoadFailException)
+                    return true;
+                cause = cause.getCause();
+            }
+            return false;
         }
     }
 

@@ -14,16 +14,20 @@ import java.net.URLClassLoader;
 import java.net.URLDecoder;
 import java.nio.file.*;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipError;
 
 public class DefaultPackAdapter implements ResourcePackHelper.Adapter<DefaultResourcePack> {
-    @FunctionalInterface
-    private interface FSConsumer {
-        List<String> accept(FileSystem fs) throws IOException;
+    private static List<String> walkAssets(Path basePath, Predicate<String> filter) throws IOException {
+        if(!Files.exists(basePath))
+            return ImmutableList.of();
+        try (Stream<Path> stream = Files.walk(basePath)) {
+            return stream.map(basePath::relativize).map(p -> "/assets/" + Util.normalizePathToString(p))
+                    .filter(filter)
+                    .collect(Collectors.toList());
+        }
     }
 
     /**
@@ -33,7 +37,7 @@ public class DefaultPackAdapter implements ResourcePackHelper.Adapter<DefaultRes
      * This method is synchronized to avoid multiple threads concurrently opening and closing filesystems, which can
      * cause weird filesystem not found errors.
      */
-    private static synchronized Iterator<String> walkFileSystems(Class<?> clz, FSConsumer consumer) throws IOException {
+    private static synchronized Iterator<String> walkFileSystems(Class<?> clz, Predicate<String> filter) throws IOException {
         Set<String> set;
         FileSystem mainFs;
         try {
@@ -49,7 +53,7 @@ public class DefaultPackAdapter implements ResourcePackHelper.Adapter<DefaultRes
         } catch (URISyntaxException e) {
             throw new IOException("Couldn't list vanilla resources", e);
         }
-        set = new HashSet<>(consumer.accept(mainFs));
+        set = new HashSet<>(walkAssets(mainFs.getPath("/assets"), filter));
         mainFs.close();
         if(clz.getClassLoader() instanceof URLClassLoader) {
             URLClassLoader cl = (URLClassLoader)clz.getClassLoader();
@@ -58,8 +62,15 @@ public class DefaultPackAdapter implements ResourcePackHelper.Adapter<DefaultRes
                 List<String> newList = ImmutableList.of();
                 URI uri = null;
                 try {
-                    // Decode the URL before passing it to the URI constructor so it isn't doubly encoded (which breaks
-                    // reading files from folders with spaces)
+                    if(Objects.equals(url.getProtocol(), "file")) {
+                        Path dirPath = Paths.get(url.toURI());
+                        if(Files.isDirectory(dirPath)) {
+                            newList = walkAssets(dirPath.resolve("assets"), filter);
+                            if(newList.size() > 0)
+                                set.addAll(newList);
+                            continue;
+                        }
+                    }
                     uri = new URI("jar:" + url.toString());
                     boolean needClose = false;
                     FileSystem fs;
@@ -70,7 +81,7 @@ public class DefaultPackAdapter implements ResourcePackHelper.Adapter<DefaultRes
                         needClose = true;
                     }
                     try {
-                        newList = consumer.accept(fs);
+                        newList = walkAssets(fs.getPath("/assets"), filter);
                     } catch(IOException ignored) {}
                     if(newList.size() > 0)
                         set.addAll(newList);
@@ -86,13 +97,6 @@ public class DefaultPackAdapter implements ResourcePackHelper.Adapter<DefaultRes
 
     @Override
     public Iterator<String> getAllPaths(DefaultResourcePack pack, Predicate<String> filter) throws IOException {
-        return walkFileSystems(DefaultResourcePack.class, fs -> {
-            Path basePath = fs.getPath("/assets");
-            try (Stream<Path> stream = Files.walk(basePath)) {
-                return stream.map(basePath::relativize).map(p -> "/assets/" + Util.normalizePathToString(p))
-                    .filter(filter)
-                    .collect(Collectors.toList());
-            }
-        });
+        return walkFileSystems(DefaultResourcePack.class, filter);
     }
 }
