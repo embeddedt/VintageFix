@@ -127,7 +127,7 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
                         }
                     }
                 } catch(Throwable e2) {
-                    normalException = e;
+                    normalException = e2;
                 }
             }
         }
@@ -152,7 +152,7 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
         return model;
     }
 
-    private static class DynamicModelLoadFailException extends ModelLoaderRegistry.LoaderException {
+    public static class DynamicModelLoadFailException extends ModelLoaderRegistry.LoaderException {
         public DynamicModelLoadFailException(String message) {
             super(message);
         }
@@ -161,6 +161,53 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
         public synchronized Throwable fillInStackTrace() {
             return this;
         }
+
+        public static boolean isMissingVariant(Throwable t) {
+            if(t == null)
+                return false;
+            if(t instanceof DynamicModelLoadFailException)
+                return true;
+            Throwable cause = t.getCause();
+            while(cause != null && cause != t) {
+                if(cause instanceof DynamicModelLoadFailException)
+                    return true;
+                cause = cause.getCause();
+            }
+            return false;
+        }
+    }
+
+    @Nullable
+    private IModel loadMissingVariantFallback(ResourceLocation location, ICustomModelLoader accepted) {
+        if (!(location instanceof ModelResourceLocation)) {
+            return null;
+        }
+        ResourceLocation blockKey = new ResourceLocation(location.getNamespace(), location.getPath());
+        Collection<ModelResourceLocation> siblings = ModelLocationInformation.validVariantsForBlock.get(blockKey);
+        if (siblings == null || siblings.isEmpty()) {
+            return null;
+        }
+        int attempts = 0;
+        for (ModelResourceLocation sibling : siblings) {
+            if (sibling.equals(location)) {
+                continue;
+            }
+            if (++attempts > 16) {
+                break;
+            }
+            try {
+                IModel candidate = accepted.loadModel(ModelLoaderRegistry.getActualLocation(sibling));
+                if (candidate != null && candidate != ModelLoaderRegistry.getMissingModel()) {
+                    VintageFix.LOGGER.debug("Using fallback variant {} for missing variant {}", sibling, location);
+                    return candidate;
+                }
+            } catch (ModelBlockDefinition.MissingVariantException ignored) {
+                // try another sibling
+            } catch (Exception e) {
+                VintageFix.LOGGER.debug("Failed loading fallback variant {} for {}", sibling, location, e);
+            }
+        }
+        return null;
     }
 
     private IModel loadModel(ResourceLocation location, Set<ResourceLocation> loadStack) throws ModelLoaderRegistry.LoaderException {
@@ -218,7 +265,10 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
             model = accepted.loadModel(actualLocation);
         } catch (Exception e) {
             if (e instanceof ModelBlockDefinition.MissingVariantException && accepted == VARIANT_LOADER) {
-                throw new DynamicModelLoadFailException("Variant " + location + " does not exist");
+                model = loadMissingVariantFallback(location, accepted);
+                if (model == null) {
+                    throw new DynamicModelLoadFailException("Variant " + location + " does not exist");
+                }
             } else {
                 throw new ModelLoaderRegistry.LoaderException("Exception loading model " + location + " with loader " + accepted, e);
             }

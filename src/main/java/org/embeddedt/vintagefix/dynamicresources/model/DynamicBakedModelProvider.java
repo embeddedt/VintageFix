@@ -115,12 +115,10 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
             return bakedModel;
         }
 
-        Throwable mException = null;
         IModel model = null;
         try {
             model = modelProvider.getObject(location);
-        } catch(Throwable e) {
-            mException = e;
+        } catch(Throwable ignored) {
         }
 
         if(model == null) {
@@ -130,13 +128,7 @@ public class DynamicBakedModelProvider extends RegistrySimple<ModelResourceLocat
             if(event.bakedModel != missingModel)
                 return event.bakedModel;
 
-            if(ModelLocationInformation.canLogError(location.getNamespace())) {
-                if(!ModelLocationInformation.DEBUG_MODEL_LOAD)
-                    LOGGER.error("Error occured while loading model {}", location);
-                else {
-                    LOGGER.error("Failed to load model {}", location, mException);
-                }
-            }
+            // DynamicModelProvider already logs load failures.
         } else {
             try {
                 return bakeAndCheckTextures(location, model, DefaultVertexFormats.ITEM);

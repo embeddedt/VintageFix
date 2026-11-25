@@ -44,7 +44,7 @@ import java.util.stream.Stream;
 public class TextureCollector {
 
     // target all textures in the listed subfolders, or textures in the root folder
-    private static final Pattern TEXTURE_MATCH_PATTERN = Pattern.compile("^/?assets/(.+?(?=/))/textures/((?:attachment|aspect.?|bettergrass|block.?|cape|customoverlay|decors|item.?|entity/(armor|bed|chest)|fluid.?|model.?|part.?|pipe|rendering|ropebridge|slot.?|solid_block|tile.?|tinkers|tconstruct|valuetype.?)/.*)\\.png$");
+    private static final Pattern TEXTURE_MATCH_PATTERN = Pattern.compile("^/?assets/(.+?(?=/))/textures/((?:attachment|aspect.?|bettergrass|block.?|broom_parts|cape|customoverlay|decors|item.?|entity/(armor|bed|chest)|fluid.?|model.?|part.?|pipe|rendering|ropebridge|slot.?|solid_block|tile.?|tinkers|tconstruct|valuetype.?)/.*)\\.png$");
 
     private static final ImmutableListMultimap<String, ResourceLocation> EXTRA_TEXTURES_BY_MOD = ImmutableListMultimap.<String, ResourceLocation>builder()
         .put("mekanism", new ResourceLocation("mekanism", "entities/robit"))
