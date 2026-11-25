@@ -177,6 +177,39 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
         }
     }
 
+    @Nullable
+    private IModel loadMissingVariantFallback(ResourceLocation location, ICustomModelLoader accepted) {
+        if (!(location instanceof ModelResourceLocation)) {
+            return null;
+        }
+        ResourceLocation blockKey = new ResourceLocation(location.getNamespace(), location.getPath());
+        Collection<ModelResourceLocation> siblings = ModelLocationInformation.validVariantsForBlock.get(blockKey);
+        if (siblings == null || siblings.isEmpty()) {
+            return null;
+        }
+        int attempts = 0;
+        for (ModelResourceLocation sibling : siblings) {
+            if (sibling.equals(location)) {
+                continue;
+            }
+            if (++attempts > 16) {
+                break;
+            }
+            try {
+                IModel candidate = accepted.loadModel(ModelLoaderRegistry.getActualLocation(sibling));
+                if (candidate != null && candidate != ModelLoaderRegistry.getMissingModel()) {
+                    VintageFix.LOGGER.debug("Using fallback variant {} for missing variant {}", sibling, location);
+                    return candidate;
+                }
+            } catch (ModelBlockDefinition.MissingVariantException ignored) {
+                // try another sibling
+            } catch (Exception e) {
+                VintageFix.LOGGER.debug("Failed loading fallback variant {} for {}", sibling, location, e);
+            }
+        }
+        return null;
+    }
+
     private IModel loadModel(ResourceLocation location, Set<ResourceLocation> loadStack) throws ModelLoaderRegistry.LoaderException {
         if(loadStack.add(location)) {
             ResourceLocation alias;
@@ -232,7 +265,10 @@ public class DynamicModelProvider implements IRegistry<ResourceLocation, IModel>
             model = accepted.loadModel(actualLocation);
         } catch (Exception e) {
             if (e instanceof ModelBlockDefinition.MissingVariantException && accepted == VARIANT_LOADER) {
-                throw new DynamicModelLoadFailException("Variant " + location + " does not exist");
+                model = loadMissingVariantFallback(location, accepted);
+                if (model == null) {
+                    throw new DynamicModelLoadFailException("Variant " + location + " does not exist");
+                }
             } else {
                 throw new ModelLoaderRegistry.LoaderException("Exception loading model " + location + " with loader " + accepted, e);
             }
